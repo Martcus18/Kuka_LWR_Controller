@@ -1,4 +1,6 @@
-# Controller_MEMPC
+# Generic controller for KUKA LWR-4
+
+The controller allows to pilot the robot either in joints positions and torque control
 
 For compiling use the standard procedure:
 
