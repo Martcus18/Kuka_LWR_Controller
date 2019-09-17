@@ -7,6 +7,7 @@ Eigen::VectorXd controller_kuka::FeedbackLinearization(Eigen::VectorXd Q, Eigen:
     float* dq = new float[7];
     float* C = new float[7];
     float* g = new float[7];
+    float* friction = new float[7];
     float** B = new float*[7];
     
     int i,j;
@@ -14,6 +15,7 @@ Eigen::VectorXd controller_kuka::FeedbackLinearization(Eigen::VectorXd Q, Eigen:
     Eigen::MatrixXd B_eig(NUMBER_OF_JOINTS,NUMBER_OF_JOINTS);
     Eigen::VectorXd C_eig(NUMBER_OF_JOINTS);
     Eigen::VectorXd g_eig(NUMBER_OF_JOINTS);
+    Eigen::VectorXd friction_eig(NUMBER_OF_JOINTS);
     Eigen::VectorXd TauFl(NUMBER_OF_JOINTS);
     
     
@@ -27,7 +29,7 @@ Eigen::VectorXd controller_kuka::FeedbackLinearization(Eigen::VectorXd Q, Eigen:
     dyn->get_B(B,q);
     dyn->get_c(C,q,dq);
     dyn->get_g(g,q);
-
+    dyn->get_friction(friction,dq);
     
     for(i=0;i<NUMBER_OF_JOINTS;i++)
     {    
@@ -37,9 +39,10 @@ Eigen::VectorXd controller_kuka::FeedbackLinearization(Eigen::VectorXd Q, Eigen:
         }
         C_eig(i) = C[i];
         g_eig (i)= g[i];
+        friction_eig(i) = friction[i];
     }
 
-    TauFl = B_eig * reference + C_eig + g_eig;
+    TauFl = B_eig * reference + C_eig + g_eig + friction_eig;
     return TauFl;
  };
 
