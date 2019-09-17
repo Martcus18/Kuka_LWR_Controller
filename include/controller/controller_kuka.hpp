@@ -33,8 +33,7 @@ class controller_kuka : public controller
             const float TimeOutValueInSeconds = 120.0;
 
             //FRI starting
-            FRI			=	new FastResearchInterface("/home/kuka_linux/Desktop/Corl/Controller_MEMPC/external/FRILibrary/etc/980039-FRI-Driver.init");	        
-            
+            FRI			=	new FastResearchInterface("/home/kuka_linux/Desktop/Kuka_Controller/external/FRILibrary/etc/980039-FRI-Driver.init");	        
             //Choosing the controlling mode
             if(!MODE.compare(IMP))
             {
@@ -45,12 +44,13 @@ class controller_kuka : public controller
             if(!MODE.compare(POS))
             {
                     ResultValue = FRI->StartRobot(		FastResearchInterface::JOINT_POSITION_CONTROL, TimeOutValueInSeconds);
+                    std::cout << ResultValue << "\n";
             }
             else
             {
                 std::cout<<"No allowed controlling mode";
             }
-
+            
             if (ResultValue == EOK)
 	    {
 		        fprintf(stdout, "Robot successfully started.\n");
@@ -68,6 +68,9 @@ class controller_kuka : public controller
             {
                 Q(i) = JointValuesInRad[i];
             }
+            Qsave.push_back(Q);
+            dQsave.push_back(dQ);
+            d2Qsave.push_back(d2Q);
         };
 
         //Set torques in impedence control mode

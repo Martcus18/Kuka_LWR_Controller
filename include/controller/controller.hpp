@@ -103,6 +103,9 @@ class controller
         std::vector<Eigen::VectorXd> dQsave_filtered;
         std::vector<Eigen::VectorXd> d2Qsave_filtered;
 
+        std::vector<Eigen::VectorXd> Tor_th;
+        std::vector<Eigen::VectorXd> Tor_meas;
+        
         data_manager writer;
         
         data_manager X_manager;

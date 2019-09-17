@@ -122,11 +122,12 @@ Eigen::VectorXd controller_kuka::VelocityCalculator(Eigen::VectorXd Q, Eigen::Ve
 Eigen::VectorXd controller_kuka::AccCalculator(Eigen::VectorXd dQ, Eigen::VectorXd dQold)
 {
     Eigen::VectorXd acc = Eigen::VectorXd(NUMBER_OF_JOINTS);
-
+    
     for(int i=0;i<NUMBER_OF_JOINTS;i++)
     {
         acc(i) = (dQ(i) - dQold(i)) / DELTAT;
     }
+    
     return acc;    
 };
 
@@ -136,15 +137,6 @@ void controller_kuka::SetTorques(Eigen::VectorXd torques)
     //torque_biased = TorqueAdjuster(torques, dQ);
     //this->EigToArray(torques_biased, CommandedTorquesInNm);
     this->EigToArray(torques, CommandedTorquesInNm);
-    
-    std::cout<<CommandedTorquesInNm[0] <<"\n";
-    std::cout<<CommandedTorquesInNm[1] <<"\n";
-    std::cout<<CommandedTorquesInNm[2] <<"\n";
-    std::cout<<CommandedTorquesInNm[3] <<"\n";
-    std::cout<<CommandedTorquesInNm[4] <<"\n";
-    std::cout<<CommandedTorquesInNm[5] <<"\n";
-    std::cout<<CommandedTorquesInNm[6] <<"\n";
-    std::cout<<"---------------------" <<"\n";
     
     this->FRI->SetCommandedJointTorques(CommandedTorquesInNm);
 };
@@ -210,7 +202,7 @@ Eigen::MatrixXd controller_kuka::GetMass()
 
 Eigen::VectorXd controller_kuka::Filter(std::vector<Eigen::VectorXd> &signal)
 {
-    int filter_length = 50;
+    int filter_length = 200;
     int signal_length = signal.size();
     
     Eigen::VectorXd output = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
@@ -232,10 +224,24 @@ void controller_kuka::dataset_creation(Eigen::VectorXd State, Eigen::VectorXd Ol
 void controller_kuka::state_filtering()
 {
     Eigen::VectorXd temp(NUMBER_OF_JOINTS);
-    temp = Filter(Qsave);
-    Qsave_filtered.push_back(temp);
-    temp = Filter(dQsave);
-    dQsave_filtered.push_back(temp);
-    temp = Filter(d2Qsave);
-    d2Qsave_filtered.push_back(temp);
+    int minimum_size = 3;
+
+    if(Qsave.size() > minimum_size)
+    {
+        temp = Filter(Qsave);
+        Qsave_filtered.push_back(temp);
+    
+        temp = Filter(dQsave);
+        dQsave_filtered.push_back(temp);
+
+        //temp = AccCalculator(dQsave_filtered[Qsave_filtered.size()-1], dQsave_filtered[Qsave_filtered.size()-2]);
+        temp = Filter(d2Qsave);
+        d2Qsave_filtered.push_back(temp);
+        
+    }
+    else
+    {
+        Qsave_filtered.push_back(Qsave.back());
+        dQsave_filtered.push_back(dQsave.back());
+    }
 };

@@ -16,5 +16,6 @@ CycleTime=0.002
 
 [Logging]
 NumberOfLoggingFileEntries=60000
-LoggingPath= /home/kuka_linux/Desktop/Corl/Controller_MEMPC/external/FRILibrary/output
+LoggingPath= /home/kuka_linux/Desktop/Kuka_Controller/external/FRILibrary/output
+
 LoggingFileName=LWR-Scope.dat
