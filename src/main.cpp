@@ -76,8 +76,6 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		//Torques_ref = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.3*std::sin(1.0*Time));
-
 		Q_ref = Q0 + Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.1*std::sin(2*Time));
 		
 		d2Q_ref = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,-0.4*std::sin(Time));
@@ -86,7 +84,9 @@ int main(int argc, char *argv[])
 		
 		G = Controller.GetGravity();
 		
-		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
+		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
+
+		Torques_ref = G;
 
 		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
 		//Torques_ref = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
@@ -101,13 +101,15 @@ int main(int argc, char *argv[])
 
 		Controller.d2Qsave.push_back(Controller.d2Q);
 
-		//Controller.state_filtering();
+		Controller.state_filtering();
 		
-		//Controller.SetTorques(Torques_ref);
+		Controller.SetTorques(Torques_ref);
 		
-		Controller.SetJointsPositions(Q_ref);
+		//Controller.SetJointsPositions(Q_ref);
 		
 		Controller.MeasureJointTorques();	
+		
+		
 
 		Torques_measured(0) = Controller.MeasuredTorquesInNm[0];
 		Torques_measured(1) = Controller.MeasuredTorquesInNm[1];
@@ -116,6 +118,8 @@ int main(int argc, char *argv[])
 		Torques_measured(4) = Controller.MeasuredTorquesInNm[4];
 		Torques_measured(5) = Controller.MeasuredTorquesInNm[5];
 		Torques_measured(6) = Controller.MeasuredTorquesInNm[6];
+
+		Torques_measured = Controller.TorqueAdjuster(Torques_measured,Controller.dQsave_filtered.back());
 
 		Controller.Tor_meas.push_back(Torques_measured);
 		Controller.Tor_th.push_back(Torques_ref);

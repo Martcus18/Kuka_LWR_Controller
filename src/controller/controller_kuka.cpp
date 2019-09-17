@@ -91,7 +91,6 @@ Eigen::VectorXd controller_kuka::TorqueAdjuster(Eigen::VectorXd torques, Eigen::
 {
     double bias = 0.5;
     int i;
-    auto torques_biased = Eigen::VectorXd::Constant(torques.rows(),0.0);
 
     for(i=0;i<dQ.rows();i++)
     {
@@ -105,10 +104,10 @@ Eigen::VectorXd controller_kuka::TorqueAdjuster(Eigen::VectorXd torques, Eigen::
         }
         else
         {
-            torques(i) = 0.0;
+            torques(i) = torques(i);
         }
     }
-    return torques_biased;
+    return torques;
 };
 
 Eigen::VectorXd controller_kuka::VelocityCalculator(Eigen::VectorXd Q, Eigen::VectorXd Qold)
