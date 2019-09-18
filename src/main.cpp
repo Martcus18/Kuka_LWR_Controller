@@ -119,7 +119,6 @@ int main(int argc, char *argv[])
 		Torques_measured(5) = Controller.MeasuredTorquesInNm[5];
 		Torques_measured(6) = Controller.MeasuredTorquesInNm[6];
 
-		Torques_measured = Controller.TorqueAdjuster(Torques_measured,Controller.dQsave_filtered.back());
 
 		Controller.Tor_meas.push_back(Torques_measured);
 		Controller.Tor_th.push_back(Torques_ref);
