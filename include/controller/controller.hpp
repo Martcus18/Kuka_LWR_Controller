@@ -40,10 +40,6 @@
 
 #endif  /* _USE_MATH_DEFINES */
 
-#ifndef NUMBER_OF_JOINTS
-#define NUMBER_OF_JOINTS                        7
-#endif
-
 #define RUN_TIME_IN_SECONDS             300.0
 #define DELTAT                  0.005
 
@@ -64,7 +60,7 @@
 #include <chrono>
 #include <utils/data_utils.hpp>
 
-typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , 1> Kuka_Vec;
+
 
 class controller
 {
@@ -81,33 +77,33 @@ class controller
 
         //Feedback Linearization VIRTUAL
 
-        virtual Eigen::VectorXd FeedbackLinearization(Eigen::VectorXd Q, Eigen::VectorXd dQ, Eigen::VectorXd reference) = 0;
+        virtual Kuka_Vec FeedbackLinearization(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec reference) = 0;
 
         //PD Controller VIRTUAL
 
-        virtual Eigen::VectorXd PD_controller(Eigen::VectorXd Q, Eigen::VectorXd dQ, Eigen::VectorXd d2Q, Eigen::VectorXd Qd,Eigen::VectorXd dQd,Eigen::VectorXd d2Qd) = 0;
+        virtual Kuka_Vec PD_controller(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd) = 0;
 
         //Communication VIRTUAL
         
-        virtual void SetTorques(Eigen::VectorXd torques) = 0;
+        virtual void SetTorques(Kuka_Vec torques) = 0;
 
         //Communication VIRTUAL
-        virtual Eigen::VectorXd GetState() = 0;
+        virtual Kuka_Vec GetState() = 0;
         
         double Ts;
 
         //In order to be generic with respect to the number of DOF of the manipulator
 
-        std::vector<Eigen::VectorXd> Qsave;
-        std::vector<Eigen::VectorXd> dQsave;
-        std::vector<Eigen::VectorXd> d2Qsave;
+        std::vector<Kuka_Vec> Qsave;
+        std::vector<Kuka_Vec> dQsave;
+        std::vector<Kuka_Vec> d2Qsave;
 
-        std::vector<Eigen::VectorXd> Qsave_filtered;
-        std::vector<Eigen::VectorXd> dQsave_filtered;
-        std::vector<Eigen::VectorXd> d2Qsave_filtered;
+        std::vector<Kuka_Vec> Qsave_filtered;
+        std::vector<Kuka_Vec> dQsave_filtered;
+        std::vector<Kuka_Vec> d2Qsave_filtered;
 
-        std::vector<Eigen::VectorXd> Tor_th;
-        std::vector<Eigen::VectorXd> Tor_meas;
+        std::vector<Kuka_Vec> Tor_th;
+        std::vector<Kuka_Vec> Tor_meas;
         
         data_manager writer;
         

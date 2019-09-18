@@ -83,11 +83,11 @@ class controller_kuka : public controller
 
         //Set torques in impedence control mode
 
-        void SetTorques(Eigen::VectorXd torques);
+        void SetTorques(Kuka_Vec torques);
 
         //Set joints positions in position control
 
-        void SetJointsPositions(Eigen::VectorXd positions);
+        void SetJointsPositions(Kuka_Vec positions);
 
         //Get measured joints positions
 
@@ -99,23 +99,23 @@ class controller_kuka : public controller
 
         //Calculate complete state [Q,dQ]
         
-        Eigen::VectorXd GetState();
+        Kuka_Vec GetState();
 
         //Get gravity vector
 
-        Eigen::VectorXd GetGravity();
+        Kuka_Vec GetGravity();
 
         //Get mass matrix
 
-        Eigen::MatrixXd GetMass();
+        Kuka_Vec GetMass();
 
         //Conversion from Eigen vector to array of float
 
-        void EigToArray(Eigen::VectorXd IN,float *OUT);
+        void EigToArray(Kuka_Vec IN,float *OUT);
 
         //Conversion from array of float to Eigen Vector
 
-        void ArrayToEig(float *IN, Eigen::VectorXd& OUT);
+        void ArrayToEig(float *IN, Kuka_Vec& OUT);
 
        //Dataset creation
 
@@ -123,27 +123,27 @@ class controller_kuka : public controller
         
         //Dynamic feedback linearization
 
-        Eigen::VectorXd FeedbackLinearization(Eigen::VectorXd Q, Eigen::VectorXd dQ, Eigen::VectorXd reference);
+        Kuka_Vec FeedbackLinearization(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec reference);
 
         //PD controller
 
-        Eigen::VectorXd PD_controller(Eigen::VectorXd Q, Eigen::VectorXd dQ, Eigen::VectorXd d2Q, Eigen::VectorXd Qd,Eigen::VectorXd dQd,Eigen::VectorXd d2Qd);
+        Kuka_Vec PD_controller(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd);
         
         //Filtering of the state
 
         void state_filtering();
 
         //Adding of the torque bias for KUKA LWR-4
-        Eigen::VectorXd TorqueAdjuster(Eigen::VectorXd torques, Eigen::VectorXd dQ);
+        Kuka_Vec TorqueAdjuster(Kuka_Vec torques, Kuka_Vec dQ);
         
         //Numerical differentiation for velocity calculation
-        Eigen::VectorXd VelocityCalculator(Eigen::VectorXd Q, Eigen::VectorXd Qold);
+        Kuka_Vec VelocityCalculator(Kuka_Vec Q, Kuka_Vec Qold);
         
         //Numerical differentiation for acceleration calculation
-        Eigen::VectorXd AccCalculator(Eigen::VectorXd dQ, Eigen::VectorXd dQold);
+        Kuka_Vec AccCalculator(Kuka_Vec dQ, Kuka_Vec dQold);
 
         //Signal filter
-        Eigen::VectorXd Filter(std::vector<Eigen::VectorXd> &signal);
+        Kuka_Vec Filter(std::vector<Kuka_Vec> &signal);
 
         //Attributes definition
 
@@ -154,16 +154,18 @@ class controller_kuka : public controller
         Eigen::VectorXd robot_state = Eigen::VectorXd(NUMBER_OF_JOINTS * 2);
         Eigen::VectorXd old_robot_state = Eigen::VectorXd(NUMBER_OF_JOINTS * 2);
         
-        Eigen::VectorXd Q = Eigen::VectorXd(NUMBER_OF_JOINTS);
-	Eigen::VectorXd Qold = Eigen::VectorXd(NUMBER_OF_JOINTS);
 
-	Eigen::VectorXd dQ = Eigen::VectorXd(NUMBER_OF_JOINTS);
-	Eigen::VectorXd dQold = Eigen::VectorXd(NUMBER_OF_JOINTS);
+        Kuka_Vec Q;
         
-        Eigen::VectorXd d2Q = Eigen::VectorXd(NUMBER_OF_JOINTS);
-        Eigen::VectorXd d2Qold = Eigen::VectorXd(NUMBER_OF_JOINTS);
+	Kuka_Vec Qold;
+
+	Kuka_Vec dQ;
+	Kuka_Vec dQold;
         
-        Eigen::VectorXd torque_measured = Eigen::VectorXd(NUMBER_OF_JOINTS);
+        Kuka_Vec d2Q;
+        Kuka_Vec d2Qold;
+        
+        Kuka_Vec torque_measured;
 
 
         float	CommandedTorquesInNm		[NUMBER_OF_JOINTS],

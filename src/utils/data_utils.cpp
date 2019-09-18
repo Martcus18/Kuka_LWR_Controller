@@ -15,7 +15,7 @@ data_manager::~data_manager(){};
 
 //Read Data for limbo  GP -> <Xtrain,Ytrain>
 
-void data_manager::read_data(std::string &filename, std::vector<Eigen::VectorXd> &container,int width)
+void data_manager::read_data(std::string &filename, std::vector<Kuka_Vec> &container,int width)
 {   
         std::ifstream Datareader;
         std::string buffer;
@@ -44,7 +44,7 @@ void data_manager::read_data(std::string &filename, std::vector<Eigen::VectorXd>
 };
 
 //Write Data for limbo GP -> <Prediction,Variance>
-void data_manager::write_data(std::string &filename, std::vector<Eigen::VectorXd> &container)
+void data_manager::write_data(std::string &filename, std::vector<Kuka_Vec> &container)
 {
     std::ofstream Datawriter;
 
@@ -71,7 +71,7 @@ void data_manager::write_data(std::string &filename, std::vector<Eigen::VectorXd
 
 //Conversion from Limbo input to Eigen Matrix
 
-Eigen::MatrixXd data_manager::Limbo_to_Eigen(std::vector<Eigen::VectorXd> &Dataset)
+Eigen::MatrixXd data_manager::Limbo_to_Eigen(std::vector<Kuka_Vec> &Dataset)
 {
     int rows = Dataset.size();
     
@@ -87,14 +87,13 @@ Eigen::MatrixXd data_manager::Limbo_to_Eigen(std::vector<Eigen::VectorXd> &Datas
 };
 
 //Conversion from Eigen Matrix to Limbo input
-std::vector<Eigen::VectorXd> data_manager::Eigen_to_Limbo(Eigen::MatrixXd &Dataset)
+std::vector<Kuka_Vec> data_manager::Eigen_to_Limbo(Eigen::MatrixXd &Dataset)
 {
     //For stack of row vector
     int rows = Dataset.rows();
     int cols = Dataset.cols();
 
-    //DEBUGGARE I NAN 
-    std::vector<Eigen::VectorXd> Output_vector;
+    std::vector<Kuka_Vec> Output_vector;
     
     for(auto i=0;i<rows;i++)
     {
@@ -105,7 +104,7 @@ std::vector<Eigen::VectorXd> data_manager::Eigen_to_Limbo(Eigen::MatrixXd &Datas
 
 //Normalize Dataset
 
-void data_manager::normalize_data(std::vector<Eigen::VectorXd> &Dataset)
+void data_manager::normalize_data(std::vector<Kuka_Vec> &Dataset)
 {
     int i;
 
@@ -141,7 +140,7 @@ void data_manager::normalize_data(std::vector<Eigen::VectorXd> &Dataset)
     return;
 };
 
-void data_manager::de_normalize_data(std::vector<Eigen::VectorXd> &Dataset)
+void data_manager::de_normalize_data(std::vector<Kuka_Vec> &Dataset)
 {   
     Eigen::MatrixXd DeNormalizedDataMatrix = Limbo_to_Eigen(Dataset);
     int i;
