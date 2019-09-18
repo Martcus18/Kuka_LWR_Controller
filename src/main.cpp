@@ -2,8 +2,6 @@
 
 int main(int argc, char *argv[])
 {
-
-	
 	unsigned int				CycleCounter	=	0;
 	int							ResultValue		=	0;
 	double 						Time = 0.0;
@@ -14,6 +12,7 @@ int main(int argc, char *argv[])
 
 	unsigned int TimeoutValueInMicroSeconds = 0;
 	
+	/*
 	Eigen::VectorXd Q0 = Eigen::VectorXd(NUMBER_OF_JOINTS);
 
 	Eigen::VectorXd dQ0 = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
@@ -23,6 +22,18 @@ int main(int argc, char *argv[])
 	Eigen::VectorXd d2Q_ref = Eigen::VectorXd(NUMBER_OF_JOINTS);
 
 	Eigen::VectorXd G = Eigen::VectorXd(NUMBER_OF_JOINTS);
+
+	*/
+	Kuka_Vec Q0;
+
+	Kuka_Vec dQ0 = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
+
+	Kuka_Vec Q_ref;
+
+	Kuka_Vec d2Q_ref;
+
+	Kuka_Vec G;
+
 
 	//std::string Mode("impedence");
 	
@@ -36,6 +47,7 @@ int main(int argc, char *argv[])
 	
 	float prova[NUMBER_OF_JOINTS];
 
+	/*
 	Eigen::VectorXd Torques_ref = Eigen::VectorXd(NUMBER_OF_JOINTS);
 
 	Eigen::VectorXd Acc = Eigen::VectorXd(NUMBER_OF_JOINTS);
@@ -43,7 +55,16 @@ int main(int argc, char *argv[])
 	Eigen::VectorXd Torques_measured = Eigen::VectorXd(NUMBER_OF_JOINTS);
 	
 	Eigen::VectorXd state = Eigen::VectorXd(NUMBER_OF_JOINTS);
+	*/
 
+	Kuka_Vec Torques_ref;
+
+	Kuka_Vec Acc;
+
+	Kuka_Vec Torques_measured;
+	
+	Kuka_Vec state;;
+	
 	controller_kuka Controller(true, Mode);
 
 	if (Controller.FRI->IsMachineOK())
@@ -141,13 +162,13 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout, "Deleting the object...\n");
 	
-	
+	/*
 	Controller.writer.write_data(qsave,Controller.Qsave);
 	Controller.writer.write_data(dqsave,Controller.dQsave);
 	Controller.writer.write_data(d2qsave,Controller.d2Qsave);
 	Controller.writer.write_data(torque_meas,Controller.Tor_meas);
 	Controller.writer.write_data(torque_th,Controller.Tor_th);
-	
+	*/
 	/*
 	Controller.writer.write_data(qsave,Controller.Qsave_filtered);
 	Controller.writer.write_data(dqsave,Controller.dQsave_filtered);

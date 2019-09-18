@@ -51,6 +51,11 @@
 #define DEG(A)  ((A) * 180.0 / PI )
 #endif
 
+#ifndef NUMBER_OF_JOINTS
+#define NUMBER_OF_JOINTS                        7
+#endif
+
+
 
 #include <Eigen/Dense>
 #include<fstream>
@@ -60,7 +65,7 @@
 #include <chrono>
 #include <utils/data_utils.hpp>
 
-
+typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , 1> Kuka_Vec;
 
 class controller
 {
