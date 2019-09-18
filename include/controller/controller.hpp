@@ -62,11 +62,9 @@
 #include <string.h>
 #include <pthread.h>
 #include <chrono>
-
 #include <utils/data_utils.hpp>
 
-
-
+typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , 1> Kuka_Vec;
 
 class controller
 {

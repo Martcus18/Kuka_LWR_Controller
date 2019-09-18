@@ -25,16 +25,23 @@ class controller_kuka : public controller
             std::string IMP("impedence");
             std::string POS("position");
 	    
+            /*
             dQ = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
 	    dQold = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
             d2Q = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
             d2Qold = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
+            */
 
+            dQ = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
+	    dQold = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
+            d2Q = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
+            d2Qold = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
 
             const float TimeOutValueInSeconds = 120.0;
 
             //FRI starting
             FRI			=	new FastResearchInterface("/home/kuka_linux/Desktop/Kuka_Controller/external/FRILibrary/etc/980039-FRI-Driver.init");	        
+            
             //Choosing the controlling mode
             if(!MODE.compare(IMP))
             {
