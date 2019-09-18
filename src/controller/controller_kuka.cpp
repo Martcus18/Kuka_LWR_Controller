@@ -83,8 +83,16 @@ void controller_kuka::MeasureJointTorques()
 
 Eigen::VectorXd controller_kuka::PD_controller(Eigen::VectorXd Q, Eigen::VectorXd dQ, Eigen::VectorXd d2Q, Eigen::VectorXd Qd,Eigen::VectorXd dQd,Eigen::VectorXd d2Qd)
 {
-    Eigen::VectorXd state(NUMBER_OF_JOINTS);
-    return state;
+    Eigen::VectorXd e(NUMBER_OF_JOINTS);
+    Eigen::VectorXd de(NUMBER_OF_JOINTS);
+    Eigen::VectorXd Torque(NUMBER_OF_JOINTS);
+    
+    e = Q - Qd;
+    de = dQ - dQd;
+    
+    Torque = Kp * e + Kd * de;
+
+    return Torque;
 };
 
 Eigen::VectorXd controller_kuka::TorqueAdjuster(Eigen::VectorXd torques, Eigen::VectorXd dQ)
@@ -136,8 +144,6 @@ Eigen::VectorXd controller_kuka::AccCalculator(Eigen::VectorXd dQ, Eigen::Vector
 void controller_kuka::SetTorques(Eigen::VectorXd torques)
 {
     Eigen::VectorXd torque_biased(NUMBER_OF_JOINTS);
-    //torque_biased = TorqueAdjuster(torques, dQ);
-    //this->EigToArray(torques_biased, CommandedTorquesInNm);
     this->EigToArray(torques, CommandedTorquesInNm);
     
     this->FRI->SetCommandedJointTorques(CommandedTorquesInNm);
@@ -182,7 +188,6 @@ Eigen::MatrixXd controller_kuka::GetMass()
 {
     Eigen::MatrixXd Mass = Eigen::MatrixXd(NUMBER_OF_JOINTS, NUMBER_OF_JOINTS);
     int i,j;
-
     float** B = new float*[7];
 
     for(i=0;i<NUMBER_OF_JOINTS;i++)
@@ -211,7 +216,6 @@ Eigen::VectorXd controller_kuka::Filter(std::vector<Eigen::VectorXd> &signal)
 
     if(signal_length > filter_length)
     {
-            //output = ((25.0 / 12.0) * signal[signal_length-1] - 4.0 * signal[signal_length-2] + 3.0 * signal[signal_length-3] - (4.0/3.0) * signal[signal_length-4] + 0.25 * signal[signal_length-5]) / DELTAT;
             for(int i=1;i<filter_length+1;i++)
             {
                 output = output + signal[signal_length-i];

@@ -8,7 +8,7 @@
 #include <stdarg.h>
 #include<TypeIRML.h>
 #include<LWR_Dynamic_Model_Lib.h>
-
+#include <TypeIRML.h>
 
 
 class controller_kuka : public controller
@@ -29,6 +29,7 @@ class controller_kuka : public controller
 	    dQold = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
             d2Q = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
             d2Qold = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
+
 
             const float TimeOutValueInSeconds = 120.0;
 
@@ -140,8 +141,7 @@ class controller_kuka : public controller
         //Attributes definition
 
         FastResearchInterface	*FRI;
-
-
+        
 	CLWR_Dynamic_Model_Lib *dyn;
 
         Eigen::VectorXd robot_state = Eigen::VectorXd(NUMBER_OF_JOINTS * 2);

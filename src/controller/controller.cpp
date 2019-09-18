@@ -1,11 +1,5 @@
 #include <controller/controller.hpp>
 
-controller::controller(bool Flag)
-{
-    //Initialization
-    data_manager writer();
-};
-
 double controller::unwrap_angle(double angle_old, double angle_new)
 {
     double threshold = 0.1;

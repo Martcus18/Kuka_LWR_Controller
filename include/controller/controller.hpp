@@ -74,7 +74,12 @@ class controller
     
         controller(){};
         ~controller(){};
-        controller(bool Flag);
+        controller(bool Flag)
+        {
+                data_manager writer();
+                Kp.diagonal() << 50,50,50,50,50,50,50;
+                Kd.diagonal() << 5,5,5,5,5,5,5;
+        };
 
         //Feedback Linearization VIRTUAL
 
@@ -113,6 +118,9 @@ class controller
 
         std::vector<Eigen::VectorXd> DatasetY;
         std::vector<Eigen::VectorXd> DatasetX;
+
+        Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kp;
+        Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kd;
 
     protected:
 
