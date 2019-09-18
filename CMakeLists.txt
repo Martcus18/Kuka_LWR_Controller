@@ -38,6 +38,7 @@ include_directories(${TECS_INCLUDE_DIR})
 include_directories(${CRYPTOPP_INCLUDE_DIR})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/FRILibrary/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/include")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/ehvi")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/hv")
@@ -55,8 +56,8 @@ add_library(utils SHARED "${CMAKE_CURRENT_SOURCE_DIR}/src/utils/data_utils.cpp")
 target_link_libraries(utils ${TBB_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(controller ${TBB_LIBRARIES} ${Boost_LIBRARIES} libFastResearchInterfaceLibrary libTypeIRML)
 
-target_link_libraries(controller_kuka PUBLIC controller utils "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so")
-
+#target_link_libraries(controller_kuka PUBLIC controller utils "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so")
+target_link_libraries(controller_kuka PUBLIC controller utils "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so")
 add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 
 target_link_libraries(main controller_kuka)
