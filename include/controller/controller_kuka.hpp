@@ -24,13 +24,6 @@ class controller_kuka : public controller
             
             std::string IMP("impedence");
             std::string POS("position");
-	    
-            /*
-            dQ = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
-	    dQold = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
-            d2Q = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
-            d2Qold = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
-            */
 
             dQ = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
 	    dQold = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
@@ -52,7 +45,6 @@ class controller_kuka : public controller
             if(!MODE.compare(POS))
             {
                     ResultValue = FRI->StartRobot(		FastResearchInterface::JOINT_POSITION_CONTROL, TimeOutValueInSeconds);
-                    std::cout << ResultValue << "\n";
             }
             else
             {
@@ -99,7 +91,7 @@ class controller_kuka : public controller
 
         //Calculate complete state [Q,dQ]
         
-        Kuka_Vec GetState();
+        Eigen::VectorXd GetState();
 
         //Get gravity vector
 
@@ -107,7 +99,7 @@ class controller_kuka : public controller
 
         //Get mass matrix
 
-        Kuka_Vec GetMass();
+        Kuka_Mat GetMass();
 
         //Conversion from Eigen vector to array of float
 
@@ -127,11 +119,11 @@ class controller_kuka : public controller
 
         //PD controller
 
-        Kuka_Vec PD_controller(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd);
+        Kuka_Vec PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd);
         
         //Filtering of the state
 
-        void state_filtering();
+        void StateFiltering();
 
         //Adding of the torque bias for KUKA LWR-4
         Kuka_Vec TorqueAdjuster(Kuka_Vec torques, Kuka_Vec dQ);
@@ -145,6 +137,12 @@ class controller_kuka : public controller
         //Signal filter
         Kuka_Vec Filter(std::vector<Kuka_Vec> &signal);
 
+        //Gear Differentiation
+        Kuka_Vec GearDiff(std::vector<Kuka_Vec> &signal);
+
+        //From Kuka_Vec to std::Vector<Eigen::VectorXd>
+        void FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vector<Kuka_Vec>& OUT);
+        
         //Attributes definition
 
         FastResearchInterface	*FRI;
@@ -156,7 +154,6 @@ class controller_kuka : public controller
         
 
         Kuka_Vec Q;
-        
 	Kuka_Vec Qold;
 
 	Kuka_Vec dQ;

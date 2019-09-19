@@ -12,18 +12,6 @@ int main(int argc, char *argv[])
 
 	unsigned int TimeoutValueInMicroSeconds = 0;
 	
-	/*
-	Eigen::VectorXd Q0 = Eigen::VectorXd(NUMBER_OF_JOINTS);
-
-	Eigen::VectorXd dQ0 = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
-
-	Eigen::VectorXd Q_ref = Eigen::VectorXd(NUMBER_OF_JOINTS);
-
-	Eigen::VectorXd d2Q_ref = Eigen::VectorXd(NUMBER_OF_JOINTS);
-
-	Eigen::VectorXd G = Eigen::VectorXd(NUMBER_OF_JOINTS);
-
-	*/
 	Kuka_Vec Q0;
 
 	Kuka_Vec dQ0 = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
@@ -33,6 +21,10 @@ int main(int argc, char *argv[])
 	Kuka_Vec d2Q_ref;
 
 	Kuka_Vec G;
+
+	Kuka_Vec Torques_ref;
+
+	Kuka_Vec Torques_measured;
 
 
 	//std::string Mode("impedence");
@@ -45,26 +37,9 @@ int main(int argc, char *argv[])
 	std::string torque_meas = "tor_meas.txt";
 	std::string torque_th = "tor_th.txt";
 	
-	float prova[NUMBER_OF_JOINTS];
+	Eigen::VectorXd state;
+	std::vector<Eigen::VectorXd> temp;
 
-	/*
-	Eigen::VectorXd Torques_ref = Eigen::VectorXd(NUMBER_OF_JOINTS);
-
-	Eigen::VectorXd Acc = Eigen::VectorXd(NUMBER_OF_JOINTS);
-
-	Eigen::VectorXd Torques_measured = Eigen::VectorXd(NUMBER_OF_JOINTS);
-	
-	Eigen::VectorXd state = Eigen::VectorXd(NUMBER_OF_JOINTS);
-	*/
-
-	Kuka_Vec Torques_ref;
-
-	Kuka_Vec Acc;
-
-	Kuka_Vec Torques_measured;
-	
-	Kuka_Vec state;;
-	
 	controller_kuka Controller(true, Mode);
 
 	if (Controller.FRI->IsMachineOK())
@@ -81,14 +56,19 @@ int main(int argc, char *argv[])
 	}
 	
 	std::cout << "RUN TIME" << RUN_TIME_IN_SECONDS<<"\n";
-		Tic = std::chrono::system_clock::now();
+	
+	Tic = std::chrono::system_clock::now();
+
 	while ((float)CycleCounter * Controller.FRI->GetFRICycleTime() < RUN_TIME_IN_SECONDS)
 	{	
 		Time = Controller.FRI->GetFRICycleTime() * (float)CycleCounter;
+
 		Toc = std::chrono::system_clock::now();
+		
 		Controller.FRI->WaitForKRCTick(TimeoutValueInMicroSeconds);
 		
-		elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(Toc - Tic).count();
+		elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
+
 		Tic = std::chrono::system_clock::now();
 
 		if (!Controller.FRI->IsMachineOK())
@@ -97,24 +77,21 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		Q_ref = Q0 + Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.1*std::sin(2*Time));
+		Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time));
 		
-		d2Q_ref = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,-0.4*std::sin(Time));
+		d2Q_ref = Kuka_Vec::Constant(0.1*std::sin(Time));
 
 		state = Controller.GetState();
 		
 		G = Controller.GetGravity();
 		
-		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
-
-		Torques_ref = G;
-
-		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
-		//Torques_ref = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
+		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 
 		Controller.Qsave.push_back(Controller.Q);
 		
-		Controller.dQsave.push_back(Controller.dQ);
+		Controller.dQsave.push_back(Controller.GearDiff(Controller.Qsave));
+
+		//Controller.dQsave.push_back(Controller.dQ);
 
 		Controller.d2Qold = Controller.d2Q;
 
@@ -122,16 +99,14 @@ int main(int argc, char *argv[])
 
 		Controller.d2Qsave.push_back(Controller.d2Q);
 
-		Controller.state_filtering();
+		Controller.StateFiltering();
 		
-		Controller.SetTorques(Torques_ref);
+		//Controller.SetTorques(Torques_ref);
 		
-		//Controller.SetJointsPositions(Q_ref);
+		Controller.SetJointsPositions(Q_ref);
 		
 		Controller.MeasureJointTorques();	
 		
-		
-
 		Torques_measured(0) = Controller.MeasuredTorquesInNm[0];
 		Torques_measured(1) = Controller.MeasuredTorquesInNm[1];
 		Torques_measured(2) = Controller.MeasuredTorquesInNm[2];
@@ -140,10 +115,11 @@ int main(int argc, char *argv[])
 		Torques_measured(5) = Controller.MeasuredTorquesInNm[5];
 		Torques_measured(6) = Controller.MeasuredTorquesInNm[6];
 
-
+		
 		Controller.Tor_meas.push_back(Torques_measured);
+		
 		Controller.Tor_th.push_back(Torques_ref);
-
+		
 		CycleCounter++;
 	}
 	
@@ -162,18 +138,21 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout, "Deleting the object...\n");
 	
-	/*
-	Controller.writer.write_data(qsave,Controller.Qsave);
-	Controller.writer.write_data(dqsave,Controller.dQsave);
-	Controller.writer.write_data(d2qsave,Controller.d2Qsave);
-	Controller.writer.write_data(torque_meas,Controller.Tor_meas);
-	Controller.writer.write_data(torque_th,Controller.Tor_th);
-	*/
-	/*
-	Controller.writer.write_data(qsave,Controller.Qsave_filtered);
-	Controller.writer.write_data(dqsave,Controller.dQsave_filtered);
-	Controller.writer.write_data(d2qsave,Controller.d2Qsave_filtered);
-	*/
+	Controller.FromKukaToDyn(temp,Controller.Qsave);
+	Controller.writer.write_data(qsave,temp);
+
+	Controller.FromKukaToDyn(temp,Controller.dQsave);
+	Controller.writer.write_data(dqsave,temp);
+
+	Controller.FromKukaToDyn(temp,Controller.d2Qsave);
+	Controller.writer.write_data(d2qsave,temp);
+	
+	Controller.FromKukaToDyn(temp,Controller.Tor_meas);
+	Controller.writer.write_data(torque_meas,temp);	
+
+	Controller.FromKukaToDyn(temp,Controller.Tor_th);
+	Controller.writer.write_data(torque_th,temp);
+
 	delete Controller.FRI;
 	
 	fprintf(stdout, "Object deleted...\n");

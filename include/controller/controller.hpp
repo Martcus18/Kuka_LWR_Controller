@@ -66,6 +66,7 @@
 #include <utils/data_utils.hpp>
 
 typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , 1> Kuka_Vec;
+typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , NUMBER_OF_JOINTS> Kuka_Mat;
 
 class controller
 {
@@ -86,14 +87,15 @@ class controller
 
         //PD Controller VIRTUAL
 
-        virtual Kuka_Vec PD_controller(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd) = 0;
+        virtual Kuka_Vec PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd) = 0;
 
         //Communication VIRTUAL
         
         virtual void SetTorques(Kuka_Vec torques) = 0;
 
         //Communication VIRTUAL
-        virtual Kuka_Vec GetState() = 0;
+        
+        virtual Eigen::VectorXd GetState() = 0;
         
         double Ts;
 

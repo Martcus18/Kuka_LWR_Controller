@@ -11,12 +11,12 @@ Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Ve
     float** B = new float*[7];
     
     int i,j;
+    
+    Kuka_Mat B_eig;
 
-    Eigen::MatrixXd B_eig(NUMBER_OF_JOINTS,NUMBER_OF_JOINTS);
-    Eigen::VectorXd C_eig(NUMBER_OF_JOINTS);
-    Eigen::VectorXd g_eig(NUMBER_OF_JOINTS);
-    Eigen::VectorXd friction_eig(NUMBER_OF_JOINTS);
-    //Eigen::VectorXd TauFl(NUMBER_OF_JOINTS);
+    Kuka_Vec C_eig;
+    Kuka_Vec g_eig;
+    Kuka_Vec friction_eig;
     Kuka_Vec TauFl;
     
     for(i=0; i<NUMBER_OF_JOINTS; i++)
@@ -81,11 +81,11 @@ void controller_kuka::MeasureJointTorques()
     }
 };
 
-Kuka_Vec controller_kuka::PD_controller(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd)
+Kuka_Vec controller_kuka::PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd)
 {
-    Kuka_Vec e(NUMBER_OF_JOINTS);
-    Kuka_Vec de(NUMBER_OF_JOINTS);
-    Kuka_Vec Torque(NUMBER_OF_JOINTS);
+    Kuka_Vec e;
+    Kuka_Vec de;
+    Kuka_Vec Torque;
     
     e = Q - Qd;
     de = dQ - dQd;
@@ -120,7 +120,7 @@ Kuka_Vec controller_kuka::TorqueAdjuster(Kuka_Vec torques, Kuka_Vec dQ)
 
 Kuka_Vec controller_kuka::VelocityCalculator(Kuka_Vec Q, Kuka_Vec Qold)
 {
-    Kuka_Vec velocity = Kuka_Vec(NUMBER_OF_JOINTS);
+    Kuka_Vec velocity;;
     
     for(int i=0;i<NUMBER_OF_JOINTS;i++)
     {
@@ -131,7 +131,7 @@ Kuka_Vec controller_kuka::VelocityCalculator(Kuka_Vec Q, Kuka_Vec Qold)
 
 Kuka_Vec controller_kuka::AccCalculator(Kuka_Vec dQ, Kuka_Vec dQold)
 {
-    Kuka_Vec acc = Kuka_Vec(NUMBER_OF_JOINTS);
+    Kuka_Vec acc;;
     
     for(int i=0;i<NUMBER_OF_JOINTS;i++)
     {
@@ -143,9 +143,7 @@ Kuka_Vec controller_kuka::AccCalculator(Kuka_Vec dQ, Kuka_Vec dQold)
 
 void controller_kuka::SetTorques(Kuka_Vec torques)
 {
-    Kuka_Vec torque_biased(NUMBER_OF_JOINTS);
     this->EigToArray(torques, CommandedTorquesInNm);
-    
     this->FRI->SetCommandedJointTorques(CommandedTorquesInNm);
 };
 
@@ -155,9 +153,9 @@ void controller_kuka::SetJointsPositions(Kuka_Vec positions)
     this->FRI->SetCommandedJointPositions(CommandedJointPositions);
 };
 
-Kuka_Vec controller_kuka::GetState()
+Eigen::VectorXd controller_kuka::GetState()
 {
-    auto state = Kuka_Vec(NUMBER_OF_JOINTS*2);
+    auto state = Eigen::VectorXd(NUMBER_OF_JOINTS*2);
 
     old_robot_state = robot_state;
 
@@ -178,15 +176,18 @@ Kuka_Vec controller_kuka::GetState()
 
 Kuka_Vec controller_kuka::GetGravity()
 {
-    Kuka_Vec Gravity = Kuka_Vec(NUMBER_OF_JOINTS);
+    Kuka_Vec Gravity;
+
     this->FRI->GetCurrentGravityVector(GravityVector);
     this->ArrayToEig(GravityVector, Gravity);
+    
     return Gravity;
 };
 
-Kuka_Vec controller_kuka::GetMass()
-{
-    Eigen::MatrixXd Mass = Eigen::MatrixXd(NUMBER_OF_JOINTS, NUMBER_OF_JOINTS);
+Kuka_Mat controller_kuka::GetMass()
+{    
+    Kuka_Mat Mass;
+
     int i,j;
     float** B = new float*[7];
 
@@ -212,7 +213,6 @@ Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal)
     int filter_length = 200;
     int signal_length = signal.size();
     
-    //Eigen::VectorXd output = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
     Kuka_Vec output;
 
     if(signal_length > filter_length)
@@ -228,10 +228,9 @@ Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal)
 
 void controller_kuka::dataset_creation(Eigen::VectorXd State, Eigen::VectorXd OldState, Eigen::VectorXd reference, Eigen::VectorXd prediction){};
 
-void controller_kuka::state_filtering()
+void controller_kuka::StateFiltering()
 {
-    
-    Kuka_Vec temp(NUMBER_OF_JOINTS);
+    Kuka_Vec temp;
     int minimum_size = 3;
 
     if(Qsave.size() > minimum_size)
@@ -245,11 +244,38 @@ void controller_kuka::state_filtering()
         //temp = AccCalculator(dQsave_filtered[Qsave_filtered.size()-1], dQsave_filtered[Qsave_filtered.size()-2]);
         temp = Filter(d2Qsave);
         d2Qsave_filtered.push_back(temp);
-        
     }
     else
     {
         Qsave_filtered.push_back(Qsave.back());
         dQsave_filtered.push_back(dQsave.back());
     }
+};
+
+void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vector<Kuka_Vec>& OUT)
+{
+    int length = OUT.size();
+    
+    IN.clear();
+
+    for(int i=0;i<length;i++)
+    {
+        IN.push_back(OUT[i]);
+    }
+};
+
+Kuka_Vec controller_kuka::GearDiff(std::vector<Kuka_Vec> &signal)
+{
+    Kuka_Vec dsignal;
+    Kuka_Vec temp;
+    int length = signal.size();
+    
+    if(length > 4)
+    {
+        for(int i=0;i<NUMBER_OF_JOINTS;i++)
+        {
+            dsignal(i) = (1.0 / DELTAT) *  ((25.0/12.0) * signal[length](i) - 4.0 * signal[length-1](i) + 3*signal[length-2](i) - (4.0/3.0) * signal[length-3](i) + (1.0/4.0) * signal[length-4](i));
+        }
+    }
+    return dsignal;
 };
