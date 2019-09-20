@@ -135,7 +135,7 @@ class controller_kuka : public controller
         Kuka_Vec AccCalculator(Kuka_Vec dQ, Kuka_Vec dQold);
 
         //Signal filter
-        Kuka_Vec Filter(std::vector<Kuka_Vec> &signal);
+        Kuka_Vec Filter(std::vector<Kuka_Vec> &signal, int filter_length);
 
         //Gear Differentiation
         Kuka_Vec GearDiff(std::vector<Kuka_Vec> &signal);
@@ -150,8 +150,8 @@ class controller_kuka : public controller
 	CLWR_Dynamic_Model_Lib *dyn;
 
         Eigen::VectorXd robot_state = Eigen::VectorXd(NUMBER_OF_JOINTS * 2);
-        Eigen::VectorXd old_robot_state = Eigen::VectorXd(NUMBER_OF_JOINTS * 2);
-        
+
+        Eigen::VectorXd old_robot_state = Eigen::VectorXd(NUMBER_OF_JOINTS * 2);        
 
         Kuka_Vec Q;
 	Kuka_Vec Qold;
@@ -163,7 +163,6 @@ class controller_kuka : public controller
         Kuka_Vec d2Qold;
         
         Kuka_Vec torque_measured;
-
 
         float	CommandedTorquesInNm		[NUMBER_OF_JOINTS],
               	CommandedStiffness      	[NUMBER_OF_JOINTS]={0.0},

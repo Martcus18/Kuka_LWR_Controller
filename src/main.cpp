@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 	while ((float)CycleCounter * Controller.FRI->GetFRICycleTime() < RUN_TIME_IN_SECONDS)
 	{	
 		Time = Controller.FRI->GetFRICycleTime() * (float)CycleCounter;
-
+		std::cout << Time << " \n";
 		Toc = std::chrono::system_clock::now();
 		
 		Controller.FRI->WaitForKRCTick(TimeoutValueInMicroSeconds);
@@ -89,9 +89,9 @@ int main(int argc, char *argv[])
 
 		Controller.Qsave.push_back(Controller.Q);
 		
-		Controller.dQsave.push_back(Controller.GearDiff(Controller.Qsave));
+		//Controller.dQsave.push_back(Controller.GearDiff(Controller.Qsave));
 
-		//Controller.dQsave.push_back(Controller.dQ);
+		Controller.dQsave.push_back(Controller.dQ);
 
 		Controller.d2Qold = Controller.d2Q;
 
@@ -115,7 +115,6 @@ int main(int argc, char *argv[])
 		Torques_measured(5) = Controller.MeasuredTorquesInNm[5];
 		Torques_measured(6) = Controller.MeasuredTorquesInNm[6];
 
-		
 		Controller.Tor_meas.push_back(Torques_measured);
 		
 		Controller.Tor_th.push_back(Torques_ref);
@@ -138,20 +137,20 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout, "Deleting the object...\n");
 	
-	Controller.FromKukaToDyn(temp,Controller.Qsave);
+	Controller.FromKukaToDyn(temp,Controller.Qsave_filtered);
 	Controller.writer.write_data(qsave,temp);
 
-	Controller.FromKukaToDyn(temp,Controller.dQsave);
+	Controller.FromKukaToDyn(temp,Controller.dQsave_filtered);
 	Controller.writer.write_data(dqsave,temp);
 
-	Controller.FromKukaToDyn(temp,Controller.d2Qsave);
+	Controller.FromKukaToDyn(temp,Controller.d2Qsave_filtered);
 	Controller.writer.write_data(d2qsave,temp);
 	
-	Controller.FromKukaToDyn(temp,Controller.Tor_meas);
-	Controller.writer.write_data(torque_meas,temp);	
+	//Controller.FromKukaToDyn(temp,Controller.Tor_meas);
+	//Controller.writer.write_data(torque_meas,temp);	
 
-	Controller.FromKukaToDyn(temp,Controller.Tor_th);
-	Controller.writer.write_data(torque_th,temp);
+	//Controller.FromKukaToDyn(temp,Controller.Tor_th);
+	//Controller.writer.write_data(torque_th,temp);
 
 	delete Controller.FRI;
 	

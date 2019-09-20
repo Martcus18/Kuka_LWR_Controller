@@ -208,9 +208,8 @@ Kuka_Mat controller_kuka::GetMass()
     return Mass;
 }
 
-Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal)
+Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal, int filter_length)
 {
-    int filter_length = 200;
     int signal_length = signal.size();
     
     Kuka_Vec output;
@@ -222,6 +221,10 @@ Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal)
                 output = output + signal[signal_length-i];
             }
             output = output / filter_length;
+    }
+    else
+    {
+        output = signal.back();
     }
     return output;
 };
@@ -235,14 +238,14 @@ void controller_kuka::StateFiltering()
 
     if(Qsave.size() > minimum_size)
     {
-        temp = Filter(Qsave);
+        temp = Filter(Qsave, 100);
         Qsave_filtered.push_back(temp);
-    
-        temp = Filter(dQsave);
+
+        temp = Filter(dQsave,200);
         dQsave_filtered.push_back(temp);
 
         //temp = AccCalculator(dQsave_filtered[Qsave_filtered.size()-1], dQsave_filtered[Qsave_filtered.size()-2]);
-        temp = Filter(d2Qsave);
+        temp = Filter(d2Qsave,300);
         d2Qsave_filtered.push_back(temp);
     }
     else
