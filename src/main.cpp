@@ -12,11 +12,15 @@ int main(int argc, char *argv[])
 
 	unsigned int TimeoutValueInMicroSeconds = 0;
 	
+	int filter_length = 300;
+
 	Kuka_Vec Q0;
 
 	Kuka_Vec dQ0 = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
 
 	Kuka_Vec Q_ref;
+
+	Kuka_Vec dQ_ref;
 
 	Kuka_Vec d2Q_ref;
 
@@ -26,10 +30,11 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec Torques_measured;
 
+	Kuka_Vec temp2;
 
-	//std::string Mode("impedence");
+	std::string Mode("impedence");
 	
-	std::string Mode("position");
+	//std::string Mode("position");
 	
 	std::string qsave = "Q.txt";
   	std::string dqsave = "dQ.txt";
@@ -77,33 +82,50 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time));
+		Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::cos(2*Time));
+
+		dQ_ref = Kuka_Vec::Constant(-0.2*std::sin(2*Time));
+
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.3);
+
+		//dQ_ref = Kuka_Vec::Constant(0.0);
+
+		d2Q_ref = Kuka_Vec::Constant(0.0);
 		
-		d2Q_ref = Kuka_Vec::Constant(0.1*std::sin(Time));
+		//d2Q_ref = Kuka_Vec::Constant(0.1*std::sin(Time));
 
 		state = Controller.GetState();
 		
 		G = Controller.GetGravity();
 		
-		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
+		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 
-		Controller.Qsave.push_back(Controller.Q);
+		Torques_ref = Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , d2Q_ref);
+
+		temp2 = Controller.Filter(Controller.Qsave, filter_length);	
+		Controller.Qsave_filtered.push_back(temp2);
 		
-		//Controller.dQsave.push_back(Controller.GearDiff(Controller.Qsave));
+		if(CycleCounter > filter_length)
+		{	
+			Controller.dQsave_filtered.push_back(Controller.EulerDifferentiation(Controller.Qsave_filtered[CycleCounter], Controller.Qsave_filtered[CycleCounter-1]));
+			Controller.d2Qsave_filtered.push_back(Controller.EulerDifferentiation(Controller.dQsave_filtered[CycleCounter], Controller.dQsave_filtered[CycleCounter-1]));
+		}
+		else
+		{
+			Controller.dQsave_filtered.push_back(Controller.dQ);
+		}
+		Controller.Qsave.push_back(Controller.Q);
 
 		Controller.dQsave.push_back(Controller.dQ);
 
-		Controller.d2Qold = Controller.d2Q;
-
-		Controller.d2Q = Controller.AccCalculator(Controller.dQ, Controller.dQold);
-
 		Controller.d2Qsave.push_back(Controller.d2Q);
 
-		Controller.StateFiltering();
+		Controller.d2Qold = Controller.d2Q;
 		
-		//Controller.SetTorques(Torques_ref);
+
+		Controller.SetTorques(Torques_ref);
 		
-		Controller.SetJointsPositions(Q_ref);
+		//Controller.SetJointsPositions(Q_ref);
 		
 		Controller.MeasureJointTorques();	
 		
@@ -137,12 +159,14 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout, "Deleting the object...\n");
 	
+	
 	Controller.FromKukaToDyn(temp,Controller.Qsave_filtered);
 	Controller.writer.write_data(qsave,temp);
 
 	Controller.FromKukaToDyn(temp,Controller.dQsave_filtered);
 	Controller.writer.write_data(dqsave,temp);
-
+	
+	
 	Controller.FromKukaToDyn(temp,Controller.d2Qsave_filtered);
 	Controller.writer.write_data(d2qsave,temp);
 	

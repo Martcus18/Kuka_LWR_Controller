@@ -71,6 +71,9 @@ class controller_kuka : public controller
             Qsave.push_back(Q);
             dQsave.push_back(dQ);
             d2Qsave.push_back(d2Q);
+            Qsave_filtered.push_back(Q);
+            dQsave_filtered.push_back(dQ);
+            d2Qsave_filtered.push_back(d2Q);
         };
 
         //Set torques in impedence control mode
@@ -120,19 +123,12 @@ class controller_kuka : public controller
         //PD controller
 
         Kuka_Vec PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd);
-        
-        //Filtering of the state
-
-        void StateFiltering();
 
         //Adding of the torque bias for KUKA LWR-4
         Kuka_Vec TorqueAdjuster(Kuka_Vec torques, Kuka_Vec dQ);
         
         //Numerical differentiation for velocity calculation
-        Kuka_Vec VelocityCalculator(Kuka_Vec Q, Kuka_Vec Qold);
-        
-        //Numerical differentiation for acceleration calculation
-        Kuka_Vec AccCalculator(Kuka_Vec dQ, Kuka_Vec dQold);
+        Kuka_Vec EulerDifferentiation(Kuka_Vec X, Kuka_Vec Xold);
 
         //Signal filter
         Kuka_Vec Filter(std::vector<Kuka_Vec> &signal, int filter_length);

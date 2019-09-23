@@ -87,8 +87,8 @@ Kuka_Vec controller_kuka::PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Ku
     Kuka_Vec de;
     Kuka_Vec Torque;
     
-    e = Q - Qd;
-    de = dQ - dQd;
+    e = Qd - Q;
+    de = dQd - dQ;
     
     Torque = Kp * e + Kd * de;
 
@@ -118,27 +118,15 @@ Kuka_Vec controller_kuka::TorqueAdjuster(Kuka_Vec torques, Kuka_Vec dQ)
     return torques;
 };
 
-Kuka_Vec controller_kuka::VelocityCalculator(Kuka_Vec Q, Kuka_Vec Qold)
+Kuka_Vec controller_kuka::EulerDifferentiation(Kuka_Vec X, Kuka_Vec Xold)
 {
-    Kuka_Vec velocity;;
+    Kuka_Vec dX;
     
     for(int i=0;i<NUMBER_OF_JOINTS;i++)
     {
-        velocity(i) = (Q(i) - Qold(i)) / DELTAT;
+        dX(i) = (X(i) - Xold(i)) / DELTAT;
     }
-    return velocity;
-};
-
-Kuka_Vec controller_kuka::AccCalculator(Kuka_Vec dQ, Kuka_Vec dQold)
-{
-    Kuka_Vec acc;;
-    
-    for(int i=0;i<NUMBER_OF_JOINTS;i++)
-    {
-        acc(i) = (dQ(i) - dQold(i)) / DELTAT;
-    }
-    
-    return acc;    
+    return dX;
 };
 
 void controller_kuka::SetTorques(Kuka_Vec torques)
@@ -168,7 +156,7 @@ Eigen::VectorXd controller_kuka::GetState()
     }
     
     dQold = dQ;
-    dQ = VelocityCalculator(Q,Qold);
+    dQ = EulerDifferentiation(Q,Qold);
     state<<Q,dQ;
     robot_state = state;
     return state;
@@ -208,6 +196,7 @@ Kuka_Mat controller_kuka::GetMass()
     return Mass;
 }
 
+
 Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal, int filter_length)
 {
     int signal_length = signal.size();
@@ -230,30 +219,6 @@ Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal, int filter_lengt
 };
 
 void controller_kuka::dataset_creation(Eigen::VectorXd State, Eigen::VectorXd OldState, Eigen::VectorXd reference, Eigen::VectorXd prediction){};
-
-void controller_kuka::StateFiltering()
-{
-    Kuka_Vec temp;
-    int minimum_size = 3;
-
-    if(Qsave.size() > minimum_size)
-    {
-        temp = Filter(Qsave, 100);
-        Qsave_filtered.push_back(temp);
-
-        temp = Filter(dQsave,200);
-        dQsave_filtered.push_back(temp);
-
-        //temp = AccCalculator(dQsave_filtered[Qsave_filtered.size()-1], dQsave_filtered[Qsave_filtered.size()-2]);
-        temp = Filter(d2Qsave,300);
-        d2Qsave_filtered.push_back(temp);
-    }
-    else
-    {
-        Qsave_filtered.push_back(Qsave.back());
-        dQsave_filtered.push_back(dQsave.back());
-    }
-};
 
 void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vector<Kuka_Vec>& OUT)
 {

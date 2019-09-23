@@ -78,7 +78,7 @@ class controller
         {
                 data_manager writer();
                 Kp.diagonal() << 50,50,50,50,50,50,50;
-                Kd.diagonal() << 5,5,5,5,5,5,5;
+                Kd.diagonal() << 1,1,1,1,1,1,1;
         };
 
         //Feedback Linearization VIRTUAL
