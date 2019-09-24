@@ -98,15 +98,17 @@ int main(int argc, char *argv[])
 		
 		G = Controller.GetGravity();
 		
+		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
+
 		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 		
 		//Torque th for checking feedback linearization
-		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
-
-
-		Torques_ref = Torques_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , d2Q_ref);
+		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, Controller.d2Q);
+		
+		Torques_ref = Torques_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 
 		temp2 = Controller.Filter(Controller.Qsave, filter_length);	
+
 		Controller.Qsave_filtered.push_back(temp2);
 		
 		if(CycleCounter > filter_length)
