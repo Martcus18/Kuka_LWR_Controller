@@ -32,9 +32,9 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec temp2;
 
-	std::string Mode("impedence");
+	//std::string Mode("impedence");
 	
-	//std::string Mode("position");
+	std::string Mode("position");
 	
 	std::string qsave = "Q.txt";
   	std::string dqsave = "dQ.txt";
@@ -82,15 +82,15 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::cos(2*Time));
+		Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time));
 
-		dQ_ref = Kuka_Vec::Constant(-0.2*std::sin(2*Time));
+		dQ_ref = Kuka_Vec::Constant(0.2*std::cos(2*Time));
 
 		//Q_ref = Q0 + Kuka_Vec::Constant(0.3);
 
 		//dQ_ref = Kuka_Vec::Constant(0.0);
 
-		d2Q_ref = Kuka_Vec::Constant(0.0);
+		d2Q_ref = Kuka_Vec::Constant(-0.4*std::sin(2*Time));
 		
 		//d2Q_ref = Kuka_Vec::Constant(0.1*std::sin(Time));
 
@@ -99,8 +99,12 @@ int main(int argc, char *argv[])
 		G = Controller.GetGravity();
 		
 		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
+		
+		//Torque th for checking feedback linearization
+		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
 
-		Torques_ref = Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , d2Q_ref);
+
+		Torques_ref = Torques_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , d2Q_ref);
 
 		temp2 = Controller.Filter(Controller.Qsave, filter_length);	
 		Controller.Qsave_filtered.push_back(temp2);
@@ -123,9 +127,9 @@ int main(int argc, char *argv[])
 		Controller.d2Qold = Controller.d2Q;
 		
 
-		Controller.SetTorques(Torques_ref);
+		//Controller.SetTorques(Torques_ref);
 		
-		//Controller.SetJointsPositions(Q_ref);
+		Controller.SetJointsPositions(Q_ref);
 		
 		Controller.MeasureJointTorques();	
 		
@@ -170,11 +174,11 @@ int main(int argc, char *argv[])
 	Controller.FromKukaToDyn(temp,Controller.d2Qsave_filtered);
 	Controller.writer.write_data(d2qsave,temp);
 	
-	//Controller.FromKukaToDyn(temp,Controller.Tor_meas);
-	//Controller.writer.write_data(torque_meas,temp);	
+	Controller.FromKukaToDyn(temp,Controller.Tor_meas);
+	Controller.writer.write_data(torque_meas,temp);	
 
-	//Controller.FromKukaToDyn(temp,Controller.Tor_th);
-	//Controller.writer.write_data(torque_th,temp);
+	Controller.FromKukaToDyn(temp,Controller.Tor_th);
+	Controller.writer.write_data(torque_th,temp);
 
 	delete Controller.FRI;
 	

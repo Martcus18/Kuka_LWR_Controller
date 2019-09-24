@@ -43,6 +43,7 @@ Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Ve
     }
 
     TauFl = B_eig * reference + C_eig + g_eig + friction_eig;
+    //TauFl = B_eig * reference + C_eig + g_eig;
     return TauFl;
  };
 
