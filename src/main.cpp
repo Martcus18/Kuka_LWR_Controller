@@ -122,7 +122,8 @@ int main(int argc, char *argv[])
 		
 		if(Controller.dQsave_filtered.size() > 50)
 		{
-			temp2 = 1.573*Controller.dQsave_filtered[Controller.dQsave_filtered.size()] - 0.6188*Controller.dQsave_filtered[Controller.dQsave_filtered.size()-1] + 22.65*Controller.Qsave_filtered[Controller.Qsave_filtered.size()] - 22.65*Controller.Qsave_filtered[Controller.Qsave_filtered.size()-1];
+			//temp2 = 1.573*Controller.dQsave_filtered[Controller.dQsave_filtered.size()] - 0.6188*Controller.dQsave_filtered[Controller.dQsave_filtered.size()-1] + 22.65*Controller.Qsave_filtered[Controller.Qsave_filtered.size()] - 22.65*Controller.Qsave_filtered[Controller.Qsave_filtered.size()-1];
+			temp2 = 1.573*Controller.dQsave_filtered[Controller.dQsave_filtered.size()] - 0.6188*Controller.dQsave_filtered[Controller.dQsave_filtered.size()-1] + 22.65*Controller.Qsave[Controller.Qsave_filtered.size()] - 22.65*Controller.Qsave[Controller.Qsave_filtered.size()-1];
 			Controller.dQsave_filtered.push_back(temp2);
 		}
 		else
