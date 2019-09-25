@@ -107,24 +107,32 @@ int main(int argc, char *argv[])
 		
 		Torques_ref = Torques_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 
-		temp2 = Controller.Filter(Controller.Qsave, filter_length);	
-
-		Controller.Qsave_filtered.push_back(temp2);
 		
-		if(CycleCounter > filter_length)
-		{	
-			Controller.dQsave_filtered.push_back(Controller.EulerDifferentiation(Controller.Qsave_filtered[CycleCounter], Controller.Qsave_filtered[CycleCounter-1]));
-			Controller.d2Qsave_filtered.push_back(Controller.EulerDifferentiation(Controller.dQsave_filtered[CycleCounter], Controller.dQsave_filtered[CycleCounter-1]));
-		}
-		else
-		{
-			Controller.dQsave_filtered.push_back(Controller.dQ);
-		}
 		Controller.Qsave.push_back(Controller.Q);
 
 		Controller.dQsave.push_back(Controller.dQ);
 
 		Controller.d2Qsave.push_back(Controller.d2Q);
+
+		temp2 = Controller.Filter(Controller.Qsave,20);
+		Controller.Qsave_filtered.push_back(temp2);
+
+		//temp2 = Controller.Filter(Controller.dQsave,100);
+		//Controller.dQsave_filtered.push_back(temp2);
+		
+		if(Controller.dQsave_filtered.size() > 50)
+		{
+			temp2 = 1.573*Controller.dQsave_filtered[Controller.dQsave_filtered.size()] - 0.6188*Controller.dQsave_filtered[Controller.dQsave_filtered.size()-1] + 22.65*Controller.Qsave_filtered[Controller.Qsave_filtered.size()] - 22.65*Controller.Qsave_filtered[Controller.Qsave_filtered.size()-1];
+			Controller.dQsave_filtered.push_back(temp2);
+		}
+		else
+		{
+			Controller.dQsave_filtered.push_back(Controller.dQ);
+		}
+		
+		
+		//temp2 = Controller.Filter(Controller.d2Qsave,200);
+		//Controller.d2Qsave_filtered.push_back(temp2);
 
 		Controller.d2Qold = Controller.d2Q;
 		
@@ -165,17 +173,28 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout, "Deleting the object...\n");
 	
-	
-	Controller.FromKukaToDyn(temp,Controller.Qsave_filtered);
+	Controller.FromKukaToDyn(temp,Controller.Qsave);
 	Controller.writer.write_data(qsave,temp);
+	/*
+	Controller.FromKukaToDyn(temp,Controller.dQsave);
+	Controller.writer.write_data(dqsave,temp);
+	
+	
+	Controller.FromKukaToDyn(temp,Controller.d2Qsave);
+	Controller.writer.write_data(d2qsave,temp);
+	*/
+	
+	//Controller.FromKukaToDyn(temp,Controller.Qsave_filtered);
+	//Controller.writer.write_data(qsave,temp);
 
 	Controller.FromKukaToDyn(temp,Controller.dQsave_filtered);
 	Controller.writer.write_data(dqsave,temp);
 	
 	
-	Controller.FromKukaToDyn(temp,Controller.d2Qsave_filtered);
-	Controller.writer.write_data(d2qsave,temp);
+	//Controller.FromKukaToDyn(temp,Controller.d2Qsave_filtered);
+	//Controller.writer.write_data(d2qsave,temp);
 	
+
 	Controller.FromKukaToDyn(temp,Controller.Tor_meas);
 	Controller.writer.write_data(torque_meas,temp);	
 
