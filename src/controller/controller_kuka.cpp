@@ -202,11 +202,11 @@ Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal, int filter_lengt
 {
     int signal_length = signal.size();
     
-    Kuka_Vec output;
+    Kuka_Vec output = Kuka_Vec::Constant(0.0);
 
     if(signal_length > filter_length)
     {
-            for(int i=1;i<filter_length+1;i++)
+            for(int i=0;i<filter_length;i++)
             {
                 output = output + signal[signal_length-i];
             }

@@ -39,6 +39,9 @@ int main(int argc, char *argv[])
 	std::string qsave = "Q.txt";
   	std::string dqsave = "dQ.txt";
 	std::string d2qsave = "d2Q.txt";
+	std::string qsave_filtered = "Q_filtered.txt";
+  	std::string dqsave_filtered = "dQ_filtered.txt";
+	std::string d2qsave_filtered = "d2Q_filtered.txt";
 	std::string torque_meas = "tor_meas.txt";
 	std::string torque_th = "tor_th.txt";
 	
@@ -67,13 +70,13 @@ int main(int argc, char *argv[])
 	while ((float)CycleCounter * Controller.FRI->GetFRICycleTime() < RUN_TIME_IN_SECONDS)
 	{	
 		Time = Controller.FRI->GetFRICycleTime() * (float)CycleCounter;
-		std::cout << Time << " \n";
+		
 		Toc = std::chrono::system_clock::now();
 		
 		Controller.FRI->WaitForKRCTick(TimeoutValueInMicroSeconds);
 		
 		elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
-
+		//std::cout << elapsed_time << "---\n---";
 		Tic = std::chrono::system_clock::now();
 
 		if (!Controller.FRI->IsMachineOK())
@@ -82,15 +85,15 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time));
+		Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
 
-		dQ_ref = Kuka_Vec::Constant(0.2*std::cos(2*Time));
+		dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
 
 		//Q_ref = Q0 + Kuka_Vec::Constant(0.3);
 
 		//dQ_ref = Kuka_Vec::Constant(0.0);
 
-		d2Q_ref = Kuka_Vec::Constant(-0.4*std::sin(2*Time));
+		d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
 		
 		//d2Q_ref = Kuka_Vec::Constant(0.1*std::sin(Time));
 
@@ -103,40 +106,28 @@ int main(int argc, char *argv[])
 		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 		
 		//Torque th for checking feedback linearization
-		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, Controller.d2Q);
+		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, Controller.d2Q);
 		
-		Torques_ref = Torques_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+		//Torque for PD+Feedforward control
+		//Torques_ref = Torques_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 
-		
 		Controller.Qsave.push_back(Controller.Q);
 
 		Controller.dQsave.push_back(Controller.dQ);
 
 		Controller.d2Qsave.push_back(Controller.d2Q);
 
-		temp2 = Controller.Filter(Controller.Qsave,20);
-		Controller.Qsave_filtered.push_back(temp2);
+		Controller.Qsave_filtered.push_back(Controller.Filter(Controller.Qsave,30));
 
-		//temp2 = Controller.Filter(Controller.dQsave,100);
-		//Controller.dQsave_filtered.push_back(temp2);
+		Controller.dQsave_filtered.push_back(Controller.Filter(Controller.dQsave,30));
 		
-		if(Controller.dQsave_filtered.size() > 50)
-		{
-			//temp2 = 1.573*Controller.dQsave_filtered[Controller.dQsave_filtered.size()] - 0.6188*Controller.dQsave_filtered[Controller.dQsave_filtered.size()-1] + 22.65*Controller.Qsave_filtered[Controller.Qsave_filtered.size()] - 22.65*Controller.Qsave_filtered[Controller.Qsave_filtered.size()-1];
-			temp2 = 1.573*Controller.dQsave_filtered[Controller.dQsave_filtered.size()] - 0.6188*Controller.dQsave_filtered[Controller.dQsave_filtered.size()-1] + 22.65*Controller.Qsave[Controller.Qsave_filtered.size()] - 22.65*Controller.Qsave[Controller.Qsave_filtered.size()-1];
-			Controller.dQsave_filtered.push_back(temp2);
-		}
-		else
-		{
-			Controller.dQsave_filtered.push_back(Controller.dQ);
-		}
-		
-		
-		//temp2 = Controller.Filter(Controller.d2Qsave,200);
-		//Controller.d2Qsave_filtered.push_back(temp2);
+		Controller.d2Qsave_filtered.push_back(Controller.Filter(Controller.d2Qsave,30));
 
-		Controller.d2Qold = Controller.d2Q;
-		
+		Torques_ref = Controller.FeedbackLinearization(Controller.Qsave_filtered.back(), Controller.dQsave_filtered.back(), Controller.d2Qsave_filtered.back());
+
+		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, Controller.d2Q);
+
+		Controller.d2Qold = Controller.d2Q;	
 
 		//Controller.SetTorques(Torques_ref);
 		
@@ -174,28 +165,26 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout, "Deleting the object...\n");
 	
+	
 	Controller.FromKukaToDyn(temp,Controller.Qsave);
 	Controller.writer.write_data(qsave,temp);
-	/*
+	
 	Controller.FromKukaToDyn(temp,Controller.dQsave);
 	Controller.writer.write_data(dqsave,temp);
-	
-	
+
 	Controller.FromKukaToDyn(temp,Controller.d2Qsave);
 	Controller.writer.write_data(d2qsave,temp);
-	*/
 	
-	//Controller.FromKukaToDyn(temp,Controller.Qsave_filtered);
-	//Controller.writer.write_data(qsave,temp);
+	
+	Controller.FromKukaToDyn(temp,Controller.Qsave_filtered);
+	Controller.writer.write_data(qsave_filtered,temp);
 
 	Controller.FromKukaToDyn(temp,Controller.dQsave_filtered);
-	Controller.writer.write_data(dqsave,temp);
+	Controller.writer.write_data(dqsave_filtered,temp);
 	
+	Controller.FromKukaToDyn(temp,Controller.d2Qsave_filtered);
+	Controller.writer.write_data(d2qsave_filtered,temp);
 	
-	//Controller.FromKukaToDyn(temp,Controller.d2Qsave_filtered);
-	//Controller.writer.write_data(d2qsave,temp);
-	
-
 	Controller.FromKukaToDyn(temp,Controller.Tor_meas);
 	Controller.writer.write_data(torque_meas,temp);	
 
