@@ -32,6 +32,8 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec temp2;
 
+	Eigen::Vector3d end_effector;
+
 	//std::string Mode("impedence");
 	
 	std::string Mode("position");
@@ -42,6 +44,7 @@ int main(int argc, char *argv[])
 	std::string qsave_filtered = "Q_filtered.txt";
   	std::string dqsave_filtered = "dQ_filtered.txt";
 	std::string d2qsave_filtered = "d2Q_filtered.txt";
+	std::string end_effector_pos = "end_eff.txt";
 	std::string torque_meas = "tor_meas.txt";
 	std::string torque_th = "tor_th.txt";
 	
@@ -133,6 +136,10 @@ int main(int argc, char *argv[])
 		
 		Controller.SetJointsPositions(Q_ref);
 		
+		end_effector = D_kin(Controller.Q);
+
+		Controller.end_eff_pos.push_back(end_effector);
+
 		Controller.MeasureJointTorques();	
 		
 		Torques_measured(0) = Controller.MeasuredTorquesInNm[0];
@@ -175,7 +182,6 @@ int main(int argc, char *argv[])
 	Controller.FromKukaToDyn(temp,Controller.d2Qsave);
 	Controller.writer.write_data(d2qsave,temp);
 	
-	
 	Controller.FromKukaToDyn(temp,Controller.Qsave_filtered);
 	Controller.writer.write_data(qsave_filtered,temp);
 
@@ -190,6 +196,8 @@ int main(int argc, char *argv[])
 
 	Controller.FromKukaToDyn(temp,Controller.Tor_th);
 	Controller.writer.write_data(torque_th,temp);
+
+	Controller.writer.write_data(end_effector_pos,Controller.end_eff_pos);
 
 	delete Controller.FRI;
 	

@@ -1,7 +1,7 @@
 #include "controller/kuka_utilities.h"
 
 //Direct kinematic
-Eigen::VectorXd D_kin(Kuka_Vec q)
+Eigen::Vector3d D_kin(Kuka_Vec q)
 {
     double C1,C2,C3,C4,C5,C6,C7;
     double S1,S2,S3,S4,S5,S6,S7;
@@ -28,7 +28,7 @@ Eigen::VectorXd D_kin(Kuka_Vec q)
     l2=0.4;
     l3=0.39;
     l4=0.078; // EE in the tip of KUKA without auxiliary addition
-
+    
     M1<<C1,0,S1,0,S1,0,-C1,0,0,1,0,l1,0,0,0,1;
     M2<<C2,0,-S2,0,S2,0,C2,0,0,-1,0,0,0,0,0,1;
     M3<<C3,0,-S3,0,S3,0,C3,0,0,-1,0,l2,0,0,0,1;
@@ -40,7 +40,6 @@ Eigen::VectorXd D_kin(Kuka_Vec q)
     MEE=(((((M1*M2)*M3)*M4)*M5)*M6)*M7;
 
     P=MEE.block<3,1>(0,3);
-
     return P;
 }
 
@@ -141,14 +140,16 @@ Eigen::MatrixXd diff_Jacobian2(Kuka_Vec q, Kuka_Vec qdot)
 
 // the tolerance is e ( change if needed)
 //damped pesudo inverse
-/*
-template <typename Derived1, typename Derived2>
-void dampedPseudoInverse(const Eigen::MatrixBase<Derived1>& A,double dampingFactor,double e,Eigen::MatrixBase<Derived2>& Apinv,unsigned int computationOptions)
+
+//template <typename Derived1, typename Derived2>
+void dampedPseudoInverse(const Eigen::MatrixXd& A,double dampingFactor,double e,Eigen::MatrixXd& Apinv,unsigned int computationOptions)
 {
     int m = A.rows(), n = A.cols(), k = (m < n) ? m : n;
-    JacobiSVD<typename MatrixBase<Derived1>::PlainObject> svd = A.jacobiSvd(computationOptions);
-    const typename JacobiSVD<typename Derived1::PlainObject>::SingularValuesType& singularValues = svd.singularValues();
-    MatrixXd sigmaDamped = MatrixXd::Zero(k, k);
+    //JacobiSVD<typename MatrixBase<Derived1>::PlainObject> svd = A.jacobiSvd(computationOptions);
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd = A.jacobiSvd(computationOptions);
+    //const typename JacobiSVD<typename Derived1::PlainObject>::SingularValuesType& singularValues = svd.singularValues();
+    const typename Eigen::JacobiSVD<Eigen::MatrixXd>::SingularValuesType& singularValues = svd.singularValues();
+    Eigen::MatrixXd sigmaDamped = Eigen::MatrixXd::Zero(k, k);
     double damp = dampingFactor * dampingFactor;
 
     for (int idx = 0; idx < k; idx++)
@@ -161,16 +162,16 @@ void dampedPseudoInverse(const Eigen::MatrixBase<Derived1>& A,double dampingFact
     Apinv = svd.matrixV() * sigmaDamped * svd.matrixU().transpose(); // damped pseudoinverse
 }
 
-/*
+
 //dampingFactor is 0.1( change if needed)
 //return pesudo inverse computed in dampedPseudoInverse function
-MatrixXd compute_Damped_pinv(MatrixXd j, double f, double e)
+Eigen::MatrixXd compute_Damped_pinv(Eigen::MatrixXd j, double f, double e)
 {
 
     int row,col;
     row=j.rows();
     col=j.cols();
-    MatrixXd pJacobian(col,row);
+    Eigen::MatrixXd pJacobian(col,row);
 
     dampedPseudoInverse(j,f,e,pJacobian,Eigen::ComputeThinU|Eigen::ComputeThinV );
 

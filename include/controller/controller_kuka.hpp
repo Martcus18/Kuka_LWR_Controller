@@ -1,15 +1,15 @@
 #ifndef CONTROLLER_KUKA_HPP_
 #define CONTROLLER_KUKA_HPP_
-#include<controller/controller.hpp>
+#include <controller/controller.hpp>
 #include <FastResearchInterface.h>
 #include <FRICommunication.h>
 #include <OSAbstraction.h>
 #include <errno.h>
 #include <stdarg.h>
-#include<TypeIRML.h>
-#include<LWR_Dynamic_Model_Lib.h>
 #include <TypeIRML.h>
-
+#include <LWR_Dynamic_Model_Lib.h>
+#include <TypeIRML.h>
+#include <controller/kuka_utilities.h>
 
 class controller_kuka : public controller
 {

@@ -66,6 +66,7 @@
 #include <chrono>
 #include <utils/data_utils.hpp>
 
+
 #include <limbo/kernel/exp.hpp>
 #include <limbo/kernel/squared_exp_ard.hpp>
 #include <limbo/mean/data.hpp>
@@ -140,6 +141,8 @@ class controller
         std::vector<Kuka_Vec> Qsave_filtered;
         std::vector<Kuka_Vec> dQsave_filtered;
         std::vector<Kuka_Vec> d2Qsave_filtered;
+
+        std::vector<Eigen::VectorXd> end_eff_pos;
 
         std::vector<Kuka_Vec> Tor_th;
         std::vector<Kuka_Vec> Tor_meas;
