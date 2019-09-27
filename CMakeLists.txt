@@ -53,11 +53,15 @@ add_library(controller_kuka STATIC "${CMAKE_CURRENT_SOURCE_DIR}/src/controller/c
 
 add_library(utils SHARED "${CMAKE_CURRENT_SOURCE_DIR}/src/utils/data_utils.cpp")
 
+add_library(kuka_utilities SHARED "${CMAKE_CURRENT_SOURCE_DIR}/src/controller/kuka_utilities.cpp")
+
 target_link_libraries(utils ${TBB_LIBRARIES} ${Boost_LIBRARIES})
+
 target_link_libraries(controller ${TBB_LIBRARIES} ${Boost_LIBRARIES} libFastResearchInterfaceLibrary libTypeIRML)
 
-#target_link_libraries(controller_kuka PUBLIC controller utils "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so")
-target_link_libraries(controller_kuka PUBLIC controller utils "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so")
+#target_link_libraries(controller_kuka PUBLIC controller utils "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so")
+target_link_libraries(controller_kuka PUBLIC controller utils "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so" "${CMAKE_CURRENT_SOURCE_DIR}/build/libkuka_utilities.so")
+
 add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 
 target_link_libraries(main controller_kuka)

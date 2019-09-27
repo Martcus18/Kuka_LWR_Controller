@@ -104,14 +104,6 @@ class controller_kuka : public controller
 
         Kuka_Mat GetMass();
 
-        //Conversion from Eigen vector to array of float
-
-        void EigToArray(Kuka_Vec IN,float *OUT);
-
-        //Conversion from array of float to Eigen Vector
-
-        void ArrayToEig(float *IN, Kuka_Vec& OUT);
-
        //Dataset creation
 
         void dataset_creation(Eigen::VectorXd State, Eigen::VectorXd OldState, Eigen::VectorXd reference, Eigen::VectorXd prediction);
@@ -168,5 +160,12 @@ class controller_kuka : public controller
 	        JointValuesInRad		[NUMBER_OF_JOINTS],
                 GravityVector                   [NUMBER_OF_JOINTS];
         float   MassMatrix                    [NUMBER_OF_JOINTS][NUMBER_OF_JOINTS];
+        
+protected:
+        //Conversion from Eigen vector to array of float
+        void EigToArray(Kuka_Vec IN,float *OUT);
+
+        //Conversion from array of float to Eigen Vector
+        void ArrayToEig(float *IN, Kuka_Vec& OUT);
 };
 #endif /* CONTROLLER_KUKA_HPP_ */
