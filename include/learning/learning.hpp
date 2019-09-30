@@ -35,12 +35,16 @@ class learning
         Eigen::MatrixXd temp3;
         Eigen::MatrixXd temp4;
     
+        A << 1.0, DELTAT, 0.0, 1.0 ;
+        B << std::pow(DELTAT,2) / 2.0 , DELTAT;
+
         temp = A * B;
         temp2 = B * B.transpose();
         temp3 = temp * temp.transpose();
         W = temp2 + temp3;
         temp4 = -(B.transpose() + temp.transpose());
         Y = temp4 * W.inverse();       
+        
     }
 
     ~learning();

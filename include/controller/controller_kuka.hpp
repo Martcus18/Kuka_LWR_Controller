@@ -67,6 +67,9 @@ class controller_kuka : public controller
             Qsave_filtered.push_back(Q);
             dQsave_filtered.push_back(dQ);
             d2Qsave_filtered.push_back(d2Q);
+
+            Regressor = new learning();
+
         };
 
         //Set torques in impedence control mode
@@ -130,6 +133,7 @@ class controller_kuka : public controller
         
 	CLWR_Dynamic_Model_Lib *dyn;
 
+        learning *Regressor;
 
         Kuka_State robot_state;
         Kuka_State old_robot_state;
@@ -154,7 +158,7 @@ class controller_kuka : public controller
                 GravityVector                   [NUMBER_OF_JOINTS];
         float   MassMatrix                    [NUMBER_OF_JOINTS][NUMBER_OF_JOINTS];
         
-        learning Regressor();
+        
 
 protected:
         //Conversion from Eigen vector to array of float

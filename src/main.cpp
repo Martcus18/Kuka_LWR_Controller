@@ -33,6 +33,8 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec temp_Vec;
 
+	auto zero_vec = Kuka_Vec::Constant(0.0);
+
 	Kuka_Mat Mass;
 
 	Eigen::Vector3d end_effector;
@@ -129,13 +131,12 @@ int main(int argc, char *argv[])
 		G = Controller.GetGravity();
 
 		Mass = Controller.GetMass();
+		
+		//std::cout << "state = " << Controller.robot_state << "---------\n" << "Old state = "<< Controller.old_robot_state << "---------- \n";
+		
+		//std::cout << "acc = " << Controller.d2Qold << "\n";
 
-		std::cout << Mass << "---\n  ";
-		//temp_Vec = Controller.Regressor.DatasetCreation(Controller.robot_state, Controller.old_robot_state, G, G, Mass);
-		//double ciao = 0.1;
-		//double ciao2 = 0.2;
-
-		//auto prova = Controller.Regressor.UnwrapAngle(ciao, ciao2);
+		temp_Vec = Controller.Regressor->DatasetCreation(Controller.robot_state, Controller.old_robot_state, Controller.d2Qold, zero_vec, Mass);
 
 		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
 

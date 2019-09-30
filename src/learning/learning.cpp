@@ -23,10 +23,14 @@ double learning::GramianCalc(double qnew, double dqnew,double qold, double dqold
     Eigen::Matrix<double, 2, 1> x;
     Eigen::Matrix<double, 2, 1> xold;
     double u;
+    
     qnew = UnwrapAngle(qold,qnew);
+    
     x << qnew, dqnew;
     xold << qold, dqold;
     u = Y * (xold - x);
+    std::cout << u << "---\n";
+    
     return u;
 };
 
@@ -41,5 +45,6 @@ Kuka_Vec learning::DatasetCreation(Kuka_State State, Kuka_State OldState, Kuka_V
     
     Yk = MassMatrix * (reference - acc);
     Yk = Yk + prediction;
+    
     return Yk;
 };
