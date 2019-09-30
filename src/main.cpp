@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
 	std::string end_effector_pos = "end_eff.txt";
 	std::string torque_meas = "tor_meas.txt";
 	std::string torque_th = "tor_th.txt";
+	std::string foo = "foo.txt";
 	
 	Kuka_State state;
 
@@ -76,6 +77,8 @@ int main(int argc, char *argv[])
 	
 	Tic = std::chrono::system_clock::now();
 
+	d2Q_ref = Kuka_Vec::Constant(0.0);
+	
 	while ((float)CycleCounter * Controller.FRI->GetFRICycleTime() < RUN_TIME_IN_SECONDS)
 	{	
 		Time = Controller.FRI->GetFRICycleTime() * (float)CycleCounter;
@@ -85,7 +88,7 @@ int main(int argc, char *argv[])
 		Controller.FRI->WaitForKRCTick(TimeoutValueInMicroSeconds);
 		
 		elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
-		//std::cout << elapsed_time << "---\n---";
+		
 		Tic = std::chrono::system_clock::now();
 
 		if (!Controller.FRI->IsMachineOK())
@@ -93,7 +96,15 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "ERROR, the machine is not ready anymore.\n");
 			break;
 		}
-
+		
+		Mass = Controller.GetMass();
+		
+		state = Controller.GetState();
+		
+		temp_Vec = Controller.Regressor->DatasetCreation(Controller.robot_state, Controller.old_robot_state, d2Q_ref, zero_vec, Mass);
+		
+		Controller.foo.push_back(temp_Vec);
+		
 		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
 
 		Q_ref = Q0;
@@ -126,8 +137,6 @@ int main(int argc, char *argv[])
 	
 		//d2Q_ref = Kuka_Vec::Constant(0.1*std::sin(Time));
 
-		state = Controller.GetState();
-		
 		G = Controller.GetGravity();
 
 		Mass = Controller.GetMass();
@@ -136,14 +145,13 @@ int main(int argc, char *argv[])
 		
 		//std::cout << "acc = " << Controller.d2Qold << "\n";
 
-		temp_Vec = Controller.Regressor->DatasetCreation(Controller.robot_state, Controller.old_robot_state, Controller.d2Qold, zero_vec, Mass);
-
 		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
 
 		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 		
 		//Torque th for checking feedback linearization
-		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, Controller.d2Q);
+		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, Controller.d2Q);
+		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
 		
 		//Torque for PD+Feedforward control
 		//Torques_ref = Torques_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
@@ -232,6 +240,9 @@ int main(int argc, char *argv[])
 	Controller.writer.write_data(torque_th,temp);
 
 	Controller.writer.write_data(end_effector_pos,Controller.end_eff_pos);
+
+	Controller.FromKukaToDyn(temp,Controller.foo);
+	Controller.writer.write_data(foo,temp);
 
 	delete Controller.FRI;
 	

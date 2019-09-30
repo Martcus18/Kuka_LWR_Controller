@@ -28,9 +28,7 @@ double learning::GramianCalc(double qnew, double dqnew,double qold, double dqold
     
     x << qnew, dqnew;
     xold << qold, dqold;
-    u = Y * (xold - x);
-    std::cout << u << "---\n";
-    
+    u = Y * (xold - x);    
     return u;
 };
 
@@ -45,6 +43,6 @@ Kuka_Vec learning::DatasetCreation(Kuka_State State, Kuka_State OldState, Kuka_V
     
     Yk = MassMatrix * (reference - acc);
     Yk = Yk + prediction;
-    
+
     return Yk;
 };

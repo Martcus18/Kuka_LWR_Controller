@@ -53,8 +53,10 @@ class controller
         std::vector<Kuka_Vec> Qsave_filtered;
         std::vector<Kuka_Vec> dQsave_filtered;
         std::vector<Kuka_Vec> d2Qsave_filtered;
+        std::vector<Kuka_Vec> foo;
 
         std::vector<Eigen::VectorXd> end_eff_pos;
+        
 
         std::vector<Kuka_Vec> Tor_th;
         std::vector<Kuka_Vec> Tor_meas;
