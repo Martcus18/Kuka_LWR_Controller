@@ -45,6 +45,8 @@ class learning
 
     ~learning();
 
+    Kuka_Vec DatasetCreation(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
+
     //GP parameters
     struct Params 
     {
@@ -69,8 +71,8 @@ class learning
     Eigen::Matrix2d W;
     Eigen::Matrix<double, 1, 2> Y;
 
-    double unwrap_angle(double angle_old, double angle_new); 
-    double gramian_calc(double qnew, double dqnew, double qold, double dqold);
+    double UnwrapAngle(double angle_old, double angle_new); 
+    double GramianCalc(double qnew, double dqnew, double qold, double dqold);
 };
 
 

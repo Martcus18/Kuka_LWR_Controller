@@ -31,7 +31,9 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec Torques_measured;
 
-	Kuka_Vec temp2;
+	Kuka_Vec temp_Vec;
+
+	Kuka_Mat Mass;
 
 	Eigen::Vector3d end_effector;
 
@@ -125,16 +127,24 @@ int main(int argc, char *argv[])
 		state = Controller.GetState();
 		
 		G = Controller.GetGravity();
-		
+
+		Mass = Controller.GetMass();
+
+		//temp_Vec = Controller.Regressor.DatasetCreation(Controller.robot_state, Controller.old_robot_state, G, G, Mass);
+		double ciao = 0.1;
+		double ciao2 = 0.2;
+
+		auto prova = Controller.Regressor.UnwrapAngle(ciao, ciao2);
+
 		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
 
-		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
+		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 		
 		//Torque th for checking feedback linearization
-		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, Controller.d2Q);
+		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, Controller.d2Q);
 		
 		//Torque for PD+Feedforward control
-		Torques_ref = Torques_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+		//Torques_ref = Torques_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 
 		Controller.Qsave.push_back(Controller.Q);
 
@@ -154,9 +164,9 @@ int main(int argc, char *argv[])
 
 		Controller.d2Qold = Controller.d2Q;	
 
-		Controller.SetTorques(Torques_ref);
+		//Controller.SetTorques(Torques_ref);
 		
-		//Controller.SetJointsPositions(Q_ref);
+		Controller.SetJointsPositions(Q_ref);
 		
 		end_effector = D_kin(Controller.Q);
 
