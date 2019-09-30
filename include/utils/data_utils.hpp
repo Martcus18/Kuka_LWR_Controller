@@ -1,8 +1,4 @@
-#include<fstream>
-#include <iostream>
-#include <string.h>
-#include <boost/algorithm/string.hpp>
-#include <Eigen/Dense>
+#include<utils/lib.hpp>
 
 class data_manager
 {

@@ -1,15 +1,8 @@
 #ifndef CONTROLLER_KUKA_HPP_
 #define CONTROLLER_KUKA_HPP_
+
 #include <controller/controller.hpp>
-#include <FastResearchInterface.h>
-#include <FRICommunication.h>
-#include <OSAbstraction.h>
-#include <errno.h>
-#include <stdarg.h>
-#include <TypeIRML.h>
-#include <LWR_Dynamic_Model_Lib.h>
-#include <TypeIRML.h>
-#include <controller/kuka_utilities.h>
+#include<learning/learning.hpp>
 
 class controller_kuka : public controller
 {
@@ -18,7 +11,7 @@ class controller_kuka : public controller
         
         controller_kuka(){};
         ~controller_kuka(){};
-        controller_kuka(bool Flag, std::string MODE):controller(Flag)
+        controller_kuka(std::string MODE)
         {
 	    int	            ResultValue=0;
             
@@ -58,7 +51,7 @@ class controller_kuka : public controller
 	    else
 	    {
 	               fprintf(stderr, "ERROR, could not start robot: %s\n", strerror(ResultValue));
-	    }
+	    }//learning();
 
             fprintf(stdout, "Current system state:\n%s\n", FRI->GetCompleteRobotStateAndInformation());
 
@@ -94,7 +87,7 @@ class controller_kuka : public controller
 
         //Calculate complete state [Q,dQ]
         
-        Eigen::VectorXd GetState();
+        Kuka_State GetState();
 
         //Get gravity vector
 
@@ -137,10 +130,10 @@ class controller_kuka : public controller
         
 	CLWR_Dynamic_Model_Lib *dyn;
 
-        Eigen::VectorXd robot_state = Eigen::VectorXd(NUMBER_OF_JOINTS * 2);
 
-        Eigen::VectorXd old_robot_state = Eigen::VectorXd(NUMBER_OF_JOINTS * 2);        
-
+        Kuka_State robot_state;
+        Kuka_State old_robot_state;
+        
         Kuka_Vec Q;
 	Kuka_Vec Qold;
 
@@ -161,6 +154,8 @@ class controller_kuka : public controller
                 GravityVector                   [NUMBER_OF_JOINTS];
         float   MassMatrix                    [NUMBER_OF_JOINTS][NUMBER_OF_JOINTS];
         
+        learning Regressor();
+
 protected:
         //Conversion from Eigen vector to array of float
         void EigToArray(Kuka_Vec IN,float *OUT);

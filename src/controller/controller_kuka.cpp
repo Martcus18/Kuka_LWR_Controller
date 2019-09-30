@@ -142,9 +142,9 @@ void controller_kuka::SetJointsPositions(Kuka_Vec positions)
     this->FRI->SetCommandedJointPositions(CommandedJointPositions);
 };
 
-Eigen::VectorXd controller_kuka::GetState()
+Kuka_State controller_kuka::GetState()
 {
-    auto state = Eigen::VectorXd(NUMBER_OF_JOINTS*2);
+    Kuka_State state;
 
     old_robot_state = robot_state;
 

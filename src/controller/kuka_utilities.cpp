@@ -1,5 +1,6 @@
 #include "controller/kuka_utilities.h"
 
+
 //Direct kinematic
 Eigen::Vector3d D_kin(Kuka_Vec q)
 {
@@ -140,7 +141,7 @@ Eigen::MatrixXd diff_Jacobian2(Kuka_Vec q, Kuka_Vec qdot)
 
 // the tolerance is e ( change if needed)
 //damped pesudo inverse
-
+/*
 //template <typename Derived1, typename Derived2>
 void dampedPseudoInverse(const Eigen::MatrixXd& A,double dampingFactor,double e,Eigen::MatrixXd& Apinv,unsigned int computationOptions)
 {
