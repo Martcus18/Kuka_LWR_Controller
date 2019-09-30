@@ -37,9 +37,9 @@ int main(int argc, char *argv[])
 
 	Eigen::Vector3d end_effector;
 
-	std::string Mode("impedence");
+	//std::string Mode("impedence");
 	
-	//std::string Mode("position");
+	std::string Mode("position");
 	
 	std::string qsave = "Q.txt";
   	std::string dqsave = "dQ.txt";
@@ -130,11 +130,12 @@ int main(int argc, char *argv[])
 
 		Mass = Controller.GetMass();
 
+		std::cout << Mass << "---\n  ";
 		//temp_Vec = Controller.Regressor.DatasetCreation(Controller.robot_state, Controller.old_robot_state, G, G, Mass);
-		double ciao = 0.1;
-		double ciao2 = 0.2;
+		//double ciao = 0.1;
+		//double ciao2 = 0.2;
 
-		auto prova = Controller.Regressor.UnwrapAngle(ciao, ciao2);
+		//auto prova = Controller.Regressor.UnwrapAngle(ciao, ciao2);
 
 		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
 
