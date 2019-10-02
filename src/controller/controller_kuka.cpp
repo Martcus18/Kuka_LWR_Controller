@@ -86,19 +86,19 @@ Kuka_Vec controller_kuka::PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Ku
 {
     Kuka_Vec e;
     Kuka_Vec de;
-    Kuka_Vec Torque;
+    Kuka_Vec control;
     
     e = Qd - Q;
     de = dQd - dQ;
     
-    Torque = Kp * e + Kd * de;
+    control = Kp * e + Kd * de;
 
-    return Torque;
+    return control;
 };
 
 Kuka_Vec controller_kuka::TorqueAdjuster(Kuka_Vec torques, Kuka_Vec dQ)
 {
-    double bias = 0.5;
+    double bias = 0.1;
     int i;
 
     for(i=0;i<dQ.rows();i++)

@@ -54,6 +54,7 @@ class controller
         std::vector<Kuka_Vec> dQsave_filtered;
         std::vector<Kuka_Vec> d2Qsave_filtered;
         std::vector<Kuka_Vec> foo;
+        std::vector<Kuka_Vec> foo2;
 
         std::vector<Eigen::VectorXd> end_eff_pos;
         

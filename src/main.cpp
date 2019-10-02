@@ -33,15 +33,15 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec temp_Vec;
 
-	auto zero_vec = Kuka_Vec::Constant(0.0);
+	Kuka_Vec zero_vec = Kuka_Vec::Constant(0.0);
 
 	Kuka_Mat Mass;
 
 	Eigen::Vector3d end_effector;
 
-	//std::string Mode("impedence");
+	std::string Mode("impedence");
 	
-	std::string Mode("position");
+	//std::string Mode("position");
 	
 	std::string qsave = "Q.txt";
   	std::string dqsave = "dQ.txt";
@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
 	std::string torque_meas = "tor_meas.txt";
 	std::string torque_th = "tor_th.txt";
 	std::string foo = "foo.txt";
+	std::string foo2 = "foo2.txt";
 	
 	Kuka_State state;
 
@@ -78,7 +79,8 @@ int main(int argc, char *argv[])
 	Tic = std::chrono::system_clock::now();
 
 	d2Q_ref = Kuka_Vec::Constant(0.0);
-	
+	Mass = Controller.GetMass();
+
 	while ((float)CycleCounter * Controller.FRI->GetFRICycleTime() < RUN_TIME_IN_SECONDS)
 	{	
 		Time = Controller.FRI->GetFRICycleTime() * (float)CycleCounter;
@@ -88,7 +90,7 @@ int main(int argc, char *argv[])
 		Controller.FRI->WaitForKRCTick(TimeoutValueInMicroSeconds);
 		
 		elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
-		
+
 		Tic = std::chrono::system_clock::now();
 
 		if (!Controller.FRI->IsMachineOK())
@@ -96,65 +98,62 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "ERROR, the machine is not ready anymore.\n");
 			break;
 		}
-		
-		Mass = Controller.GetMass();
+
+		//Mass = Controller.GetMass();
 		
 		state = Controller.GetState();
-		
-		temp_Vec = Controller.Regressor->DatasetCreation(Controller.robot_state, Controller.old_robot_state, d2Q_ref, zero_vec, Mass);
+
+		temp_Vec = Controller.Regressor->DatasetCreation(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
 		
 		Controller.foo.push_back(temp_Vec);
 		
 		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
 
+		Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
+		dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
+		d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
+		/*
 		Q_ref = Q0;
 
 		Q_ref(3) = Q_ref(3) + 0.2 * std::sin(2*Time);
 		Q_ref(4) = Q_ref(4) + 0.2 * std::sin(2*Time);
 		Q_ref(5) = Q_ref(5) + 0.2 * std::sin(2*Time);
-		Q_ref(6) = Q_ref(6) + 0.2 * std::sin(2*Time);
-		
+		Q_ref(6) = Q_ref(6) + 0.2 * std::sin(2*Time);		
 
 		dQ_ref = Kuka_Vec::Constant(0.0);
-		//dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
 
 		dQ_ref(3) = 0.2 * std::cos(2*Time);
 		dQ_ref(4) = 0.2 * std::cos(2*Time);
 		dQ_ref(5) = 0.2 * std::cos(2*Time);
 		dQ_ref(6) = 0.2 * std::cos(2*Time);
 
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.3);
-
-		//dQ_ref = Kuka_Vec::Constant(0.0);
-
 		d2Q_ref = Kuka_Vec::Constant(0.0);
-		//d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
 	
 		d2Q_ref(3) = -0.2 * std::sin(2*Time);
 		d2Q_ref(4) = -0.2 * std::sin(2*Time);
 		d2Q_ref(5) = -0.2 * std::sin(2*Time);
 		d2Q_ref(6) = -0.2 * std::sin(2*Time);
-	
-		//d2Q_ref = Kuka_Vec::Constant(0.1*std::sin(Time));
+		*/
+
+		Controller.foo2.push_back(d2Q_ref);
 
 		G = Controller.GetGravity();
 
-		Mass = Controller.GetMass();
-		
-		//std::cout << "state = " << Controller.robot_state << "---------\n" << "Old state = "<< Controller.old_robot_state << "---------- \n";
-		
-		//std::cout << "acc = " << Controller.d2Qold << "\n";
-
 		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
 
-		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
+		d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+
+		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 		
 		//Torque th for checking feedback linearization
 		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, Controller.d2Q);
-		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
+
+		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
 		
 		//Torque for PD+Feedforward control
 		//Torques_ref = Torques_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+
+		//Torques_ref = Controller.TorqueAdjuster(Torques_ref, Controller.dQ);
 
 		Controller.Qsave.push_back(Controller.Q);
 
@@ -162,22 +161,22 @@ int main(int argc, char *argv[])
 
 		Controller.d2Qsave.push_back(Controller.d2Q);
 
-		Controller.Qsave_filtered.push_back(Controller.Filter(Controller.Qsave,30));
-
-		Controller.dQsave_filtered.push_back(Controller.Filter(Controller.dQsave,30));
-		
-		Controller.d2Qsave_filtered.push_back(Controller.Filter(Controller.d2Qsave,30));
-
-		//Torques_ref = Controller.FeedbackLinearization(Controller.Qsave_filtered.back(), Controller.dQsave_filtered.back(), Controller.d2Qsave_filtered.back());
-
-		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, Controller.d2Q);
-
 		Controller.d2Qold = Controller.d2Q;	
 
+		Controller.Qsave_filtered.push_back(Controller.Filter(Controller.Qsave,20));
+
+		Controller.dQsave_filtered.push_back(Controller.Filter(Controller.dQsave,20));
+		
+		Controller.d2Qsave_filtered.push_back(Controller.Filter(Controller.d2Qsave,20));
+
+		Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
+
 		//Controller.SetTorques(Torques_ref);
+
+		//Controller.SetJointsPositions(Q_ref);
 		
-		Controller.SetJointsPositions(Q_ref);
-		
+		Mass = Controller.GetMass();
+
 		end_effector = D_kin(Controller.Q);
 
 		Controller.end_eff_pos.push_back(end_effector);
@@ -193,8 +192,10 @@ int main(int argc, char *argv[])
 		Torques_measured(6) = Controller.MeasuredTorquesInNm[6];
 
 		Controller.Tor_meas.push_back(Torques_measured);
+
+		//Controller.Tor_th.push_back(Torques_ref);
 		
-		Controller.Tor_th.push_back(Torques_ref);
+		Controller.Tor_th.push_back(Torques_ref + G);
 		
 		CycleCounter++;
 	}
@@ -243,6 +244,9 @@ int main(int argc, char *argv[])
 
 	Controller.FromKukaToDyn(temp,Controller.foo);
 	Controller.writer.write_data(foo,temp);
+	
+	Controller.FromKukaToDyn(temp,Controller.foo2);
+	Controller.writer.write_data(foo2,temp);
 
 	delete Controller.FRI;
 	

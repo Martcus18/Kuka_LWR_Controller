@@ -36,13 +36,16 @@ Kuka_Vec learning::DatasetCreation(Kuka_State State, Kuka_State OldState, Kuka_V
 {
     Kuka_Vec  acc;
     Kuka_Vec Yk;
+
     for(int i=0; i < NUMBER_OF_JOINTS; i++)
     {
         acc(i) = GramianCalc(State(i),State(i+NUMBER_OF_JOINTS),OldState(i),OldState(i+NUMBER_OF_JOINTS));
     }
     
     Yk = MassMatrix * (reference - acc);
+    //Yk = reference - acc;
     Yk = Yk + prediction;
+    //Yk = acc;
 
     return Yk;
 };
