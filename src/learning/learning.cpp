@@ -43,9 +43,7 @@ Kuka_Vec learning::DatasetCreation(Kuka_State State, Kuka_State OldState, Kuka_V
     }
     
     Yk = MassMatrix * (reference - acc);
-    //Yk = reference - acc;
     Yk = Yk + prediction;
-    //Yk = acc;
 
     return Yk;
 };

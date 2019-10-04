@@ -172,7 +172,7 @@ Kuka_Vec controller_kuka::GetGravity()
     
     return Gravity;
 };
-
+/*
 Kuka_Mat controller_kuka::GetMass()
 {    
     Kuka_Mat Mass;
@@ -196,7 +196,34 @@ Kuka_Mat controller_kuka::GetMass()
     }
     return Mass;
 }
+*/
 
+Kuka_Mat controller_kuka::GetMass(Kuka_Vec Q)
+{    
+    Kuka_Mat Mass;
+    float** B = new float*[7];
+    float* q = new float[7];
+
+    int i,j;
+
+    for(i=0; i<NUMBER_OF_JOINTS; i++)
+	{
+        q[i] = Q(i);
+        B[i] = new float[NUMBER_OF_JOINTS];
+    }
+    
+    dyn->get_B(B,q);
+
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {    
+        for(int j=0;j<NUMBER_OF_JOINTS;j++)
+        {
+            Mass(i,j) = B[i][j];
+        }
+    }
+    
+    return Mass;
+}
 
 Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal, int filter_length)
 {

@@ -35,13 +35,19 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec zero_vec = Kuka_Vec::Constant(0.0);
 
+	Kuka_Vec Q_filtered;
+
+	Kuka_Vec dQ_filtered;
+
+	Kuka_Vec d2Q_filtered;
+
 	Kuka_Mat Mass;
 
 	Eigen::Vector3d end_effector;
 
-	std::string Mode("impedence");
+	//std::string Mode("impedence");
 	
-	//std::string Mode("position");
+	std::string Mode("position");
 	
 	std::string qsave = "Q.txt";
   	std::string dqsave = "dQ.txt";
@@ -79,7 +85,7 @@ int main(int argc, char *argv[])
 	Tic = std::chrono::system_clock::now();
 
 	d2Q_ref = Kuka_Vec::Constant(0.0);
-	Mass = Controller.GetMass();
+	Mass = Controller.GetMass(Controller.Q);
 
 	while ((float)CycleCounter * Controller.FRI->GetFRICycleTime() < RUN_TIME_IN_SECONDS)
 	{	
@@ -98,57 +104,51 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "ERROR, the machine is not ready anymore.\n");
 			break;
 		}
-
-		//Mass = Controller.GetMass();
 		
 		state = Controller.GetState();
+		Q_filtered = Controller.Filter(Controller.Qsave,20);
+		dQ_filtered = Controller.Filter(Controller.dQsave,20);
+		d2Q_filtered = Controller.Filter(Controller.d2Qsave,20);
 
-		temp_Vec = Controller.Regressor->DatasetCreation(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+		Controller.old_state_filtered = Controller.state_filtered;
+
+		Controller.state_filtered << Q_filtered, dQ_filtered;
+		
+		temp_Vec = Controller.Regressor->DatasetCreation(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+
+		//temp_Vec = Controller.Regressor->DatasetCreation(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
 		
 		Controller.foo.push_back(temp_Vec);
-		
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
 
 		Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
 		dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
 		d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
-		/*
-		Q_ref = Q0;
+		
+		//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 
-		Q_ref(3) = Q_ref(3) + 0.2 * std::sin(2*Time);
-		Q_ref(4) = Q_ref(4) + 0.2 * std::sin(2*Time);
-		Q_ref(5) = Q_ref(5) + 0.2 * std::sin(2*Time);
-		Q_ref(6) = Q_ref(6) + 0.2 * std::sin(2*Time);		
-
-		dQ_ref = Kuka_Vec::Constant(0.0);
-
-		dQ_ref(3) = 0.2 * std::cos(2*Time);
-		dQ_ref(4) = 0.2 * std::cos(2*Time);
-		dQ_ref(5) = 0.2 * std::cos(2*Time);
-		dQ_ref(6) = 0.2 * std::cos(2*Time);
-
-		d2Q_ref = Kuka_Vec::Constant(0.0);
-	
-		d2Q_ref(3) = -0.2 * std::sin(2*Time);
-		d2Q_ref(4) = -0.2 * std::sin(2*Time);
-		d2Q_ref(5) = -0.2 * std::sin(2*Time);
-		d2Q_ref(6) = -0.2 * std::sin(2*Time);
-		*/
-
-		Controller.foo2.push_back(d2Q_ref);
-
+		Controller.foo2.push_back(Mass.row(0));
+		Controller.foo2.push_back(Mass.row(1));
+		Controller.foo2.push_back(Mass.row(2));
+		Controller.foo2.push_back(Mass.row(3));
+		Controller.foo2.push_back(Mass.row(4));
+		Controller.foo2.push_back(Mass.row(5));
+		Controller.foo2.push_back(Mass.row(6));
+		
 		G = Controller.GetGravity();
 
 		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
 
-		d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+		//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+		
+		Controller.Qsave_filtered.push_back(d2Q_ref);
 
-		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
+		//FOR TORQUE CONTROL
+		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 		
 		//Torque th for checking feedback linearization
-		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, Controller.d2Q);
+		Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_filtered);
 
-		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
+		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered , d2Q_ref);
 		
 		//Torque for PD+Feedforward control
 		//Torques_ref = Torques_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
@@ -163,19 +163,19 @@ int main(int argc, char *argv[])
 
 		Controller.d2Qold = Controller.d2Q;	
 
-		Controller.Qsave_filtered.push_back(Controller.Filter(Controller.Qsave,20));
+		//Controller.Qsave_filtered.push_back(Controller.Filter(Controller.Qsave,20));
 
 		Controller.dQsave_filtered.push_back(Controller.Filter(Controller.dQsave,20));
 		
 		Controller.d2Qsave_filtered.push_back(Controller.Filter(Controller.d2Qsave,20));
 
-		Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
+		//Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
 
 		//Controller.SetTorques(Torques_ref);
 
-		//Controller.SetJointsPositions(Q_ref);
+		Controller.SetJointsPositions(Q_ref);
 		
-		Mass = Controller.GetMass();
+		Mass = Controller.GetMass(Controller.Q);
 
 		end_effector = D_kin(Controller.Q);
 
@@ -191,8 +191,14 @@ int main(int argc, char *argv[])
 		Torques_measured(5) = Controller.MeasuredTorquesInNm[5];
 		Torques_measured(6) = Controller.MeasuredTorquesInNm[6];
 
-		Controller.Tor_meas.push_back(Torques_measured);
 
+		Controller.Tor_meas.push_back(Torques_measured);
+		
+		Controller.Tor_meas_filtered.push_back(Controller.Filter(Controller.Tor_meas,20));
+
+		//Controller.Tor_meas_filtered.push_back(Torques_measured);
+		
+		
 		//Controller.Tor_th.push_back(Torques_ref);
 		
 		Controller.Tor_th.push_back(Torques_ref + G);
@@ -234,7 +240,7 @@ int main(int argc, char *argv[])
 	Controller.FromKukaToDyn(temp,Controller.d2Qsave_filtered);
 	Controller.writer.write_data(d2qsave_filtered,temp);
 	
-	Controller.FromKukaToDyn(temp,Controller.Tor_meas);
+	Controller.FromKukaToDyn(temp,Controller.Tor_meas_filtered);
 	Controller.writer.write_data(torque_meas,temp);	
 
 	Controller.FromKukaToDyn(temp,Controller.Tor_th);

@@ -67,6 +67,8 @@ class controller_kuka : public controller
             Qsave_filtered.push_back(Q);
             dQsave_filtered.push_back(dQ);
             d2Qsave_filtered.push_back(d2Q);
+            state_filtered << Q , dQ;
+            old_state_filtered << Q, dQ;
 
             Regressor = new learning();
 
@@ -98,7 +100,9 @@ class controller_kuka : public controller
 
         //Get mass matrix
 
-        Kuka_Mat GetMass();
+        //Kuka_Mat GetMass();
+
+        Kuka_Mat GetMass(Kuka_Vec Q);
 
        //Dataset creation
 
@@ -137,6 +141,9 @@ class controller_kuka : public controller
 
         Kuka_State robot_state;
         Kuka_State old_robot_state;
+        
+        Kuka_State state_filtered;
+        Kuka_State old_state_filtered;
         
         Kuka_Vec Q;
 	Kuka_Vec Qold;

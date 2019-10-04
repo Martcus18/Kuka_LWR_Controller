@@ -40,7 +40,7 @@ class controller
 
         //Communication VIRTUAL
         
-        virtual Kuka_State GetState() = 0;
+        //virtual Kuka_State GetState() = 0;
         
         double Ts;
 
@@ -61,6 +61,7 @@ class controller
 
         std::vector<Kuka_Vec> Tor_th;
         std::vector<Kuka_Vec> Tor_meas;
+        std::vector<Kuka_Vec> Tor_meas_filtered;
         
         data_manager writer;
         
