@@ -172,31 +172,30 @@ Kuka_Vec controller_kuka::GetGravity()
     
     return Gravity;
 };
-/*
-Kuka_Mat controller_kuka::GetMass()
-{    
-    Kuka_Mat Mass;
 
-    int i,j;
-    float** B = new float*[7];
-
-    for(i=0;i<NUMBER_OF_JOINTS;i++)
-    {
-        B[i] = new float[NUMBER_OF_JOINTS];
+Kuka_Vec controller_kuka::GetFriction(Kuka_Vec Q, Kuka_Vec dQ)
+{
+    float* friction = new float[7];
+    float* q = new float[7];
+    float* dq = new float[7];
+    int i;
+    
+    Kuka_Vec friction_eig;
+    
+    for(i=0; i<NUMBER_OF_JOINTS; i++)
+	{
+        q[i] = Q(i);
+        dq[i] = dQ(i);
     }
-
-    this->FRI->GetCurrentMassMatrix(B);
+    
+    dyn->get_friction(friction,dq);
     
     for(i=0;i<NUMBER_OF_JOINTS;i++)
     {    
-        for(j=0;j<NUMBER_OF_JOINTS;j++)
-        {
-            Mass(i,j) = B[i][j];
-        }
+        friction_eig(i) = friction[i];
     }
-    return Mass;
+    return friction_eig;
 }
-*/
 
 Kuka_Mat controller_kuka::GetMass(Kuka_Vec Q)
 {    

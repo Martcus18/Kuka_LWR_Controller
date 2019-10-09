@@ -94,9 +94,15 @@ class controller_kuka : public controller
         
         Kuka_State GetState();
 
-        //Get gravity vector
+        //Get gravity vector of KUKA
 
         Kuka_Vec GetGravity();
+
+        //Get gravity of the FL model
+
+        //Kuka_Vec GetGravityFL(Kuka_Vec Q);
+
+        Kuka_Vec GetFriction(Kuka_Vec Q, Kuka_Vec dQ);
 
         //Get mass matrix
 
