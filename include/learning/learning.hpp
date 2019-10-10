@@ -51,7 +51,8 @@ class learning
     ~learning(){};
 
     void DatasetUpdate(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
-
+    Kuka_Vec DataPoint(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
+    
     //GP parameters
     struct Params 
     {
@@ -85,7 +86,6 @@ class learning
 
     double UnwrapAngle(double angle_old, double angle_new); 
     double GramianCalc(double qnew, double dqnew, double qold, double dqold);
-    Kuka_Vec DataPoint(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
 };
 
 

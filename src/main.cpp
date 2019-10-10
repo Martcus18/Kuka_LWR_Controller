@@ -121,14 +121,11 @@ int main(int argc, char *argv[])
 		
 		//temp_Vec = Controller.Regressor->DatasetCreation(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
 
-		//temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
-		//Controller.foo.push_back(temp_Vec);
+		temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+		Controller.foo.push_back(temp_Vec);
 		
 		Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
 		//Controller.fooXd.push_back(Controller.Regressor->DatasetY.back());
-		
-		
-
 
 		Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
 		dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
@@ -207,12 +204,11 @@ int main(int argc, char *argv[])
 		Torques_measured(5) = Controller.MeasuredTorquesInNm[5];
 		Torques_measured(6) = Controller.MeasuredTorquesInNm[6];
 
-
 		Controller.Tor_meas.push_back(Torques_measured);
 		
-		Controller.Tor_meas_filtered.push_back(Controller.Filter(Controller.Tor_meas,20));
+		//Controller.Tor_meas_filtered.push_back(Controller.Filter(Controller.Tor_meas,20));
 
-		//Controller.Tor_meas_filtered.push_back(Torques_measured);
+		Controller.Tor_meas_filtered.push_back(Torques_measured);
 		
 		//Controller.Tor_th.push_back(Torques_ref);
 		

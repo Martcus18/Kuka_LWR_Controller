@@ -142,42 +142,45 @@ int main(int argc, char** argv)
     //dataX.de_normalize_data(X);
     dataY.normalize_data(Y);
     //dataY.de_normalize_data(Y);
-    std::vector<Eigen::VectorXd>::iterator first = X.begin();
-    std::vector<Eigen::VectorXd>::iterator last =  X.begin() + 800;
-    std::vector<Eigen::VectorXd> X_opti(first, last);
-    dataX_opti.normalize_data(X_opti);
 
-    first = Y.begin();
-    last =  Y.begin() + 800;
-    std::vector<Eigen::VectorXd> Y_opti(first, last);
-    dataY_opti.normalize_data(Y_opti);
+    //std::vector<Eigen::VectorXd>::iterator first = X.begin();
+    //std::vector<Eigen::VectorXd>::iterator last =  X.begin() + 800;
+    //std::vector<Eigen::VectorXd> X_opti(first, last);
+    //dataX.normalize_data(X_opti);
 
-    gp.compute(X_opti, Y_opti, true);
-    //gp.compute(X, Y, true);
+    //first = Y.begin();
+    //last =  Y.begin() + 800;
+    //std::vector<Eigen::VectorXd> Y_opti(first, last);
+    //dataY.normalize_data(Y_opti);
+
+    //gp.compute(X_opti, Y_opti, true);
+    gp.compute(X, Y, true);
+    //chrono::steady_clock sc;   // create an object of `steady_clock` class
+    //auto start = sc.now(); 
     gp.optimize_hyperparams();
-
+    //auto end = sc.now();
+    //auto time_span = static_cast<chrono::duration<double>>(end - start);   // measure time span between start & end
+    //std::cout<<"Operation took: "<<time_span.count()<<" seconds !!!" << "\n";
+    
     // Sometimes is useful to save an optimized GP
-    //gp.save<serialize::TextArchive>("myGP");
+    gp.save<serialize::TextArchive>("myGP");
 
     std::vector<Eigen::VectorXd> Prediction;
     Eigen::VectorXd mu;
     Eigen::VectorXd v;
     double sigma;
     
-    for (int i = 800; i < 1000; ++i) 
+    for (int i = 1; i < 200; ++i) 
     {
         v = X[i];
-        //chrono::steady_clock sc;   // create an object of `steady_clock` class
-        //auto start = sc.now(); 
+        chrono::steady_clock sc;   // create an object of `steady_clock` class
+        auto start = sc.now(); 
         std::tie(mu, sigma) = gp.query(v);
-        //auto end = sc.now();
-        //auto time_span = static_cast<chrono::duration<double>>(end - start);   // measure time span between start & end
-        //std::cout<<"Operation took: "<<time_span.count()<<" seconds !!!" << "\n";
+        auto end = sc.now();
+        auto time_span = static_cast<chrono::duration<double>>(end - start);   // measure time span between start & end
+        std::cout<<"Operation took: "<<time_span.count()<<" seconds !!!" << "\n";
         Prediction.push_back(mu);
     }
-
-
-    dataY_opti.de_normalize_data(Prediction);
     //dataY.de_normalize_data(Prediction);
     
     //Writing limbo format of file
