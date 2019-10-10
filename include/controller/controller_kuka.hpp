@@ -2,7 +2,6 @@
 #define CONTROLLER_KUKA_HPP_
 
 #include <controller/controller.hpp>
-#include<learning/learning.hpp>
 
 class controller_kuka : public controller
 {
@@ -51,7 +50,7 @@ class controller_kuka : public controller
 	    else
 	    {
 	               fprintf(stderr, "ERROR, could not start robot: %s\n", strerror(ResultValue));
-	    }//learning();
+	    }
 
             fprintf(stdout, "Current system state:\n%s\n", FRI->GetCompleteRobotStateAndInformation());
 

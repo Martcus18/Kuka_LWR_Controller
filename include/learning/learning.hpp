@@ -2,6 +2,7 @@
 #define LEARNING_HPP_
 
 #include<utils/lib.hpp>
+#include <utils/data_utils.hpp>
 
 #include <limbo/kernel/exp.hpp>
 #include <limbo/kernel/squared_exp_ard.hpp>
@@ -47,9 +48,9 @@ class learning
         
     }
 
-    ~learning();
+    ~learning(){};
 
-    Kuka_Vec DatasetCreation(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
+    void DatasetUpdate(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
 
     //GP parameters
     struct Params 
@@ -68,6 +69,13 @@ class learning
     using GP_t = model::GP<Params, Kernel_t, Mean_t, model::gp::KernelLFOpt<Params>>;
     std::vector<GP_t > gp_container;
 
+
+    data_manager X_manager;
+    data_manager Y_manager;
+
+    std::vector<Eigen::VectorXd> DatasetY;
+    std::vector<Eigen::VectorXd> DatasetX;
+
     protected:
 
     Eigen::Matrix2d A;
@@ -77,6 +85,7 @@ class learning
 
     double UnwrapAngle(double angle_old, double angle_new); 
     double GramianCalc(double qnew, double dqnew, double qold, double dqold);
+    Kuka_Vec DataPoint(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
 };
 
 

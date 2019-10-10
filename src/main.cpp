@@ -60,6 +60,10 @@ int main(int argc, char *argv[])
 	std::string torque_th = "tor_th.txt";
 	std::string foo = "foo.txt";
 	std::string foo2 = "foo2.txt";
+	std::string fooXd = "fooXd.txt";
+	std::string Xdata = "X.txt";
+	std::string Ydata = "Y.txt";
+
 	
 	Kuka_State state;
 
@@ -117,9 +121,14 @@ int main(int argc, char *argv[])
 		
 		//temp_Vec = Controller.Regressor->DatasetCreation(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
 
-		temp_Vec = Controller.Regressor->DatasetCreation(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+		//temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+		//Controller.foo.push_back(temp_Vec);
 		
-		Controller.foo.push_back(temp_Vec);
+		Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+		//Controller.fooXd.push_back(Controller.Regressor->DatasetY.back());
+		
+		
+
 
 		Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
 		dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
@@ -260,8 +269,15 @@ int main(int argc, char *argv[])
 	Controller.FromKukaToDyn(temp,Controller.foo2);
 	Controller.writer.write_data(foo2,temp);
 
-	delete Controller.FRI;
 	
+	Controller.writer.write_data(Xdata,Controller.Regressor->DatasetX);
+	Controller.writer.write_data(Ydata,Controller.Regressor->DatasetY);
+
+
+	delete Controller.FRI;
+	delete Controller.dyn;
+	delete Controller.Regressor;
+
 	fprintf(stdout, "Object deleted...\n");
 	
 	return(EXIT_SUCCESS);

@@ -58,9 +58,12 @@
 #include <limbo/tools/macros.hpp>
 
 #include <limbo/serialize/text_archive.hpp>
-#include <utils/data_utils.hpp>
 #include <limbo/stop/max_iterations.hpp>
 #include <chrono>
+
+//#include<utils/lib.hpp>
+#include <utils/lib.hpp>
+#include <utils/data_utils.hpp>
 
 // this tutorials shows how to use a Gaussian process for regression
 
@@ -112,50 +115,56 @@ using GP_t = model::GP<Params, Kernel_t, Mean_t>;
 int main(int argc, char** argv)
 {       
 
-    std::string Xtrain = "Xtrain.txt";
-    std::string Ytrain = "Ytrain.txt";
+    std::string Xtrain = "X.txt";
+    std::string Ytrain = "Y.txt";
     std::string Prediction_file = "gp_prediction.dat";
     data_manager dataX;
     data_manager dataY;
+    
+    data_manager dataX_opti;
+    data_manager dataY_opti;
+
     std::vector<Eigen::VectorXd> X;
     std::vector<Eigen::VectorXd> Y;
-    
 
-
-    GP_t gp(21, 1);
+    GP_t gp(21, 7);
 
     //Loading gp hyperparameters
-    gp.load<serialize::TextArchive>("myGP");
+    //gp.load<serialize::TextArchive>("myGP");
 
     //Specify Input and Output dimension
     dataX.read_data(Xtrain,X,21);
-    
-    dataY.read_data(Ytrain,Y,1);
 
+    dataY.read_data(Ytrain,Y,7);
+    //std::cout << "I am here 4 \n";
+    
     dataX.normalize_data(X);
     //dataX.de_normalize_data(X);
-
     dataY.normalize_data(Y);
     //dataY.de_normalize_data(Y);
-       
+    std::vector<Eigen::VectorXd>::iterator first = X.begin();
+    std::vector<Eigen::VectorXd>::iterator last =  X.begin() + 800;
+    std::vector<Eigen::VectorXd> X_opti(first, last);
+    dataX_opti.normalize_data(X_opti);
 
+    first = Y.begin();
+    last =  Y.begin() + 800;
+    std::vector<Eigen::VectorXd> Y_opti(first, last);
+    dataY_opti.normalize_data(Y_opti);
 
-
-    gp.compute(X, Y, false);
-    //gp.optimize_hyperparams();
+    gp.compute(X_opti, Y_opti, true);
+    //gp.compute(X, Y, true);
+    gp.optimize_hyperparams();
 
     // Sometimes is useful to save an optimized GP
     //gp.save<serialize::TextArchive>("myGP");
 
-
-
-    
     std::vector<Eigen::VectorXd> Prediction;
     Eigen::VectorXd mu;
     Eigen::VectorXd v;
     double sigma;
     
-    for (int i = 0; i < 500; ++i) 
+    for (int i = 800; i < 1000; ++i) 
     {
         v = X[i];
         //chrono::steady_clock sc;   // create an object of `steady_clock` class
@@ -168,8 +177,11 @@ int main(int argc, char** argv)
     }
 
 
-    dataY.de_normalize_data(Prediction);
+    dataY_opti.de_normalize_data(Prediction);
+    //dataY.de_normalize_data(Prediction);
+    
     //Writing limbo format of file
     dataY.write_data(Prediction_file,Prediction);
+    
     return 0;
 }

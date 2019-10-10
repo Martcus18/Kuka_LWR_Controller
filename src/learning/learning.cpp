@@ -32,7 +32,7 @@ double learning::GramianCalc(double qnew, double dqnew,double qold, double dqold
     return u;
 };
 
-Kuka_Vec learning::DatasetCreation(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix)
+Kuka_Vec learning::DataPoint(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix)
 {
     Kuka_Vec  acc;
     Kuka_Vec Yk;
@@ -44,6 +44,18 @@ Kuka_Vec learning::DatasetCreation(Kuka_State State, Kuka_State OldState, Kuka_V
     
     Yk = MassMatrix * (reference - acc);
     Yk = Yk + prediction;
-    //Yk = acc;
+
     return Yk;
+};
+
+void learning::DatasetUpdate(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix)
+{
+    Eigen::VectorXd Y;
+    Eigen::VectorXd X(NUMBER_OF_JOINTS*3);
+    
+    Y = this->DataPoint(State, OldState, reference, prediction, MassMatrix);
+    this->DatasetY.push_back(Y);
+
+    X << OldState,reference;
+    this->DatasetX.push_back(X);
 };

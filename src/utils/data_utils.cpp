@@ -14,7 +14,8 @@ data_manager::data_manager(){};
 data_manager::~data_manager(){};
 
 //Read Data for limbo  GP -> <Xtrain,Ytrain>
-
+//DATA FORMAT FOR READING MUST BE IN THE FORM X(1,1) X(1,2) X(1,3)
+//                                            X(2,1) X(2,2) X(2,3) etc...
 void data_manager::read_data(std::string &filename, std::vector<Eigen::VectorXd> &container,int width)
 {   
         std::ifstream Datareader;
@@ -24,7 +25,7 @@ void data_manager::read_data(std::string &filename, std::vector<Eigen::VectorXd>
         int j;
 
         Datareader.open (filename, std::fstream::in);
-
+        
         if (!Datareader.is_open())
         {
             std::cout << "Error in opening the file for reading" << "\n";
@@ -38,9 +39,10 @@ void data_manager::read_data(std::string &filename, std::vector<Eigen::VectorXd>
             {   
                 temp(j) = std::stof(*it);
             }
+
             container.push_back(temp);
         }  
-           Datareader.close();
+        Datareader.close();
 };
 
 //Write Data for limbo GP -> <Prediction,Variance>

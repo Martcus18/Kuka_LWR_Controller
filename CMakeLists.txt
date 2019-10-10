@@ -67,4 +67,8 @@ target_link_libraries(controller_kuka PUBLIC controller utils learning "${CMAKE_
 
 add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 
+add_executable(gp "${CMAKE_CURRENT_SOURCE_DIR}/src/gp.cpp")
+
+target_link_libraries(gp ${TBB_LIBRARIES} ${Boost_LIBRARIES} utils)
+
 target_link_libraries(main controller_kuka)

@@ -1,8 +1,11 @@
 #ifndef CONTROLLER_HPP_
 #define CONTROLLER_HPP_
 
-#include <utils/lib.hpp>
-#include <utils/data_utils.hpp>
+//#include <utils/lib.hpp>
+//#include <utils/data_utils.hpp>
+
+#include<learning/learning.hpp>
+
 #include <FastResearchInterface.h>
 #include <FRICommunication.h>
 #include <OSAbstraction.h>
@@ -37,10 +40,6 @@ class controller
         //Communication VIRTUAL
         
         virtual void SetTorques(Kuka_Vec torques) = 0;
-
-        //Communication VIRTUAL
-        
-        //virtual Kuka_State GetState() = 0;
         
         double Ts;
 
@@ -55,6 +54,7 @@ class controller
         std::vector<Kuka_Vec> d2Qsave_filtered;
         std::vector<Kuka_Vec> foo;
         std::vector<Kuka_Vec> foo2;
+        std::vector<Eigen::VectorXd> fooXd;
 
         std::vector<Eigen::VectorXd> end_eff_pos;
         
@@ -64,12 +64,6 @@ class controller
         std::vector<Kuka_Vec> Tor_meas_filtered;
         
         data_manager writer;
-        
-        data_manager X_manager;
-        data_manager Y_manager;
-
-        std::vector<Eigen::VectorXd> DatasetY;
-        std::vector<Eigen::VectorXd> DatasetX;
 
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kp;
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kd;
