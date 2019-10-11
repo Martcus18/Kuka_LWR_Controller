@@ -59,3 +59,37 @@ void learning::DatasetUpdate(Kuka_State State, Kuka_State OldState, Kuka_Vec ref
     X << OldState,reference;
     this->DatasetX.push_back(X);
 };
+
+void learning::GpUpdate()
+{
+    int i;
+
+    Eigen::VectorXd tempX(3);
+    Eigen::VectorXd tempY(1);
+    
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {
+        tempX << DatasetX.back()(i),DatasetX.back()(i+8), DatasetX.back()(i+14);
+        tempY << DatasetY.back()(i);
+        gp_container[i].add_sample(tempX,tempY);
+    }
+};
+
+Kuka_Vec learning::GpPredict(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q_ref)
+{
+    Kuka_Vec prediction(NUMBER_OF_JOINTS);
+    Eigen::VectorXd query_point(3);
+    int i;
+    double sigma;
+    Eigen::VectorXd mu;
+
+
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {
+        query_point << Q(i),dQ(i),d2Q_ref(i);
+        std::tie(mu, sigma) = gp_container[i].query(query_point);
+        //prediction(i) = gp_container[i].query(query_point);
+        prediction(i) = mu(0);
+    }
+    return prediction;
+};

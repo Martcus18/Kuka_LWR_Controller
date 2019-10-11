@@ -51,6 +51,8 @@
 #include <limbo/kernel/squared_exp_ard.hpp>
 #include <limbo/mean/data.hpp>
 #include <limbo/model/gp.hpp>
+#include <limbo/model/multi_gp.hpp>
+#include <limbo/model/multi_gp/parallel_lf_opt.hpp>
 #include <limbo/model/sparsified_gp.hpp>
 #include <limbo/model/gp/kernel_lf_opt.hpp>
 #include <limbo/model/gp/mean_lf_opt.hpp>
@@ -61,7 +63,6 @@
 #include <limbo/stop/max_iterations.hpp>
 #include <chrono>
 
-//#include<utils/lib.hpp>
 #include <utils/lib.hpp>
 #include <utils/data_utils.hpp>
 
@@ -127,21 +128,21 @@ int main(int argc, char** argv)
     std::vector<Eigen::VectorXd> X;
     std::vector<Eigen::VectorXd> Y;
 
-    GP_t gp(21, 7);
+    GP_t gp(3, 1);
 
     //Loading gp hyperparameters
     //gp.load<serialize::TextArchive>("myGP");
 
     //Specify Input and Output dimension
-    dataX.read_data(Xtrain,X,21);
+    dataX.read_data(Xtrain,X,3);
 
-    dataY.read_data(Ytrain,Y,7);
+    dataY.read_data(Ytrain,Y,1);
     //std::cout << "I am here 4 \n";
     
     dataX.normalize_data(X);
     //dataX.de_normalize_data(X);
     dataY.normalize_data(Y);
-    //dataY.de_normalize_data(Y);
+    
 
     //std::vector<Eigen::VectorXd>::iterator first = X.begin();
     //std::vector<Eigen::VectorXd>::iterator last =  X.begin() + 800;
@@ -170,10 +171,10 @@ int main(int argc, char** argv)
     Eigen::VectorXd v;
     double sigma;
     
-    for (int i = 1; i < 200; ++i) 
+    for (int i = 200; i <400 ; ++i) 
     {
         v = X[i];
-        chrono::steady_clock sc;   // create an object of `steady_clock` class
+        chrono::steady_clock sc;   // crea//#include<utils/lib.hpp>te an object of `steady_clock` class
         auto start = sc.now(); 
         std::tie(mu, sigma) = gp.query(v);
         auto end = sc.now();
@@ -181,7 +182,7 @@ int main(int argc, char** argv)
         std::cout<<"Operation took: "<<time_span.count()<<" seconds !!!" << "\n";
         Prediction.push_back(mu);
     }
-    //dataY.de_normalize_data(Prediction);
+    dataY.de_normalize_data(Prediction);
     
     //Writing limbo format of file
     dataY.write_data(Prediction_file,Prediction);

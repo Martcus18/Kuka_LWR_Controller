@@ -25,12 +25,14 @@ class learning
 
     learning()
     {
+        
         for(int i=0;i<NUMBER_OF_JOINTS;i++)
         {
             GP_t temp_gp(NUMBER_OF_JOINTS*3,1);
+            temp_gp.load<serialize::TextArchive>("myGP");
             gp_container.push_back(temp_gp);
         }
-        
+
         Eigen::MatrixXd temp;
         Eigen::MatrixXd temp2;
         Eigen::MatrixXd temp3;
@@ -53,6 +55,10 @@ class learning
     void DatasetUpdate(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
     Kuka_Vec DataPoint(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
     
+    void GpUpdate();
+    
+    Kuka_Vec GpPredict(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q_ref);
+    
     //GP parameters
     struct Params 
     {
@@ -68,6 +74,7 @@ class learning
     using Kernel_t = kernel::SquaredExpARD<Params>;
     using Mean_t = mean::Data<Params>;
     using GP_t = model::GP<Params, Kernel_t, Mean_t, model::gp::KernelLFOpt<Params>>;
+    
     std::vector<GP_t > gp_container;
 
 

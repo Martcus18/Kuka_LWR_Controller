@@ -41,6 +41,11 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec d2Q_filtered;
 
+	Kuka_Vec Prediction;
+	
+	std::vector<Kuka_Vec> Prediction_array;
+
+
 	Kuka_Mat Mass;
 
 	Eigen::Vector3d end_effector;
@@ -60,7 +65,7 @@ int main(int argc, char *argv[])
 	std::string torque_th = "tor_th.txt";
 	std::string foo = "foo.txt";
 	std::string foo2 = "foo2.txt";
-	std::string fooXd = "fooXd.txt";
+	std::string fooXd = "predictions.txt";
 	std::string Xdata = "X.txt";
 	std::string Ydata = "Y.txt";
 
@@ -95,13 +100,13 @@ int main(int argc, char *argv[])
 	{	
 		Time = Controller.FRI->GetFRICycleTime() * (float)CycleCounter;
 		
-		Toc = std::chrono::system_clock::now();
+		//Toc = std::chrono::system_clock::now();
 		
 		Controller.FRI->WaitForKRCTick(TimeoutValueInMicroSeconds);
 		
-		elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
+		//elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
 
-		Tic = std::chrono::system_clock::now();
+		//Tic = std::chrono::system_clock::now();
 
 		if (!Controller.FRI->IsMachineOK())
 		{
@@ -118,19 +123,48 @@ int main(int argc, char *argv[])
 		Controller.old_state_filtered = Controller.state_filtered;
 
 		Controller.state_filtered << Q_filtered, dQ_filtered;
-		
-		//temp_Vec = Controller.Regressor->DatasetCreation(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
 
+		//CHECKING USING NOT FILTERED STATE
 		temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+
+		//CHECKING USING FILTERED STATE
+		//temp_Vec = Controller.Regressor->DataPoint(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+		
 		Controller.foo.push_back(temp_Vec);
 		
+		//CHECKING USING NOT FILTERED STATE
 		Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
-		//Controller.fooXd.push_back(Controller.Regressor->DatasetY.back());
+		
+
+		//INSERTED 7 GPs IN THE LOOP
+		/*
+		if((CycleCounter % 30) == 0)
+		{
+			
+			Controller.Regressor->GpUpdate();
+			Tic = std::chrono::system_clock::now();
+			Prediction_array.push_back(Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref));
+			Toc = std::chrono::system_clock::now();
+			elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
+			std::cout << elapsed_time << "--\n--";
+		}
+		*/
+
+		
+		//CHECKING USING FILTERED STATE
+		//Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
 
 		Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
 		dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
 		d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
 		
+		/*
+		if(CycleCounter > 10)
+		{
+			Prediction_array.push_back(Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref));
+		}
+		*/
+
 		//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 		
 		/*
@@ -146,7 +180,12 @@ int main(int argc, char *argv[])
 		G = Controller.GetGravity();
 
 		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
+		
+		//CHECKING USING NOT FILTERED STATE
 		Controller.foo2.push_back(Controller.FeedbackLinearization(Controller.Qsave.back(), Controller.dQsave.back(),Controller.d2Q));
+
+		//CHECKING USING FILTERED STATE
+		//Controller.foo2.push_back(Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_filtered));
 
 
 		d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
@@ -156,7 +195,7 @@ int main(int argc, char *argv[])
 		//FOR TORQUE CONTROL
 		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 		
-		Controller.Qsave_filtered.push_back(Controller.GetFriction(Controller.Q, Controller.dQ));
+		//Controller.Qsave_filtered.push_back(Controller.GetFriction(Controller.Q, Controller.dQ));
 
 		//Torque th for checking feedback linearization
 		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_filtered);
@@ -176,7 +215,7 @@ int main(int argc, char *argv[])
 
 		Controller.d2Qold = Controller.d2Q;	
 
-		//Controller.Qsave_filtered.push_back(Controller.Filter(Controller.Qsave,20));
+		Controller.Qsave_filtered.push_back(Controller.Filter(Controller.Qsave,20));
 
 		Controller.dQsave_filtered.push_back(Controller.Filter(Controller.dQsave,20));
 		
@@ -265,6 +304,8 @@ int main(int argc, char *argv[])
 	Controller.FromKukaToDyn(temp,Controller.foo2);
 	Controller.writer.write_data(foo2,temp);
 
+	Controller.FromKukaToDyn(temp,Prediction_array);
+	Controller.writer.write_data(fooXd,temp);
 	
 	Controller.writer.write_data(Xdata,Controller.Regressor->DatasetX);
 	Controller.writer.write_data(Ydata,Controller.Regressor->DatasetY);
