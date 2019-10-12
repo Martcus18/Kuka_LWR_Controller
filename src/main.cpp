@@ -41,10 +41,16 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec d2Q_filtered;
 
-	Kuka_Vec Prediction;
+	Kuka_Vec Prediction = Kuka_Vec::Constant(0.0);
 	
 	std::vector<Kuka_Vec> Prediction_array;
 
+	std::vector<Kuka_Vec> Ref_Acc;
+
+	std::vector<Kuka_Vec> Time_array;
+	
+	Kuka_Vec Kuka_temp;
+	std::vector<Eigen::VectorXd> temp;
 
 	Kuka_Mat Mass;
 
@@ -66,13 +72,13 @@ int main(int argc, char *argv[])
 	std::string foo = "foo.txt";
 	std::string foo2 = "foo2.txt";
 	std::string fooXd = "predictions.txt";
+	std::string pred_time = "pred_time.txt";
+	std::string ref = "ref_acc.txt";
 	std::string Xdata = "X.txt";
 	std::string Ydata = "Y.txt";
 
 	
 	Kuka_State state;
-
-	std::vector<Eigen::VectorXd> temp;
 
 	controller_kuka Controller(Mode);
 
@@ -125,57 +131,49 @@ int main(int argc, char *argv[])
 		Controller.state_filtered << Q_filtered, dQ_filtered;
 
 		//CHECKING USING NOT FILTERED STATE
-		temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+		//temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+		//temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass);
+		
 
 		//CHECKING USING FILTERED STATE
 		//temp_Vec = Controller.Regressor->DataPoint(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
 		
-		Controller.foo.push_back(temp_Vec);
+		
+		//Controller.foo.push_back(temp_Vec);
 		
 		//CHECKING USING NOT FILTERED STATE
-		Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
-		
-
-		//INSERTED 7 GPs IN THE LOOP
-		/*
-		if((CycleCounter % 30) == 0)
-		{
-			
-			Controller.Regressor->GpUpdate();
-			Tic = std::chrono::system_clock::now();
-			Prediction_array.push_back(Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref));
-			Toc = std::chrono::system_clock::now();
-			elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
-			std::cout << elapsed_time << "--\n--";
-		}
-		*/
-
+		//Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+		//Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass);
 		
 		//CHECKING USING FILTERED STATE
 		//Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
+		Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Prediction, Mass);
+
+		
+		
+		/* WITH OLD ACCELERATION
+		if((CycleCounter % 5) == 0)
+		{
+			Tic = std::chrono::system_clock::now();
+			Controller.Regressor->GpUpdate();
+			Prediction = Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref);
+			//Prediction_array.push_back(Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref));
+			Prediction_array.push_back(Prediction);
+			Toc = std::chrono::system_clock::now();
+			elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
+			Kuka_temp << elapsed_time,0.0,0.0,0.0,0.0,0.0,0.0;
+			Time_array.push_back(Kuka_temp);
+			std::cout << Time << "--\n--";
+		}
+		*/
+		
 
 		Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
 		dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
 		d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
-		
-		/*
-		if(CycleCounter > 10)
-		{
-			Prediction_array.push_back(Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref));
-		}
-		*/
+
 
 		//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
-		
-		/*
-		Controller.foo2.push_back(Mass.row(0));
-		Controller.foo2.push_back(Mass.row(1));
-		Controller.foo2.push_back(Mass.row(2));
-		Controller.foo2.push_back(Mass.row(3));
-		Controller.foo2.push_back(Mass.row(4));
-		Controller.foo2.push_back(Mass.row(5));
-		Controller.foo2.push_back(Mass.row(6));
-		*/
 
 		G = Controller.GetGravity();
 
@@ -190,10 +188,43 @@ int main(int argc, char *argv[])
 
 		d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 		
+		Ref_Acc.push_back(d2Q_ref);
+
+		//d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered, d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
+
+		if((CycleCounter % 10) == 0)
+		{
+			Tic = std::chrono::system_clock::now();
+			Controller.Regressor->GpUpdate();
+			Toc = std::chrono::system_clock::now();
+			elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
+			Kuka_temp << elapsed_time,0.0,0.0,0.0,0.0,0.0,0.0;
+			Time_array.push_back(Kuka_temp);
+			std::cout << Time << "--\n--";
+		}	
+		
+		if(CycleCounter > 20)
+		{
+		//Prediction = Controller.Regressor->GpPredict(Q_filtered, dQ_filtered,d2Q_ref);
+		//Prediction_array.push_back(Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref));
+			Prediction = Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref);
+		}
+		else
+		{
+			Prediction = Kuka_Vec::Constant(0.0);
+		}
+		
+		Prediction_array.push_back(Prediction);
+		
 		//Controller.Qsave_filtered.push_back(d2Q_ref);
 
 		//FOR TORQUE CONTROL
+		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
+		
 		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
+		Controller.foo.push_back(Torques_ref);
+		Torques_ref = Torques_ref + Prediction;
+		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G + Prediction;
 		
 		//Controller.Qsave_filtered.push_back(Controller.GetFriction(Controller.Q, Controller.dQ));
 
@@ -310,10 +341,17 @@ int main(int argc, char *argv[])
 	Controller.writer.write_data(Xdata,Controller.Regressor->DatasetX);
 	Controller.writer.write_data(Ydata,Controller.Regressor->DatasetY);
 
+	Controller.FromKukaToDyn(temp,Time_array);
+	Controller.writer.write_data(pred_time,temp);
 
+	Controller.FromKukaToDyn(temp,Ref_Acc);
+	Controller.writer.write_data(ref,temp);
+	
+	/*
 	delete Controller.FRI;
 	delete Controller.dyn;
 	delete Controller.Regressor;
+	*/
 
 	fprintf(stdout, "Object deleted...\n");
 	

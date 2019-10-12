@@ -25,13 +25,17 @@ class learning
 
     learning()
     {
-        
+        /*
         for(int i=0;i<NUMBER_OF_JOINTS;i++)
         {
             GP_t temp_gp(NUMBER_OF_JOINTS*3,1);
             temp_gp.load<serialize::TextArchive>("myGP");
             gp_container.push_back(temp_gp);
         }
+        */
+        GP_t gp(NUMBER_OF_JOINTS*3,NUMBER_OF_JOINTS);
+        
+        gp_container.push_back(gp);
 
         Eigen::MatrixXd temp;
         Eigen::MatrixXd temp2;
@@ -48,15 +52,20 @@ class learning
         temp4 = -(B.transpose() + temp.transpose());
         Y = temp4 * W.inverse();       
         
+        Max_Vector = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
+        Min_Vector = Eigen::VectorXd::Constant(NUMBER_OF_JOINTS,0.0);
+
     }
 
     ~learning(){};
 
     void DatasetUpdate(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
     Kuka_Vec DataPoint(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
-    
+    void incremental_normalization(Kuka_Vec new_point);
     void GpUpdate();
     
+    
+
     Kuka_Vec GpPredict(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q_ref);
     
     //GP parameters
@@ -84,6 +93,9 @@ class learning
     std::vector<Eigen::VectorXd> DatasetY;
     std::vector<Eigen::VectorXd> DatasetX;
 
+    Eigen::VectorXd Max_Vector;
+    Eigen::VectorXd Min_Vector;
+
     protected:
 
     Eigen::Matrix2d A;
@@ -94,20 +106,5 @@ class learning
     double UnwrapAngle(double angle_old, double angle_new); 
     double GramianCalc(double qnew, double dqnew, double qold, double dqold);
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif /*LEARNING_HPP_*/
