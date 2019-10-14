@@ -132,22 +132,22 @@ int main(int argc, char *argv[])
 
 		//CHECKING USING NOT FILTERED STATE
 		//temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
-		//temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass);
+		temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass);
 		
 
 		//CHECKING USING FILTERED STATE
 		//temp_Vec = Controller.Regressor->DataPoint(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
 		
 		
-		//Controller.foo.push_back(temp_Vec);
+		Controller.foo.push_back(temp_Vec);
 		
 		//CHECKING USING NOT FILTERED STATE
 		//Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
-		//Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass);
+		Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass);
 		
 		//CHECKING USING FILTERED STATE
 		//Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
-		Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Prediction, Mass);
+		//Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Prediction, Mass);
 
 		
 		
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
 
 		//d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered, d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
 
-		if((CycleCounter % 10) == 0)
+		if((CycleCounter % 100) == 0)
 		{
 			Tic = std::chrono::system_clock::now();
 			Controller.Regressor->GpUpdate();
@@ -200,13 +200,13 @@ int main(int argc, char *argv[])
 			elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
 			Kuka_temp << elapsed_time,0.0,0.0,0.0,0.0,0.0,0.0;
 			Time_array.push_back(Kuka_temp);
-			std::cout << Time << "--\n--";
+			std::cout << elapsed_time << "--\n--";
 		}	
 		
-		if(CycleCounter > 20)
+		if(CycleCounter > 50)
 		{
-		//Prediction = Controller.Regressor->GpPredict(Q_filtered, dQ_filtered,d2Q_ref);
-		//Prediction_array.push_back(Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref));
+			//Prediction = Controller.Regressor->GpPredict(Q_filtered, dQ_filtered,d2Q_ref);
+			//Prediction_array.push_back(Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref));
 			Prediction = Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref);
 		}
 		else
@@ -222,8 +222,11 @@ int main(int argc, char *argv[])
 		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 		
 		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
-		Controller.foo.push_back(Torques_ref);
+		
+		//Controller.foo.push_back(Torques_ref);
+
 		Torques_ref = Torques_ref + Prediction;
+
 		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G + Prediction;
 		
 		//Controller.Qsave_filtered.push_back(Controller.GetFriction(Controller.Q, Controller.dQ));
@@ -276,9 +279,9 @@ int main(int argc, char *argv[])
 
 		Controller.Tor_meas.push_back(Torques_measured);
 		
-		//Controller.Tor_meas_filtered.push_back(Controller.Filter(Controller.Tor_meas,20));
+		Controller.Tor_meas_filtered.push_back(Controller.Filter(Controller.Tor_meas,20));
 
-		Controller.Tor_meas_filtered.push_back(Torques_measured);
+		//Controller.Tor_meas_filtered.push_back(Torques_measured);
 		
 		//Controller.Tor_th.push_back(Torques_ref);
 		

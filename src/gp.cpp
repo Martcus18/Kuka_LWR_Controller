@@ -128,15 +128,15 @@ int main(int argc, char** argv)
     std::vector<Eigen::VectorXd> X;
     std::vector<Eigen::VectorXd> Y;
 
-    GP_t gp(3, 1);
+    GP_t gp(21, 7);
 
     //Loading gp hyperparameters
     //gp.load<serialize::TextArchive>("myGP");
 
     //Specify Input and Output dimension
-    dataX.read_data(Xtrain,X,3);
+    dataX.read_data(Xtrain,X,21);
 
-    dataY.read_data(Ytrain,Y,1);
+    dataY.read_data(Ytrain,Y,7);
     //std::cout << "I am here 4 \n";
     
     dataX.normalize_data(X);
@@ -171,7 +171,7 @@ int main(int argc, char** argv)
     Eigen::VectorXd v;
     double sigma;
     
-    for (int i = 200; i <400 ; ++i) 
+    for (int i = 500; i <1000 ; ++i) 
     {
         v = X[i];
         chrono::steady_clock sc;   // crea//#include<utils/lib.hpp>te an object of `steady_clock` class

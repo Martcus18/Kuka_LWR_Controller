@@ -60,14 +60,10 @@ void learning::DatasetUpdate(Kuka_State State, Kuka_State OldState, Kuka_Vec ref
     this->DatasetX.push_back(X);
 };
 
-void incremental_normalization(Kuka_Vec new_point)
-{
-    
-};
-
 void learning::GpUpdate()
 {
     int i;
+    Eigen::VectorXd normalized_Y;
 
     //FOR 7 Gps
     /*
@@ -83,7 +79,8 @@ void learning::GpUpdate()
     */
 
    //FOR 1 Multidimensional GP
-   gp_container.back().add_sample(DatasetX.back(),DatasetY.back());
+   //gp_container.back().add_sample(DatasetX.back(),DatasetY.back());
+   gp_container.back().add_sample(DatasetX.back(),Normalize(DatasetY.back()));
 
 };
 
@@ -111,5 +108,32 @@ Kuka_Vec learning::GpPredict(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q_ref)
    query_point << Q,dQ,d2Q_ref;
    std::tie(mu,sigma) = gp_container.back().query(query_point);
    prediction = mu;
+
+   prediction = DeNormalize(prediction);
+   
    return prediction;
+};
+
+Eigen::VectorXd learning::Normalize(Eigen::VectorXd Y)
+{
+    int i;
+    Kuka_Vec Normalized;
+
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {
+        Normalized(i) = (Y(i) - MIN_GP) / (2.0*(MAX_GP-MIN_GP));
+    }
+    return Normalized;
+};
+
+Eigen::VectorXd learning::DeNormalize(Eigen::VectorXd YNormalized)
+{
+    int i;
+    Kuka_Vec DeNormalized;
+    
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {
+        DeNormalized(i) = YNormalized(i) * (2.0*(MAX_GP-MIN_GP)) + MIN_GP;
+    }
+    return DeNormalized;
 };

@@ -1,5 +1,7 @@
 #define RUN_TIME_IN_SECONDS             300.0
 #define DELTAT                  0.005
+#define MAX_GP                  50
+#define MIN_GP                  -50
 
 
 #ifndef RAD

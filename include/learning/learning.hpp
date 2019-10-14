@@ -34,7 +34,7 @@ class learning
         }
         */
         GP_t gp(NUMBER_OF_JOINTS*3,NUMBER_OF_JOINTS);
-        
+        //gp.load<serialize::TextArchive>("myGP");
         gp_container.push_back(gp);
 
         Eigen::MatrixXd temp;
@@ -61,7 +61,7 @@ class learning
 
     void DatasetUpdate(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
     Kuka_Vec DataPoint(Kuka_State State, Kuka_State OldState, Kuka_Vec reference, Kuka_Vec prediction, Kuka_Mat MassMatrix);
-    void incremental_normalization(Kuka_Vec new_point);
+
     void GpUpdate();
     
     
@@ -102,7 +102,10 @@ class learning
     Eigen::Matrix<double, 2, 1>  B;
     Eigen::Matrix2d W;
     Eigen::Matrix<double, 1, 2> Y;
-
+    
+    Eigen::VectorXd Normalize(Eigen::VectorXd Y);
+    Eigen::VectorXd DeNormalize(Eigen::VectorXd YNormalized);
+    
     double UnwrapAngle(double angle_old, double angle_new); 
     double GramianCalc(double qnew, double dqnew, double qold, double dqold);
 };
