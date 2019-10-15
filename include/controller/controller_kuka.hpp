@@ -17,10 +17,18 @@ class controller_kuka : public controller
             std::string IMP("impedence");
             std::string POS("position");
 
-            dQ = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
-	    dQold = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
-            d2Q = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
-            d2Qold = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
+            dQ = Kuka_Vec::Constant(0.0);
+	    dQold = Kuka_Vec::Constant(0.0);
+            d2Q = Kuka_Vec::Constant(0.0);
+            d2Qold = Kuka_Vec::Constant(0.0);
+            
+            Kuka_Vec temp_zero = Kuka_Vec::Constant(0.0);
+            alpha.push_back(temp_zero);
+            epsilon.push_back(temp_zero);
+            K.push_back(temp_zero);
+
+            temp_zero = Kuka_Vec::Constant(100.0);
+            P.push_back(temp_zero);
 
             const float TimeOutValueInSeconds = 120.0;
 
@@ -121,6 +129,9 @@ class controller_kuka : public controller
 
         Kuka_Vec PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd);
 
+        // RLS estimator of alpha parameters for correting commanded torques
+        void RLS_Torque();
+
         //Adding of the torque bias for KUKA LWR-4
         Kuka_Vec TorqueAdjuster(Kuka_Vec torques, Kuka_Vec dQ);
         
@@ -160,6 +171,7 @@ class controller_kuka : public controller
         Kuka_Vec d2Qold;
         
         Kuka_Vec torque_measured;
+        Kuka_Vec torque_assigned;
 
         float	CommandedTorquesInNm		[NUMBER_OF_JOINTS],
               	CommandedStiffness      	[NUMBER_OF_JOINTS]={0.0},
@@ -170,7 +182,10 @@ class controller_kuka : public controller
                 GravityVector                   [NUMBER_OF_JOINTS];
         float   MassMatrix                    [NUMBER_OF_JOINTS][NUMBER_OF_JOINTS];
         
-        
+        std::vector<Kuka_Vec> alpha;
+        std::vector<Kuka_Vec> epsilon;
+        std::vector<Kuka_Vec> P;
+        std::vector<Kuka_Vec> K;
 
 protected:
         //Conversion from Eigen vector to array of float

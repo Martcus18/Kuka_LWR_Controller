@@ -94,6 +94,7 @@ struct Params {
         BO_PARAM(int, max_points, 200);
     };
     */
+    
 };
 
 using Kernel_t = kernel::SquaredExpARD<Params>;
@@ -155,31 +156,32 @@ int main(int argc, char** argv)
     //dataY.normalize_data(Y_opti);
 
     //gp.compute(X_opti, Y_opti, true);
+    chrono::steady_clock sc;
+    auto start = sc.now(); 
     gp.compute(X, Y, true);
+    auto end = sc.now();
+    auto time_span = static_cast<chrono::duration<double>>(end - start);   // measure time span between start & end
+    std::cout<<"Operation took: "<<time_span.count()<<" seconds !!!" << "\n";
     //chrono::steady_clock sc;   // create an object of `steady_clock` class
     //auto start = sc.now(); 
-    gp.optimize_hyperparams();
+    //gp.optimize_hyperparams();
     //auto end = sc.now();
     //auto time_span = static_cast<chrono::duration<double>>(end - start);   // measure time span between start & end
     //std::cout<<"Operation took: "<<time_span.count()<<" seconds !!!" << "\n";
     
     // Sometimes is useful to save an optimized GP
-    gp.save<serialize::TextArchive>("myGP");
-
+    //gp.save<serialize::TextArchive>("myGP");
     std::vector<Eigen::VectorXd> Prediction;
     Eigen::VectorXd mu;
     Eigen::VectorXd v;
     double sigma;
     
-    for (int i = 500; i <1000 ; ++i) 
+    for (int i = 1; i <400 ; ++i) 
     {
         v = X[i];
-        chrono::steady_clock sc;   // crea//#include<utils/lib.hpp>te an object of `steady_clock` class
+        
         auto start = sc.now(); 
         std::tie(mu, sigma) = gp.query(v);
-        auto end = sc.now();
-        auto time_span = static_cast<chrono::duration<double>>(end - start);   // measure time span between start & end
-        std::cout<<"Operation took: "<<time_span.count()<<" seconds !!!" << "\n";
         Prediction.push_back(mu);
     }
     dataY.de_normalize_data(Prediction);

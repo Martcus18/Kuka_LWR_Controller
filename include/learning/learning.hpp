@@ -25,16 +25,10 @@ class learning
 
     learning()
     {
-        /*
-        for(int i=0;i<NUMBER_OF_JOINTS;i++)
-        {
-            GP_t temp_gp(NUMBER_OF_JOINTS*3,1);
-            temp_gp.load<serialize::TextArchive>("myGP");
-            gp_container.push_back(temp_gp);
-        }
-        */
         GP_t gp(NUMBER_OF_JOINTS*3,NUMBER_OF_JOINTS);
+        
         //gp.load<serialize::TextArchive>("myGP");
+        
         gp_container.push_back(gp);
 
         Eigen::MatrixXd temp;

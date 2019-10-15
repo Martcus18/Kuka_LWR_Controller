@@ -81,6 +81,7 @@ void learning::GpUpdate()
    //FOR 1 Multidimensional GP
    //gp_container.back().add_sample(DatasetX.back(),DatasetY.back());
    gp_container.back().add_sample(DatasetX.back(),Normalize(DatasetY.back()));
+   //gp_container.back().compute(DatasetX,DatasetY);
 
 };
 

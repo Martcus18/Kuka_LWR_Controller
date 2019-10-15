@@ -43,7 +43,6 @@ Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Ve
     }
 
     TauFl = B_eig * reference + C_eig + g_eig + friction_eig;
-    //TauFl = B_eig * reference + C_eig + g_eig;
     return TauFl;
  };
 
@@ -96,27 +95,32 @@ Kuka_Vec controller_kuka::PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Ku
     return control;
 };
 
+void controller_kuka::RLS_Torque()
+{
+    Kuka_Vec alpha_new;
+    Kuka_Vec epsilon_new;
+    Kuka_Vec K_new;
+    Kuka_Vec P_new;
+    Kuka_Vec temp = Kuka_Vec::Constant(1.0);
+
+    epsilon_new = torque_assigned - torque_measured - (dQ.array().sign() * alpha.back().array()).matrix();
+    K_new = ((P.back().array() * dQ.array().sign())  / (temp.array() + P.back().array())).matrix();
+    alpha_new = alpha.back() + (K_new.array() * epsilon_new.array()).matrix();
+    P_new = (P.back().array() - K_new.array() * P.back().array() * dQ.array().sign()).matrix();
+
+    alpha.push_back(alpha_new);
+    epsilon.push_back(epsilon_new);
+    K.push_back(K_new);
+    P.push_back(P_new);
+};
+
 Kuka_Vec controller_kuka::TorqueAdjuster(Kuka_Vec torques, Kuka_Vec dQ)
 {
-    double bias = 0.1;
-    int i;
+    Kuka_Vec torques_adjusted;
 
-    for(i=0;i<dQ.rows();i++)
-    {
-        if(dQ(i)>0.0)
-        {
-            torques(i) = torques(i) + bias;
-        }
-        else if(dQ(i)<0.0)
-        {
-            torques(i) = torques(i) - bias;
-        }
-        else
-        {
-            torques(i) = torques(i);
-        }
-    }
-    return torques;
+    torques_adjusted = torques + (alpha.back().array() * dQ.array().sign()).matrix(); 
+    
+    return torques_adjusted;
 };
 
 Kuka_Vec controller_kuka::EulerDifferentiation(Kuka_Vec X, Kuka_Vec Xold)
