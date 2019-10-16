@@ -267,9 +267,13 @@ int main(int argc, char *argv[])
 		
 		//Controller.Tor_th.push_back(Torques_ref);
 		
-		Controller.Tor_th.push_back(Torques_ref + G);
+		//Controller.Tor_th.push_back(Torques_ref + G);
 
-		//Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref + G,Controller.dQ));
+		//Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,Controller.dQ));
+		
+		Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,dQ_filtered));
+		
+		std::cout << Controller.alpha.back() << "--\n--";
 		
 		CycleCounter++;
 	}
