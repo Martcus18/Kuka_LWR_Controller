@@ -22,8 +22,15 @@ class controller_kuka : public controller
             d2Q = Kuka_Vec::Constant(0.0);
             d2Qold = Kuka_Vec::Constant(0.0);
             
+            
+
             Kuka_Vec temp_zero = Kuka_Vec::Constant(0.0);
+            Kuka_Vec initial_alpha = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
+            
+            initial_alpha << 0.42, 0.52, 0.39, 0.34, 0.05, 0.08, 0.0;
+
             alpha.push_back(temp_zero);
+            //alpha.push_back(initial_alpha);
             epsilon.push_back(temp_zero);
             K.push_back(temp_zero);
 

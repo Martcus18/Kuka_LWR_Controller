@@ -147,9 +147,22 @@ int main(int argc, char *argv[])
 		//CHECKING USING FILTERED STATE
 		//Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Prediction, Mass);
 
-		Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
-		dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
-		d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
+		//TRAJ1
+		
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
+		//dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
+		//d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
+		
+
+		//TRAJ2
+		Q_ref = Q0 + Kuka_Vec::Constant(0.2*(0.05*std::sin(2*Time) + std::cos(2*Time)));
+		dQ_ref = Kuka_Vec::Constant(0.4*(0.05*std::cos(2*Time) - std::sin(2*Time)));
+		d2Q_ref = Kuka_Vec::Constant(0.8*(-0.05*std::sin(2*Time) - std::cos(2*Time)));
+
+		//TRAJ3
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::pow(std::cos(2*Time),2));
+		//dQ_ref = Kuka_Vec::Constant(-0.2*(2*std::sin(4*Time)));
+		//d2Q_ref = Kuka_Vec::Constant(-0.2*(8*std::cos(4*Time)));
 
 
 		//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
@@ -219,15 +232,15 @@ int main(int argc, char *argv[])
 
 		Controller.d2Qold = Controller.d2Q;	
 
-		Controller.Qsave_filtered.push_back(Controller.Filter(Controller.Qsave,20));
+		//Controller.Qsave_filtered.push_back(Controller.Filter(Controller.Qsave,20));
 
 		Controller.dQsave_filtered.push_back(Controller.Filter(Controller.dQsave,20));
 		
 		Controller.d2Qsave_filtered.push_back(Controller.Filter(Controller.d2Qsave,20));
 
-		//Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
+		Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
 
-		Controller.SetTorques(Torques_ref);
+		//Controller.SetTorques(Torques_ref);
 
 		//Controller.SetJointsPositions(Q_ref);
 		
@@ -237,7 +250,7 @@ int main(int argc, char *argv[])
 
 		Controller.end_eff_pos.push_back(end_effector);
 
-		Controller.torque_assigned = Torques_ref;
+		Controller.torque_assigned = Torques_ref + G;
 
 		Controller.MeasureJointTorques();	
 		
@@ -271,9 +284,9 @@ int main(int argc, char *argv[])
 
 		//Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,Controller.dQ));
 		
+		Controller.Qsave_filtered.push_back(Torques_ref + G);
+
 		Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,dQ_filtered));
-		
-		std::cout << Controller.alpha.back() << "--\n--";
 		
 		CycleCounter++;
 	}
