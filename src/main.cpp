@@ -98,9 +98,9 @@ int main(int argc, char *argv[])
 		}
 	}
 	
-	std::cout << "RUN TIME" << RUN_TIME_IN_SECONDS<<"\n";
+	std::cout << "RUN TIME" << RUN_TIME_IN_SECONDS << "\n";
 	
-	Tic = std::chrono::system_clock::now();
+	//Tic = std::chrono::system_clock::now();
 
 	d2Q_ref = Kuka_Vec::Constant(0.0);
 	Mass = Controller.GetMass(Controller.Q);
@@ -152,11 +152,10 @@ int main(int argc, char *argv[])
 
 		//TRAJ1
 		
-		Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
-		dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
-		d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
+		Q_ref = Q0 + Kuka_Vec::Constant(0.02*std::sin(2*Time));
+		dQ_ref = Kuka_Vec::Constant(0.04*std::cos(2*Time));
+		d2Q_ref = Kuka_Vec::Constant(-0.08*std::sin(2*Time));
 		
-
 		//TRAJ2
 		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*(0.05*std::sin(2*Time) + std::cos(2*Time)));
 		//dQ_ref = Kuka_Vec::Constant(0.4*(0.05*std::cos(2*Time) - std::sin(2*Time)));
@@ -167,15 +166,15 @@ int main(int argc, char *argv[])
 		//dQ_ref = Kuka_Vec::Constant(-0.2*(2*std::sin(4*Time)));
 		//d2Q_ref = Kuka_Vec::Constant(-0.2*(8*std::cos(4*Time)));
 
-
-		//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
 
 		G = Controller.GetGravity();
 
-		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
+		
 		
 		//CHECKING USING NOT FILTERED STATE
-		Controller.foo2.push_back(Controller.FeedbackLinearization(Controller.Qsave.back(), Controller.dQsave.back(),Controller.d2Q));
+		Controller.foo2.push_back(Controller.FeedbackLinearization(Controller.Qsave.back(), Controller.dQsave.back(),d2Q_filtered));
+		//Controller.foo2.push_back(Controller.FeedbackLinearization(Controller.Qsave.back(), Controller.dQsave.back(),Controller.d2Q));
 
 		//CHECKING USING FILTERED STATE
 		//Controller.foo2.push_back(Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_filtered));
@@ -183,9 +182,10 @@ int main(int argc, char *argv[])
 
 		d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 		
+		//d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered, d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
 		Ref_Acc.push_back(d2Q_ref);
 
-		//d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered, d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
+		//LEARNING PART START
 		/*
 		if((CycleCounter % 30) == 0)
 		{
@@ -210,13 +210,13 @@ int main(int argc, char *argv[])
 		
 		Prediction_array.push_back(Prediction);
 		*/
-		//Controller.Qsave_filtered.push_back(d2Q_ref);
+
+		//LEARNING PART END
 
 		//FOR TORQUE CONTROL
 		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G;
 		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 		
-		//Controller.foo.push_back(Torques_ref);
 
 		//Torques_ref = Torques_ref + Prediction;
 
@@ -240,11 +240,20 @@ int main(int argc, char *argv[])
 		Controller.dQsave_filtered.push_back(Controller.Filter(Controller.dQsave,20));
 		
 		Controller.d2Qsave_filtered.push_back(Controller.Filter(Controller.d2Qsave,20));
-
-		Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
-
-		//Controller.SetTorques(Torques_ref);
-
+		
+		std::cout << CycleCounter << "--\n--";
+		
+		//if(CycleCounter > 300)
+		//{
+			Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
+		//}
+		//else
+		//{
+		
+		//Controller.SetTorques(Torques_ref);		
+		
+		//}
+		
 		//Controller.SetJointsPositions(Q_ref);
 		
 		Mass = Controller.GetMass(Controller.Q);
@@ -252,6 +261,8 @@ int main(int argc, char *argv[])
 		end_effector = D_kin(Controller.Q);
 
 		Controller.end_eff_pos.push_back(end_effector);
+
+		//Controller.torque_assigned = Torques_ref + G;
 
 		Controller.torque_assigned = Torques_ref + G;
 
@@ -265,6 +276,7 @@ int main(int argc, char *argv[])
 		Controller.torque_measured(5) = Controller.MeasuredTorquesInNm[5];
 		Controller.torque_measured(6) = Controller.MeasuredTorquesInNm[6];
 
+		/*
 		Torques_measured(0) = Controller.MeasuredTorquesInNm[0];
 		Torques_measured(1) = Controller.MeasuredTorquesInNm[1];
 		Torques_measured(2) = Controller.MeasuredTorquesInNm[2];
@@ -272,14 +284,15 @@ int main(int argc, char *argv[])
 		Torques_measured(4) = Controller.MeasuredTorquesInNm[4];
 		Torques_measured(5) = Controller.MeasuredTorquesInNm[5];
 		Torques_measured(6) = Controller.MeasuredTorquesInNm[6];
+		*/
 
-		Controller.RLS_Torque();
+		//Controller.RLSTorque();
 
-		Controller.Tor_meas.push_back(Torques_measured);
+		Controller.Tor_meas.push_back(Controller.torque_measured);
 		
 		//Controller.Tor_meas_filtered.push_back(Controller.Filter(Controller.Tor_meas,20));
 
-		Controller.Tor_meas_filtered.push_back(Torques_measured);
+		Controller.Tor_meas_filtered.push_back(Controller.torque_measured);
 		
 		//Controller.Tor_th.push_back(Torques_ref);
 		
@@ -309,7 +322,7 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout, "Deleting the object...\n");
 	
-	
+	//KINEMATIC VARIABLES PRINTING
 	Controller.FromKukaToDyn(temp,Controller.Qsave);
 	Controller.writer.write_data(qsave,temp);
 	
@@ -328,26 +341,35 @@ int main(int argc, char *argv[])
 	Controller.FromKukaToDyn(temp,Controller.d2Qsave_filtered);
 	Controller.writer.write_data(d2qsave_filtered,temp);
 	
+	//TORQUE VARIABLES PRINTING
 	Controller.FromKukaToDyn(temp,Controller.Tor_meas_filtered);
 	Controller.writer.write_data(torque_meas,temp);	
 
 	Controller.FromKukaToDyn(temp,Controller.Tor_th);
 	Controller.writer.write_data(torque_th,temp);
 
+	//END_EFFECTOR PRINTING
 	Controller.writer.write_data(end_effector_pos,Controller.end_eff_pos);
 
+	//REFERENCE ACCELERATION PRINTING	
+	Controller.FromKukaToDyn(temp,Ref_Acc);
+	Controller.writer.write_data(ref,temp);
+
+	//TEMP VARIABLES PRINTING
 	Controller.FromKukaToDyn(temp,Controller.foo);
 	Controller.writer.write_data(foo,temp);
 	
 	Controller.FromKukaToDyn(temp,Controller.foo2);
 	Controller.writer.write_data(foo2,temp);
 
+	//LEARNING VARIABLES PRINTING
 	Controller.FromKukaToDyn(temp,Prediction_array);
 	Controller.writer.write_data(fooXd,temp);
 	
 	Controller.writer.write_data(Xdata,Controller.Regressor->DatasetX);
 	Controller.writer.write_data(Ydata,Controller.Regressor->DatasetY);
 
+	//RLS VARIABLES PRINTING
 	Controller.FromKukaToDyn(temp,Controller.alpha);
 	Controller.writer.write_data(alpha,temp);
 
@@ -359,17 +381,14 @@ int main(int argc, char *argv[])
 
 	Controller.FromKukaToDyn(temp,Controller.P);
 	Controller.writer.write_data(P,temp);
-
-	Controller.FromKukaToDyn(temp,Ref_Acc);
-	Controller.writer.write_data(ref,temp);
 	
-	/*
-	delete Controller.FRI;
-	delete Controller.dyn;
-	delete Controller.Regressor;
-	*/
+	//DELETING POINTERS
 
-	fprintf(stdout, "Object deleted...\n");
+	delete Controller.FRI;
+	//delete Controller.dyn;
+	//delete Controller.Regressor;
+
+	fprintf(stdout, "Objects deleted...\n");
 	
 	return(EXIT_SUCCESS);
 	

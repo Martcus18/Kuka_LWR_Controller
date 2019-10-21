@@ -22,16 +22,16 @@ class controller_kuka : public controller
             d2Q = Kuka_Vec::Constant(0.0);
             d2Qold = Kuka_Vec::Constant(0.0);
             
-            
-
             Kuka_Vec temp_zero = Kuka_Vec::Constant(0.0);
             Kuka_Vec initial_alpha = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
             
-            initial_alpha << 0.42, 0.52, 0.39, 0.34, 0.05, 0.08, 0.0;
+            initial_alpha << 0.45, 0.5, 0.6, 0.35, 0.3, 0.5, 0.6;
 
-            alpha.push_back(temp_zero);
-            //alpha.push_back(initial_alpha);
+            //alpha.push_back(temp_zero);
+            alpha.push_back(initial_alpha);
+
             epsilon.push_back(temp_zero);
+
             K.push_back(temp_zero);
 
             temp_zero = Kuka_Vec::Constant(100.0);
@@ -137,7 +137,7 @@ class controller_kuka : public controller
         Kuka_Vec PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd);
 
         // RLS estimator of alpha parameters for correting commanded torques
-        void RLS_Torque();
+        void RLSTorque();
 
         //Adding of the torque bias for KUKA LWR-4
         Kuka_Vec TorqueAdjuster(Kuka_Vec torques, Kuka_Vec dQ);
