@@ -72,7 +72,10 @@ int main(int argc, char *argv[])
 	std::string foo = "foo.txt";
 	std::string foo2 = "foo2.txt";
 	std::string fooXd = "predictions.txt";
-	std::string pred_time = "pred_time.txt";
+	std::string alpha = "alpha.txt";
+	std::string epsilon = "epsilon.txt";
+	std::string P = "P.txt";
+	std::string K = "K.txt";
 	std::string ref = "ref_acc.txt";
 	std::string Xdata = "X.txt";
 	std::string Ydata = "Y.txt";
@@ -149,15 +152,15 @@ int main(int argc, char *argv[])
 
 		//TRAJ1
 		
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
-		//dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
-		//d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
+		Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
+		dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
+		d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
 		
 
 		//TRAJ2
-		Q_ref = Q0 + Kuka_Vec::Constant(0.2*(0.05*std::sin(2*Time) + std::cos(2*Time)));
-		dQ_ref = Kuka_Vec::Constant(0.4*(0.05*std::cos(2*Time) - std::sin(2*Time)));
-		d2Q_ref = Kuka_Vec::Constant(0.8*(-0.05*std::sin(2*Time) - std::cos(2*Time)));
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*(0.05*std::sin(2*Time) + std::cos(2*Time)));
+		//dQ_ref = Kuka_Vec::Constant(0.4*(0.05*std::cos(2*Time) - std::sin(2*Time)));
+		//d2Q_ref = Kuka_Vec::Constant(0.8*(-0.05*std::sin(2*Time) - std::cos(2*Time)));
 
 		//TRAJ3
 		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::pow(std::cos(2*Time),2));
@@ -346,7 +349,16 @@ int main(int argc, char *argv[])
 	Controller.writer.write_data(Ydata,Controller.Regressor->DatasetY);
 
 	Controller.FromKukaToDyn(temp,Controller.alpha);
-	Controller.writer.write_data(pred_time,temp);
+	Controller.writer.write_data(alpha,temp);
+
+	Controller.FromKukaToDyn(temp,Controller.epsilon);
+	Controller.writer.write_data(epsilon,temp);	
+
+	Controller.FromKukaToDyn(temp,Controller.K);
+	Controller.writer.write_data(K,temp);
+
+	Controller.FromKukaToDyn(temp,Controller.P);
+	Controller.writer.write_data(P,temp);
 
 	Controller.FromKukaToDyn(temp,Ref_Acc);
 	Controller.writer.write_data(ref,temp);
