@@ -23,8 +23,9 @@ class controller
         controller()
         {
                 data_manager writer();
-                Kp.diagonal() << 50,50,50,50,50,50,50;
-                Kd.diagonal() << 1,1,1,1,1,1,1;
+                Kp.diagonal() << 55,55,55,55,55,55,55;
+                Kd.diagonal() << 8,8,8,8,8,8,8;
+                Ki.diagonal() << 3,3,3,3,3,3,3;
         };
 
         ~controller(){};
@@ -67,6 +68,7 @@ class controller
 
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kp;
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kd;
+        Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Ki;
 
 };
 #endif /* CONTROLLER_HPP_ */

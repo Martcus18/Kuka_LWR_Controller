@@ -140,8 +140,7 @@ int main(int argc, char *argv[])
 
 		//CHECKING USING FILTERED STATE
 		//temp_Vec = Controller.Regressor->DataPoint(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
-		
-		
+
 		Controller.foo.push_back(temp_Vec);
 		
 		//CHECKING USING NOT FILTERED STATE
@@ -152,10 +151,14 @@ int main(int argc, char *argv[])
 
 		//TRAJ1
 		
-		Q_ref = Q0 + Kuka_Vec::Constant(0.02*std::sin(2*Time));
-		dQ_ref = Kuka_Vec::Constant(0.04*std::cos(2*Time));
-		d2Q_ref = Kuka_Vec::Constant(-0.08*std::sin(2*Time));
-		
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
+		//dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
+		//d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
+
+		Q_ref = Q0 + Kuka_Vec::Constant(0.2*Time);
+		dQ_ref = Kuka_Vec::Constant(0.2);
+		d2Q_ref = Kuka_Vec::Constant(0.0);
+
 		//TRAJ2
 		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*(0.05*std::sin(2*Time) + std::cos(2*Time)));
 		//dQ_ref = Kuka_Vec::Constant(0.4*(0.05*std::cos(2*Time) - std::sin(2*Time)));
@@ -170,8 +173,6 @@ int main(int argc, char *argv[])
 
 		G = Controller.GetGravity();
 
-		
-		
 		//CHECKING USING NOT FILTERED STATE
 		Controller.foo2.push_back(Controller.FeedbackLinearization(Controller.Qsave.back(), Controller.dQsave.back(),d2Q_filtered));
 		//Controller.foo2.push_back(Controller.FeedbackLinearization(Controller.Qsave.back(), Controller.dQsave.back(),Controller.d2Q));
@@ -179,11 +180,11 @@ int main(int argc, char *argv[])
 		//CHECKING USING FILTERED STATE
 		//Controller.foo2.push_back(Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_filtered));
 
-
 		d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 		
 		//d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered, d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
-		Ref_Acc.push_back(d2Q_ref);
+		//Ref_Acc.push_back(d2Q_ref);
+		Ref_Acc.push_back(dQ_ref);
 
 		//LEARNING PART START
 		/*
@@ -215,12 +216,14 @@ int main(int argc, char *argv[])
 
 		//FOR TORQUE CONTROL
 		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G;
-		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
+		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 		
 
 		//Torques_ref = Torques_ref + Prediction;
 
 		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G + Prediction;
+
+		Torques_ref = Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 
 		//Torque th for checking feedback linearization
 		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_filtered);
@@ -243,16 +246,18 @@ int main(int argc, char *argv[])
 		
 		std::cout << CycleCounter << "--\n--";
 		
-		//if(CycleCounter > 300)
-		//{
+		
+		if(CycleCounter > 300)
+		{
 			Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
-		//}
-		//else
-		//{
+		}
+
+		else
+		{
+			Controller.SetTorques(Torques_ref);			
+		}
 		
-		//Controller.SetTorques(Torques_ref);		
 		
-		//}
 		
 		//Controller.SetJointsPositions(Q_ref);
 		
@@ -261,8 +266,6 @@ int main(int argc, char *argv[])
 		end_effector = D_kin(Controller.Q);
 
 		Controller.end_eff_pos.push_back(end_effector);
-
-		//Controller.torque_assigned = Torques_ref + G;
 
 		Controller.torque_assigned = Torques_ref + G;
 
@@ -276,17 +279,11 @@ int main(int argc, char *argv[])
 		Controller.torque_measured(5) = Controller.MeasuredTorquesInNm[5];
 		Controller.torque_measured(6) = Controller.MeasuredTorquesInNm[6];
 
-		/*
-		Torques_measured(0) = Controller.MeasuredTorquesInNm[0];
-		Torques_measured(1) = Controller.MeasuredTorquesInNm[1];
-		Torques_measured(2) = Controller.MeasuredTorquesInNm[2];
-		Torques_measured(3) = Controller.MeasuredTorquesInNm[3];
-		Torques_measured(4) = Controller.MeasuredTorquesInNm[4];
-		Torques_measured(5) = Controller.MeasuredTorquesInNm[5];
-		Torques_measured(6) = Controller.MeasuredTorquesInNm[6];
-		*/
-
-		//Controller.RLSTorque();
+		if(CycleCounter > 300)
+		{
+			Controller.RLSTorque();
+		}
+		
 
 		Controller.Tor_meas.push_back(Controller.torque_measured);
 		
@@ -302,7 +299,7 @@ int main(int argc, char *argv[])
 		
 		Controller.Qsave_filtered.push_back(Torques_ref + G);
 
-		Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,dQ_filtered));
+		Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,Controller.dQ));
 		
 		CycleCounter++;
 	}

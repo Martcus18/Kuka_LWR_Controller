@@ -25,10 +25,12 @@ class controller_kuka : public controller
             Kuka_Vec temp_zero = Kuka_Vec::Constant(0.0);
             Kuka_Vec initial_alpha = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
             
-            initial_alpha << 0.45, 0.5, 0.6, 0.35, 0.3, 0.5, 0.6;
+            //initial_alpha << 0.50008,0.56839,0.67173,0.37172,0.29092,0.46072,0.66981;
 
-            //alpha.push_back(temp_zero);
-            alpha.push_back(initial_alpha);
+            initial_alpha << 0.42942,0.51900,0.62936,0.33944,0.29354,0.43139,0.55375;
+
+            alpha.push_back(temp_zero);
+            //alpha.push_back(initial_alpha);
 
             epsilon.push_back(temp_zero);
 
@@ -193,6 +195,7 @@ class controller_kuka : public controller
         std::vector<Kuka_Vec> epsilon;
         std::vector<Kuka_Vec> P;
         std::vector<Kuka_Vec> K;
+        Kuka_Vec integralsum = Kuka_Vec::Constant(0.0);
 
 protected:
         //Conversion from Eigen vector to array of float

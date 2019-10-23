@@ -43,7 +43,6 @@ Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Ve
     }
 
     TauFl = B_eig * reference + C_eig + g_eig + friction_eig;
-    //TauFl = B_eig * reference + C_eig + g_eig;
     return TauFl;
  };
 
@@ -91,7 +90,9 @@ Kuka_Vec controller_kuka::PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Ku
     e = Qd - Q;
     de = dQd - dQ;
     
-    control = Kp * e + Kd * de;
+    integralsum = integralsum + e;
+
+    control = Kp * e + Kd * de + Ki * DELTAT *  integralsum;
 
     return control;
 };
