@@ -148,27 +148,47 @@ int main(int argc, char *argv[])
 		
 		//CHECKING USING FILTERED STATE
 		//Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Prediction, Mass);
+		
+		//TRAJ0
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*Time);
+		//dQ_ref = Kuka_Vec::Constant(0.2);
+		//d2Q_ref = Kuka_Vec::Constant(0.0);
 
 		//TRAJ1
+		//Q_ref = Q0 - Kuka_Vec::Constant(0.1*Time);
+		//dQ_ref = -Kuka_Vec::Constant(0.1);
+		//d2Q_ref = -Kuka_Vec::Constant(0.0);
 		
+		//TRAJ2
 		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
 		//dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
 		//d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
 
-		Q_ref = Q0 + Kuka_Vec::Constant(0.2*Time);
-		dQ_ref = Kuka_Vec::Constant(0.2);
-		d2Q_ref = Kuka_Vec::Constant(0.0);
-
-		//TRAJ2
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*(0.05*std::sin(2*Time) + std::cos(2*Time)));
+		//TRAJ3
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*(0.5*std::sin(2*Time) + std::cos(2*Time)));
 		//dQ_ref = Kuka_Vec::Constant(0.4*(0.05*std::cos(2*Time) - std::sin(2*Time)));
 		//d2Q_ref = Kuka_Vec::Constant(0.8*(-0.05*std::sin(2*Time) - std::cos(2*Time)));
 
-		//TRAJ3
+		//TRAJ4
 		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::pow(std::cos(2*Time),2));
 		//dQ_ref = Kuka_Vec::Constant(-0.2*(2*std::sin(4*Time)));
 		//d2Q_ref = Kuka_Vec::Constant(-0.2*(8*std::cos(4*Time)));
+		
+		//TRAJ5
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*Time) + Kuka_Vec::Constant(0.1*Time*Time);
+		//dQ_ref = Kuka_Vec::Constant(0.1) + Kuka_Vec::Constant(0.2*Time);
+		//d2Q_ref = Kuka_Vec::Constant(0.2);
 
+		//TRAJ6
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*Time) + Kuka_Vec::Constant(0.1*Time*Time) + Kuka_Vec::Constant(0.1*Time*Time*Time);
+		//dQ_ref = Kuka_Vec::Constant(0.1) + Kuka_Vec::Constant(0.2*Time) + Kuka_Vec::Constant(0.3*Time*Time);
+		//d2Q_ref = Kuka_Vec::Constant(0.2) + Kuka_Vec::Constant(0.6*Time);
+		
+		//TRAJ7
+		Q_ref = Q0 + Kuka_Vec::Constant(0.1*Time) + Kuka_Vec::Constant(0.1*Time*Time) - Kuka_Vec::Constant(0.1*Time*Time*Time);
+		dQ_ref = Kuka_Vec::Constant(0.1) + Kuka_Vec::Constant(0.2*Time) - Kuka_Vec::Constant(0.3*Time*Time);
+		d2Q_ref = -Kuka_Vec::Constant(0.2) - Kuka_Vec::Constant(0.6*Time);
+		
 		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
 
 		G = Controller.GetGravity();
@@ -184,7 +204,7 @@ int main(int argc, char *argv[])
 		
 		//d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered, d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
 		//Ref_Acc.push_back(d2Q_ref);
-		Ref_Acc.push_back(dQ_ref);
+		Ref_Acc.push_back(d2Q_ref);
 
 		//LEARNING PART START
 		/*
@@ -246,19 +266,10 @@ int main(int argc, char *argv[])
 		
 		std::cout << CycleCounter << "--\n--";
 		
-		
-		if(CycleCounter > 300)
-		{
-			Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
-		}
+		//Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
 
-		else
-		{
-			Controller.SetTorques(Torques_ref);			
-		}
-		
-		
-		
+		Controller.SetTorques(Torques_ref);			
+
 		//Controller.SetJointsPositions(Q_ref);
 		
 		Mass = Controller.GetMass(Controller.Q);
