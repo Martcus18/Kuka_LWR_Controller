@@ -108,15 +108,6 @@ void controller_kuka::RLSTorque()
 
     epsilon_new = torque_assigned - torque_measured - (dQ.array().sign() * alpha.back().array()).matrix();
     
-    //JUST FOR UPDATING ALPHA(0)
-    //K_new = K.back();
-    //K_new(0) = P.back()(0) * dQ.array().sign()(0) / (1.0 + P.back()(0));
-    //alpha_new = alpha.back();
-    //P_new = P.back();
-    //P_new(0) = P.back()(0) - K_new(0) * P.back()(0) * dQ.array().sign()(0);
-    //alpha_new(0) = alpha.back()(0) + K_new(0)*epsilon_new(0);
-
-
     //FOR UPDATING ALPHA
     K_new = ((P.back().array() * dQ.array().sign())  / (temp.array() + P.back().array())).matrix();
     alpha_new = alpha.back() + (K_new.array() * epsilon_new.array()).matrix();

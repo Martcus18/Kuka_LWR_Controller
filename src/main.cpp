@@ -185,10 +185,40 @@ int main(int argc, char *argv[])
 		//d2Q_ref = Kuka_Vec::Constant(0.2) + Kuka_Vec::Constant(0.6*Time);
 		
 		//TRAJ7
-		Q_ref = Q0 + Kuka_Vec::Constant(0.1*Time) + Kuka_Vec::Constant(0.1*Time*Time) - Kuka_Vec::Constant(0.1*Time*Time*Time);
-		dQ_ref = Kuka_Vec::Constant(0.1) + Kuka_Vec::Constant(0.2*Time) - Kuka_Vec::Constant(0.3*Time*Time);
-		d2Q_ref = -Kuka_Vec::Constant(0.2) - Kuka_Vec::Constant(0.6*Time);
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*Time) + Kuka_Vec::Constant(0.1*Time*Time) - Kuka_Vec::Constant(0.1*Time*Time*Time);
+		//dQ_ref = Kuka_Vec::Constant(0.1) + Kuka_Vec::Constant(0.2*Time) - Kuka_Vec::Constant(0.3*Time*Time);
+		//d2Q_ref = -Kuka_Vec::Constant(0.2) - Kuka_Vec::Constant(0.6*Time);
+
+		//TRAJ8
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(5*Time));
+		//dQ_ref = Kuka_Vec::Constant(0.5*std::cos(5*Time));
+		//d2Q_ref = Kuka_Vec::Constant(-2.5*std::sin(5*Time));		
+
+		//TRAJ9
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.5*std::sin(0.5*Time));
+		//dQ_ref = Kuka_Vec::Constant(0.25*std::cos(0.5*Time));
+		//d2Q_ref = Kuka_Vec::Constant(-0.125*std::sin(0.5*Time));		
 		
+		//TRAJ10
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time) - 0.05*std::cos(3*Time));
+		//dQ_ref = Kuka_Vec::Constant(0.2*std::cos(2*Time) - 0.15*std::sin(3*Time));
+		//d2Q_ref = Kuka_Vec::Constant(0.4*std::sin(2*Time) - 0.45*std::cos(3*Time));
+		
+		//TRAJ11
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time) - 0.05*std::exp(std::sin(0.3*Time)));
+		//dQ_ref = Kuka_Vec::Constant(0.2*std::cos(2*Time) - 0.05* 0.3 *std::cos(0.3 * Time) * std::exp(std::sin(0.3 * Time)));
+		//d2Q_ref = Kuka_Vec::Constant(0.4*std::sin(2*Time) - 0.05* 0.3 * (-0.3*std::sin(0.3*Time) * std::exp(std::sin(0.3*Time)) + 0.3*std::cos(0.3*Time) * std::cos(0.3*Time) * std::exp(std::sin(0.3*Time))));
+
+		//TRAJ12
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time) - 0.1*std::exp(std::sin(0.6*Time)));
+		//dQ_ref = Kuka_Vec::Constant(0.2*std::cos(2*Time) - 0.1* 0.6 *std::cos(0.6 * Time) * std::exp(std::sin(0.6 * Time)));
+		//d2Q_ref = Kuka_Vec::Constant(0.4*std::sin(2*Time) - 0.1* 0.6 * (-0.6*std::sin(0.6*Time) * std::exp(std::sin(0.6*Time)) + 0.6*std::cos(0.6*Time) * std::cos(0.6*Time) * std::exp(std::sin(0.6*Time))));
+
+		//TRAJ13
+		Q_ref = Q0 - Kuka_Vec::Constant(0.1*Time - std::sin(0.3*Time));
+		dQ_ref = -Kuka_Vec::Constant(0.1 - 0.3*std::cos(0.3*Time));
+		d2Q_ref = -Kuka_Vec::Constant(+0.3* 0.3 * std::sin(0.3*Time)); 
+
 		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
 
 		G = Controller.GetGravity();
@@ -266,9 +296,9 @@ int main(int argc, char *argv[])
 		
 		std::cout << CycleCounter << "--\n--";
 		
-		//Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
+		Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
 
-		Controller.SetTorques(Torques_ref);			
+		//Controller.SetTorques(Torques_ref);			
 
 		//Controller.SetJointsPositions(Q_ref);
 		
@@ -290,11 +320,7 @@ int main(int argc, char *argv[])
 		Controller.torque_measured(5) = Controller.MeasuredTorquesInNm[5];
 		Controller.torque_measured(6) = Controller.MeasuredTorquesInNm[6];
 
-		if(CycleCounter > 300)
-		{
-			Controller.RLSTorque();
-		}
-		
+		Controller.RLSTorque();
 
 		Controller.Tor_meas.push_back(Controller.torque_measured);
 		
