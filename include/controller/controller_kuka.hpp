@@ -24,13 +24,27 @@ class controller_kuka : public controller
             
             Kuka_Vec temp_zero = Kuka_Vec::Constant(0.0);
             Kuka_Vec initial_alpha = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
+            Kuka_Vec initial_beta = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
+            Kuka_Vec initial_gamma = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
+            Kuka_Vec initial_eta = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
+
+            //initial_alpha << 0.6776, 0.9677, 0.9269, 0.7621, 0.2355, 0.4290, 0.0643;
+            //initial_beta << 0.1118, -0.2150, -0.0100, 7.2404, -0.2851, -0.2669, 0.0808;
+            //initial_gamma << -0.0504, 0.8150, -0.1610, -4.5767, 0.0438, 0.0561, 0.0646;
             
-            //initial_alpha << 0.50008,0.56839,0.67173,0.37172,0.29092,0.46072,0.66981;
-
-            initial_alpha << 0.42942,0.51900,0.62936,0.33944,0.29354,0.43139,0.55375;
-
-            alpha.push_back(temp_zero);
-            //alpha.push_back(initial_alpha);
+            initial_alpha << 0.68, 0.97, 0.93, 0.76, 0.24, 0.43, 0.06;
+            initial_beta << 0.17, -0.31, 0.093, -0.85, -0.09, -0.078, 0.15;
+            initial_gamma << -0.11, 0.10, -0.26, 3.51, -0.15, -0.13, -0.008;
+            initial_eta << -0.012, -0.72, 0.06, 12.66, 0.24, -0.25, -0.14;
+            
+            //alpha.push_back(temp_zero);
+            //beta.push_back(temp_zero);
+            //gamma.push_back(temp_zero);
+            
+            alpha.push_back(initial_alpha);
+            beta.push_back(initial_beta);
+            gamma.push_back(initial_gamma);
+            eta.push_back(initial_eta);
 
             epsilon.push_back(temp_zero);
 
@@ -192,6 +206,10 @@ class controller_kuka : public controller
         float   MassMatrix                    [NUMBER_OF_JOINTS][NUMBER_OF_JOINTS];
         
         std::vector<Kuka_Vec> alpha;
+        std::vector<Kuka_Vec> beta;
+        std::vector<Kuka_Vec> gamma;
+        std::vector<Kuka_Vec> eta;
+
         std::vector<Kuka_Vec> epsilon;
         std::vector<Kuka_Vec> P;
         std::vector<Kuka_Vec> K;

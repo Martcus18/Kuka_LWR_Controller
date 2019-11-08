@@ -106,12 +106,17 @@ void controller_kuka::RLSTorque()
     Kuka_Vec temp = Kuka_Vec::Constant(1.0);
     Kuka_Vec temp2;
 
+
+    //DA AGGIUSTARE
+
     epsilon_new = torque_assigned - torque_measured - (dQ.array().sign() * alpha.back().array()).matrix();
     
     //FOR UPDATING ALPHA
     K_new = ((P.back().array() * dQ.array().sign())  / (temp.array() + P.back().array())).matrix();
     alpha_new = alpha.back() + (K_new.array() * epsilon_new.array()).matrix();
     P_new = (P.back().array() - K_new.array() * P.back().array() * dQ.array().sign()).matrix();
+
+    
 
     alpha.push_back(alpha_new);
     epsilon.push_back(epsilon_new);
@@ -122,9 +127,28 @@ void controller_kuka::RLSTorque()
 Kuka_Vec controller_kuka::TorqueAdjuster(Kuka_Vec torques, Kuka_Vec dQ)
 {
     Kuka_Vec torques_adjusted;
-
-    torques_adjusted = torques + (alpha.back().array() * dQ.array().sign()).matrix(); 
-    
+    int i;
+    Kuka_Vec alpha_temp = alpha.back();
+    Kuka_Vec beta_temp = beta.back();
+    Kuka_Vec gamma_temp = gamma.back();
+    Kuka_Vec eta_temp = eta.back();
+    int temp_sign;
+    //torques_adjusted = torques + (alpha.back().array() * dQ.array().sign()).matrix();
+    //TO BE FIXED
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {
+        if(torques(i) <= 0.0)
+        {
+            temp_sign = -1;
+        }
+        else
+        {
+            temp_sign = +1;
+        }
+        
+        torques_adjusted(i) = torques(i) * alpha_temp(i) + beta_temp(i) + gamma_temp(i) * 0.5 * (temp_sign+1) + eta_temp(i) * 0.5 * (-temp_sign+1);
+    }
+    //torques_adjusted = (torques.array() * alpha.back().array() + beta.back().array() + torques.array().sign() * gamma.back().array()).matrix();
     return torques_adjusted;
 };
 

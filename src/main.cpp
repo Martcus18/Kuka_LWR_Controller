@@ -215,9 +215,14 @@ int main(int argc, char *argv[])
 		//d2Q_ref = Kuka_Vec::Constant(0.4*std::sin(2*Time) - 0.1* 0.6 * (-0.6*std::sin(0.6*Time) * std::exp(std::sin(0.6*Time)) + 0.6*std::cos(0.6*Time) * std::cos(0.6*Time) * std::exp(std::sin(0.6*Time))));
 
 		//TRAJ13
-		Q_ref = Q0 - Kuka_Vec::Constant(0.1*Time - std::sin(0.3*Time));
-		dQ_ref = -Kuka_Vec::Constant(0.1 - 0.3*std::cos(0.3*Time));
-		d2Q_ref = -Kuka_Vec::Constant(+0.3* 0.3 * std::sin(0.3*Time)); 
+		//Q_ref = Q0 - Kuka_Vec::Constant(0.1*Time - std::sin(0.3*Time));
+		//dQ_ref = -Kuka_Vec::Constant(0.1 - 0.3*std::cos(0.3*Time));
+		//d2Q_ref = -Kuka_Vec::Constant(+0.3* 0.3 * std::sin(0.3*Time)); 
+
+		Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time));
+		dQ_ref = Kuka_Vec::Constant(0.2*std::cos(2*Time));
+		d2Q_ref = Kuka_Vec::Constant(-0.4*std::sin(2*Time));
+
 
 		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
 
@@ -296,9 +301,13 @@ int main(int argc, char *argv[])
 		
 		std::cout << CycleCounter << "--\n--";
 		
-		Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
+		//Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
+		
+		std::cout<< "torque = " << Torques_ref << "-- \n -- ";
+		
+		std::cout<< "torque corrected " << Controller.TorqueAdjuster(Torques_ref,Controller.dQ) << "-- \n -- ";
 
-		//Controller.SetTorques(Torques_ref);			
+		Controller.SetTorques(Torques_ref);			
 
 		//Controller.SetJointsPositions(Q_ref);
 		
