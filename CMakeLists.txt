@@ -38,6 +38,7 @@ include_directories(${TECS_INCLUDE_DIR})
 include_directories(${CRYPTOPP_INCLUDE_DIR})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/FRILibrary/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/actuation_nets/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/include")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/ehvi")
