@@ -79,9 +79,13 @@ int main(int argc, char *argv[])
 	std::string ref = "ref_acc.txt";
 	std::string Xdata = "X.txt";
 	std::string Ydata = "Y.txt";
-
 	
 	Kuka_State state;
+	
+	tf_network prova;
+
+	exit(1);
+	
 
 	controller_kuka Controller(Mode);
 
@@ -304,8 +308,6 @@ int main(int argc, char *argv[])
 		//Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
 		
 		std::cout<< "torque = " << Torques_ref << "-- \n -- ";
-		
-		std::cout<< "torque corrected " << Controller.TorqueAdjuster(Torques_ref,Controller.dQ) << "-- \n -- ";
 
 		Controller.SetTorques(Torques_ref);			
 
@@ -329,8 +331,6 @@ int main(int argc, char *argv[])
 		Controller.torque_measured(5) = Controller.MeasuredTorquesInNm[5];
 		Controller.torque_measured(6) = Controller.MeasuredTorquesInNm[6];
 
-		Controller.RLSTorque();
-
 		Controller.Tor_meas.push_back(Controller.torque_measured);
 		
 		//Controller.Tor_meas_filtered.push_back(Controller.Filter(Controller.Tor_meas,20));
@@ -345,7 +345,7 @@ int main(int argc, char *argv[])
 		
 		Controller.Qsave_filtered.push_back(Torques_ref + G);
 
-		Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,Controller.dQ));
+		Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,Controller.Q, Controller.dQ));
 		
 		CycleCounter++;
 	}

@@ -1,10 +1,9 @@
 #ifndef CONTROLLER_HPP_
 #define CONTROLLER_HPP_
 
-//#include <utils/lib.hpp>
-//#include <utils/data_utils.hpp>
-
 #include<learning/learning.hpp>
+
+#include<tensorflow/c/tf_network.hpp>
 
 #include <FastResearchInterface.h>
 #include <FRICommunication.h>
@@ -13,7 +12,6 @@
 #include <stdarg.h>
 #include <TypeIRML.h>
 #include <LWR_Dynamic_Model_Lib.h>
-#include <TypeIRML.h>
 #include <controller/kuka_utilities.h>
 
 class controller

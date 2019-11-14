@@ -1,0 +1,3 @@
+/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/build/CMakeFiles/edit_cache.dir
+/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/build/CMakeFiles/rebuild_cache.dir
+/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/build/CMakeFiles/tf_network.dir
