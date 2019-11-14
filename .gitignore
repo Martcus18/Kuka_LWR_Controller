@@ -2,3 +2,5 @@ build/*
 bin/*
 data/*
 .vscode/*
+/external/Tensorflow/lib/*
+/external/Tensorflow/build/*
