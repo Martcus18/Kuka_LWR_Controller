@@ -16,6 +16,10 @@
 #include <stdio.h>
 #include <thread>
 #include <string.h>
+#include <Eigen/Dense>
+
+#define INPUT_SIZE 3
+#define OUTPUT_SIZE 1
 
 class tf_network
 {
@@ -45,22 +49,26 @@ class tf_network
             
         };
 
-        void predict(float in[], float out[]);
+        //NOT GENERAL, TO CHANGE Vector3d to the input size or VectorXd
+        
+        double predict(Eigen::Vector3d);
 
         protected:
 
-            TF_Buffer* read_file(const char* file);
+            void EigToArray(Eigen::Vector3d IN,float *OUT);
+            Eigen::Vector3d ArrayToEig(float *IN);
 
+            TF_Buffer* read_file(const char* file);
             TF_Session * session;
             TF_Graph   * graph;
             TF_Status  * status;
             TF_Buffer  * graph_def;
             TF_ImportGraphDefOptions* opts;
             TF_SessionOptions * options;
-            const int num_bytes_in = 3 * sizeof(float);
-            const int num_bytes_out = 1 * sizeof(float);
-            int64_t in_dims[2] = { 1,3 };
-            int64_t out_dims[2] = { 1,1 };
+            const int num_bytes_in = INPUT_SIZE * sizeof(float);
+            const int num_bytes_out = OUTPUT_SIZE * sizeof(float);
+            int64_t in_dims[2] = { 1,INPUT_SIZE };
+            int64_t out_dims[2] = { 1,OUTPUT_SIZE };
 
             char * input_name;
             char * output_name;

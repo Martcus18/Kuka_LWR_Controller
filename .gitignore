@@ -2,5 +2,8 @@ build/*
 bin/*
 data/*
 .vscode/*
-/external/Tensorflow/lib/*
-/external/Tensorflow/build/*
+/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/lib/
+/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/build/
+/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/bin/
+external/Tensorflow/models/
+unused_code/

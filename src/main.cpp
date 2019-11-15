@@ -31,6 +31,8 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec Torques_measured;
 
+	Kuka_Vec torques_temp;
+
 	Kuka_Vec temp_Vec;
 
 	Kuka_Vec zero_vec = Kuka_Vec::Constant(0.0);
@@ -56,6 +58,22 @@ int main(int argc, char *argv[])
 
 	Eigen::Vector3d end_effector;
 
+	Eigen::Vector3d input1;
+	Eigen::Vector3d input2;
+	Eigen::Vector3d input3;
+	Eigen::Vector3d input4;
+	Eigen::Vector3d input5;
+	Eigen::Vector3d input6;
+	Eigen::Vector3d input7;
+
+	double output1;
+	double output2;
+	double output3;
+	double output4;
+	double output5;
+	double output6;
+	double output7;
+
 	std::string Mode("impedence");
 	
 	//std::string Mode("position");
@@ -80,7 +98,44 @@ int main(int argc, char *argv[])
 	std::string Xdata = "X.txt";
 	std::string Ydata = "Y.txt";
 	
+
+	char net_path1[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net1.pb";
+	char in_name1[] = "KerasInput_input_38";
+	char out_name1[] = "KerasOutput_37/BiasAdd";
+
+	char net_path2[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net2.pb";
+	char in_name2[] = "KerasInput_input_39";
+	char out_name2[] = "KerasOutput_38/BiasAdd";
+
+	char net_path3[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net3.pb";
+	char in_name3[] = "KerasInput_input_40";
+	char out_name3[] = "KerasOutput_39/BiasAdd";
+
+	char net_path4[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net4.pb";
+	char in_name4[] = "KerasInput_input_41";
+	char out_name4[] = "KerasOutput_40/BiasAdd";
+
+	char net_path5[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net5.pb";
+	char in_name5[] = "KerasInput_input_42";
+	char out_name5[] = "KerasOutput_41/BiasAdd";
+
+	char net_path6[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net6.pb";
+	char in_name6[] = "KerasInput_input_43";
+	char out_name6[] = "KerasOutput_42/BiasAdd";
+
+	char net_path7[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net7.pb";
+	char in_name7[] = "KerasInput_input_44";
+	char out_name7[] = "KerasOutput_43/BiasAdd";
+	
 	Kuka_State state;
+
+	tf_network net1(net_path1,in_name1,out_name1);
+	tf_network net2(net_path2,in_name2,out_name2);
+	tf_network net3(net_path3,in_name3,out_name3);
+	tf_network net4(net_path4,in_name4,out_name4);
+	tf_network net5(net_path5,in_name5,out_name5);
+	tf_network net6(net_path6,in_name6,out_name6);
+	tf_network net7(net_path7,in_name7,out_name7);
 
 	controller_kuka Controller(Mode);
 
@@ -147,76 +202,6 @@ int main(int argc, char *argv[])
 		
 		//CHECKING USING FILTERED STATE
 		//Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Prediction, Mass);
-		
-		//TRAJ0
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*Time);
-		//dQ_ref = Kuka_Vec::Constant(0.2);
-		//d2Q_ref = Kuka_Vec::Constant(0.0);
-
-		//TRAJ1
-		//Q_ref = Q0 - Kuka_Vec::Constant(0.1*Time);
-		//dQ_ref = -Kuka_Vec::Constant(0.1);
-		//d2Q_ref = -Kuka_Vec::Constant(0.0);
-		
-		//TRAJ2
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::sin(2*Time));
-		//dQ_ref = Kuka_Vec::Constant(0.4*std::cos(2*Time));
-		//d2Q_ref = Kuka_Vec::Constant(-0.8*std::sin(2*Time));
-
-		//TRAJ3
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*(0.5*std::sin(2*Time) + std::cos(2*Time)));
-		//dQ_ref = Kuka_Vec::Constant(0.4*(0.05*std::cos(2*Time) - std::sin(2*Time)));
-		//d2Q_ref = Kuka_Vec::Constant(0.8*(-0.05*std::sin(2*Time) - std::cos(2*Time)));
-
-		//TRAJ4
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.2*std::pow(std::cos(2*Time),2));
-		//dQ_ref = Kuka_Vec::Constant(-0.2*(2*std::sin(4*Time)));
-		//d2Q_ref = Kuka_Vec::Constant(-0.2*(8*std::cos(4*Time)));
-		
-		//TRAJ5
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*Time) + Kuka_Vec::Constant(0.1*Time*Time);
-		//dQ_ref = Kuka_Vec::Constant(0.1) + Kuka_Vec::Constant(0.2*Time);
-		//d2Q_ref = Kuka_Vec::Constant(0.2);
-
-		//TRAJ6
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*Time) + Kuka_Vec::Constant(0.1*Time*Time) + Kuka_Vec::Constant(0.1*Time*Time*Time);
-		//dQ_ref = Kuka_Vec::Constant(0.1) + Kuka_Vec::Constant(0.2*Time) + Kuka_Vec::Constant(0.3*Time*Time);
-		//d2Q_ref = Kuka_Vec::Constant(0.2) + Kuka_Vec::Constant(0.6*Time);
-		
-		//TRAJ7
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*Time) + Kuka_Vec::Constant(0.1*Time*Time) - Kuka_Vec::Constant(0.1*Time*Time*Time);
-		//dQ_ref = Kuka_Vec::Constant(0.1) + Kuka_Vec::Constant(0.2*Time) - Kuka_Vec::Constant(0.3*Time*Time);
-		//d2Q_ref = -Kuka_Vec::Constant(0.2) - Kuka_Vec::Constant(0.6*Time);
-
-		//TRAJ8
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(5*Time));
-		//dQ_ref = Kuka_Vec::Constant(0.5*std::cos(5*Time));
-		//d2Q_ref = Kuka_Vec::Constant(-2.5*std::sin(5*Time));		
-
-		//TRAJ9
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.5*std::sin(0.5*Time));
-		//dQ_ref = Kuka_Vec::Constant(0.25*std::cos(0.5*Time));
-		//d2Q_ref = Kuka_Vec::Constant(-0.125*std::sin(0.5*Time));		
-		
-		//TRAJ10
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time) - 0.05*std::cos(3*Time));
-		//dQ_ref = Kuka_Vec::Constant(0.2*std::cos(2*Time) - 0.15*std::sin(3*Time));
-		//d2Q_ref = Kuka_Vec::Constant(0.4*std::sin(2*Time) - 0.45*std::cos(3*Time));
-		
-		//TRAJ11
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time) - 0.05*std::exp(std::sin(0.3*Time)));
-		//dQ_ref = Kuka_Vec::Constant(0.2*std::cos(2*Time) - 0.05* 0.3 *std::cos(0.3 * Time) * std::exp(std::sin(0.3 * Time)));
-		//d2Q_ref = Kuka_Vec::Constant(0.4*std::sin(2*Time) - 0.05* 0.3 * (-0.3*std::sin(0.3*Time) * std::exp(std::sin(0.3*Time)) + 0.3*std::cos(0.3*Time) * std::cos(0.3*Time) * std::exp(std::sin(0.3*Time))));
-
-		//TRAJ12
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time) - 0.1*std::exp(std::sin(0.6*Time)));
-		//dQ_ref = Kuka_Vec::Constant(0.2*std::cos(2*Time) - 0.1* 0.6 *std::cos(0.6 * Time) * std::exp(std::sin(0.6 * Time)));
-		//d2Q_ref = Kuka_Vec::Constant(0.4*std::sin(2*Time) - 0.1* 0.6 * (-0.6*std::sin(0.6*Time) * std::exp(std::sin(0.6*Time)) + 0.6*std::cos(0.6*Time) * std::cos(0.6*Time) * std::exp(std::sin(0.6*Time))));
-
-		//TRAJ13
-		//Q_ref = Q0 - Kuka_Vec::Constant(0.1*Time - std::sin(0.3*Time));
-		//dQ_ref = -Kuka_Vec::Constant(0.1 - 0.3*std::cos(0.3*Time));
-		//d2Q_ref = -Kuka_Vec::Constant(+0.3* 0.3 * std::sin(0.3*Time)); 
 
 		Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time));
 		dQ_ref = Kuka_Vec::Constant(0.2*std::cos(2*Time));
@@ -239,34 +224,6 @@ int main(int argc, char *argv[])
 		//d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered, d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
 		//Ref_Acc.push_back(d2Q_ref);
 		Ref_Acc.push_back(d2Q_ref);
-
-		//LEARNING PART START
-		/*
-		if((CycleCounter % 30) == 0)
-		{
-			Tic = std::chrono::system_clock::now();
-			Controller.Regressor->GpUpdate();
-			Toc = std::chrono::system_clock::now();
-			elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(Toc - Tic).count();
-			Kuka_temp << elapsed_time,0.0,0.0,0.0,0.0,0.0,0.0;
-			Time_array.push_back(Kuka_temp);
-			std::cout << elapsed_time << "--\n--";
-		}	
-		
-		if(CycleCounter > 100)
-		{
-			//Prediction = Controller.Regressor->GpPredict(Q_filtered, dQ_filtered,d2Q_ref);
-			Prediction = Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref);
-		}
-		else
-		{
-			Prediction = Kuka_Vec::Constant(0.0);
-		}
-		
-		Prediction_array.push_back(Prediction);
-		*/
-
-		//LEARNING PART END
 
 		//FOR TORQUE CONTROL
 		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G;
@@ -299,12 +256,71 @@ int main(int argc, char *argv[])
 		Controller.d2Qsave_filtered.push_back(Controller.Filter(Controller.d2Qsave,20));
 		
 		std::cout << CycleCounter << "--\n--";
-		
-		//Controller.SetTorques(Controller.TorqueAdjuster(Torques_ref,Controller.dQ));
-		
-		std::cout<< "torque = " << Torques_ref << "-- \n -- ";
 
-		Controller.SetTorques(Torques_ref);			
+
+		//average prediction time around 0.1 ms
+
+		input1(0) = Torques_ref(0);
+		input1(1) = Controller.Q(0);
+		input1(2) = Controller.dQ(0);
+		output1 = net1.predict(input1);
+
+		input2(0) = Torques_ref(1);
+		input2(1) = Controller.Q(1);
+		input2(2) = Controller.dQ(1);
+		output2 = net2.predict(input2);		
+		
+		input3(0) = Torques_ref(2);
+		input3(1) = Controller.Q(2);
+		input3(2) = Controller.dQ(2);
+		output3 = net3.predict(input3);		
+
+		input4(0) = Torques_ref(3);
+		input4(1) = Controller.Q(3);
+		input4(2) = Controller.dQ(3);
+		output4 = net4.predict(input4);	
+
+		input5(0) = Torques_ref(4);
+		input5(1) = Controller.Q(4);
+		input5(2) = Controller.dQ(4);
+		output5 = net5.predict(input5);	
+
+		input6(0) = Torques_ref(5);
+		input6(1) = Controller.Q(5);
+		input6(2) = Controller.dQ(5);
+		output6 = net6.predict(input6);	
+
+		input7(0) = Torques_ref(6);
+		input7(1) = Controller.Q(6);
+		input7(2) = Controller.dQ(6);
+		output7 = net7.predict(input7);	
+
+		//FOR CHECKING ESTIMATION SUM, FOR PILOTING SUBTRAT
+
+		torques_temp = Torques_ref;
+
+		
+		//torques_temp(0) = Torques_ref(0) - output1;
+		//torques_temp(1) = Torques_ref(1) - output2;
+		//torques_temp(2) = Torques_ref(2) - output3;
+		//torques_temp(3) = Torques_ref(3) - output4;
+		//torques_temp(4) = Torques_ref(4) - output5;
+		//torques_temp(5) = Torques_ref(5) - output6;
+		//torques_temp(6) = Torques_ref(6) - output7;
+		
+		
+		torques_temp(0) = Torques_ref(0) + output1;
+		torques_temp(1) = Torques_ref(1) + output2;
+		torques_temp(2) = Torques_ref(2) + output3;
+		torques_temp(3) = Torques_ref(3) + output4;
+		torques_temp(4) = Torques_ref(4) + output5;
+		torques_temp(5) = Torques_ref(5) + output6;
+		torques_temp(6) = Torques_ref(6) + output7;
+		
+		
+		Controller.SetTorques(Torques_ref);
+
+		//Controller.SetTorques(torques_temp);
 
 		//Controller.SetJointsPositions(Q_ref);
 		
@@ -340,7 +356,12 @@ int main(int argc, char *argv[])
 		
 		Controller.Qsave_filtered.push_back(Torques_ref + G);
 
-		Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,Controller.Q, Controller.dQ));
+		//torques_temp = Controller.TorqueAdjuster(Torques_ref+G,Controller.Q, Controller.dQ);
+
+
+		Controller.Tor_th.push_back(torques_temp);
+
+		//Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,Controller.Q, Controller.dQ));
 		
 		CycleCounter++;
 	}

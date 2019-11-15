@@ -27,18 +27,36 @@ TF_Buffer* tf_network::read_file(const char* file)
 	return buf;
 };
 
-void tf_network::predict(float in[], float out[])
+void tf_network::EigToArray(Eigen::Vector3d IN,float *OUT)
+{
+	for(int i=0;i<3;i++)
+    {
+        OUT[i] = IN(i);
+    }
+};
+
+
+Eigen::Vector3d tf_network::ArrayToEig(float *IN)
+{
+	Eigen::Vector3d OUT;
+	for(int i=0;i<3;i++)
+    {
+        OUT(i) = IN[i];
+    }
+};
+
+double tf_network::predict(Eigen::Vector3d X)
 {
 	std::vector<TF_Output> inputs;
 	std::vector<TF_Tensor*> input_values;
 	std::vector<TF_Output> outputs;
 	std::vector<TF_Tensor*> output_values;
-
-	//inputs.push_back({ TF_GraphOperationByName(graph, "KerasInput_input_25"), 0 });
-	//outputs.push_back({ TF_GraphOperationByName(graph, "KerasOutput_24/BiasAdd"), 0 });
 	
-	//inputs.push_back({ TF_GraphOperationByName(graph, "KerasInput_input_26"), 0 });
-	//outputs.push_back({ TF_GraphOperationByName(graph, "KerasOutput_25/BiasAdd"), 0 });	
+	float in[INPUT_SIZE];
+	float out[OUTPUT_SIZE];
+	double result;
+	this->EigToArray(X, in);
+
 	inputs.push_back({ TF_GraphOperationByName(graph, input_name), 0 });
 	outputs.push_back({ TF_GraphOperationByName(graph, output_name), 0 });
 	input_values.push_back(TF_NewTensor(TF_FLOAT, in_dims, 2, in, num_bytes_in, &Deallocator, 0));
@@ -46,5 +64,6 @@ void tf_network::predict(float in[], float out[])
 	TF_SessionRun(session, nullptr,	&inputs[0], &input_values[0], 1, &outputs[0], &output_values[0], 1, nullptr, 0, nullptr, status);
 	const auto data = static_cast<float*>(TF_TensorData(input_values.at(0)));
 	const auto tau_data = static_cast<float*>(TF_TensorData(output_values.at(0)));
-	std::memcpy(out, tau_data, sizeof(tau_data));
+	result = tau_data[0];
+	return result;
 };
