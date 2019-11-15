@@ -23,35 +23,6 @@ class controller_kuka : public controller
             d2Qold = Kuka_Vec::Constant(0.0);
             
             Kuka_Vec temp_zero = Kuka_Vec::Constant(0.0);
-            Kuka_Vec initial_alpha = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
-            Kuka_Vec initial_beta = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
-            Kuka_Vec initial_gamma = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
-            Kuka_Vec initial_eta = Kuka_Vec::Constant(NUMBER_OF_JOINTS,0.0);
-
-            //initial_alpha << 0.6776, 0.9677, 0.9269, 0.7621, 0.2355, 0.4290, 0.0643;
-            //initial_beta << 0.1118, -0.2150, -0.0100, 7.2404, -0.2851, -0.2669, 0.0808;
-            //initial_gamma << -0.0504, 0.8150, -0.1610, -4.5767, 0.0438, 0.0561, 0.0646;
-            
-            initial_alpha << 0.68, 0.97, 0.93, 0.76, 0.24, 0.43, 0.06;
-            initial_beta << 0.17, -0.31, 0.093, -0.85, -0.09, -0.078, 0.15;
-            initial_gamma << -0.11, 0.10, -0.26, 3.51, -0.15, -0.13, -0.008;
-            initial_eta << -0.012, -0.72, 0.06, 12.66, 0.24, -0.25, -0.14;
-            
-            //alpha.push_back(temp_zero);
-            //beta.push_back(temp_zero);
-            //gamma.push_back(temp_zero);
-            
-            alpha.push_back(initial_alpha);
-            beta.push_back(initial_beta);
-            gamma.push_back(initial_gamma);
-            eta.push_back(initial_eta);
-
-            epsilon.push_back(temp_zero);
-
-            K.push_back(temp_zero);
-
-            temp_zero = Kuka_Vec::Constant(100.0);
-            P.push_back(temp_zero);
 
             const float TimeOutValueInSeconds = 120.0;
 
@@ -152,11 +123,8 @@ class controller_kuka : public controller
 
         Kuka_Vec PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd);
 
-        // RLS estimator of alpha parameters for correting commanded torques
-        void RLSTorque();
-
         //Adding of the torque bias for KUKA LWR-4
-        Kuka_Vec TorqueAdjuster(Kuka_Vec torques, Kuka_Vec dQ);
+        Kuka_Vec TorqueAdjuster(Kuka_Vec torques, Kuka_Vec Q, Kuka_Vec dQ);
         
         //Numerical differentiation for velocity calculation
         Kuka_Vec EulerDifferentiation(Kuka_Vec X, Kuka_Vec Xold);

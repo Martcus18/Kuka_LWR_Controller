@@ -38,7 +38,7 @@ include_directories(${TECS_INCLUDE_DIR})
 include_directories(${CRYPTOPP_INCLUDE_DIR})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/FRILibrary/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/include")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/actuation_nets/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/Tensorflow/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/include")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/ehvi")
@@ -58,13 +58,17 @@ add_library(kuka_utilities SHARED "${CMAKE_CURRENT_SOURCE_DIR}/src/controller/ku
 
 add_library(learning SHARED "${CMAKE_CURRENT_SOURCE_DIR}/src/learning/learning.cpp")
 
+add_library(tf_network SHARED "${CMAKE_CURRENT_SOURCE_DIR}/external/Tensorflow/src/tf_network.cpp")
+
 target_link_libraries(utils ${TBB_LIBRARIES} ${Boost_LIBRARIES})
 
 target_link_libraries(controller ${TBB_LIBRARIES} ${Boost_LIBRARIES} libFastResearchInterfaceLibrary libTypeIRML)
 
 target_link_libraries(learning ${TBB_LIBRARIES} ${Boost_LIBRARIES})
 
-target_link_libraries(controller_kuka PUBLIC controller utils learning "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so" "${CMAKE_CURRENT_SOURCE_DIR}/build/libkuka_utilities.so")
+target_link_libraries(tf_network PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/Tensorflow/lib/libtensorflow_framework.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/Tensorflow/lib/libtensorflow.so")
+
+target_link_libraries(controller_kuka PUBLIC controller utils learning tf_network "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so" "${CMAKE_CURRENT_SOURCE_DIR}/build/libkuka_utilities.so")
 
 add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 

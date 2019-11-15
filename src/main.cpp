@@ -81,11 +81,6 @@ int main(int argc, char *argv[])
 	std::string Ydata = "Y.txt";
 	
 	Kuka_State state;
-	
-	tf_network prova;
-
-	exit(1);
-	
 
 	controller_kuka Controller(Mode);
 

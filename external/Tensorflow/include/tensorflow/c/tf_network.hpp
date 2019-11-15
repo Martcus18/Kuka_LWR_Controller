@@ -15,17 +15,16 @@
 #include <chrono>
 #include <stdio.h>
 #include <thread>
+#include <string.h>
 
 class tf_network
 {
     public:
-        tf_network()
+        tf_network(char * net_path, char * in_name, char * out_name)
         {   
-            
             graph = TF_NewGraph();
-            
             status = TF_NewStatus();
-            graph_def = read_file("/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/net1.pb");
+            graph_def = read_file(net_path);
             opts = TF_NewImportGraphDefOptions();
             TF_GraphImportGraphDef(graph, graph_def, opts, status);
             TF_DeleteImportGraphDefOptions(opts);
@@ -38,14 +37,18 @@ class tf_network
             std::cout << "Running session" << "\n";
             options = TF_NewSessionOptions();
             session = TF_NewSession(graph, options, status);
+
+            input_name = (char *) malloc(strlen(in_name) * sizeof(char));
+            output_name = (char *) malloc(strlen(out_name) * sizeof(char));
+            strcpy(input_name, in_name);
+            strcpy(output_name, out_name);
+            
         };
 
         void predict(float in[], float out[]);
 
         protected:
 
-            void free_buffer(void* data, size_t length);
-            static void Deallocator(void* data, size_t length, void* arg){};
             TF_Buffer* read_file(const char* file);
 
             TF_Session * session;
@@ -54,12 +57,16 @@ class tf_network
             TF_Buffer  * graph_def;
             TF_ImportGraphDefOptions* opts;
             TF_SessionOptions * options;
-            std::vector<TF_Output> inputs;
-            std::vector<TF_Output> outputs;
             const int num_bytes_in = 3 * sizeof(float);
             const int num_bytes_out = 1 * sizeof(float);
-            int64_t in_dims[2] = { 1,4 };
+            int64_t in_dims[2] = { 1,3 };
             int64_t out_dims[2] = { 1,1 };
+
+            char * input_name;
+            char * output_name;
 };
 
 #endif /* TF_NETWORK_*/
+
+void free_buffer(void* data, size_t length);
+static void Deallocator(void* data, size_t length, void* arg);
