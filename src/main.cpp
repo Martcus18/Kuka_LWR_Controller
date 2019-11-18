@@ -258,6 +258,9 @@ int main(int argc, char *argv[])
 		
 		Controller.d2Qsave_filtered.push_back(Controller.Filter(Controller.d2Qsave,20));
 
+		// X = [torque_des + G, Q, dQ]
+		// Y = [torque_need + G]
+		// torque_need = Y - G
 		input1(0) = Torques_ref(0) + G(0);
 		input1(1) = Controller.Q(0) ;
 		input1(2) = Controller.dQ(0);
@@ -292,7 +295,6 @@ int main(int argc, char *argv[])
 		input7(1) = Controller.Q(6);
 		input7(2) = Controller.dQ(6);
 		output7 = net7.predict(input7);	
-
 
 		torques_temp = Torques_ref;
 
