@@ -99,62 +99,35 @@ int main(int argc, char *argv[])
 	std::string Xdata = "X.txt";
 	std::string Ydata = "Y.txt";
 	
-	/*
-	char net_path1[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/tanh/net_tanh_1.pb";
-	char in_name1[] = "KerasInput_input_16";
-	char out_name1[] = "dense_24_1/Tanh";
 
-	char net_path2[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/tanh/net_tanh_2.pb";
-	char in_name2[] = "KerasInput_input_17";
-	char out_name2[] = "dense_24_2/Tanh";
+	
+	char net_path1[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net_1.pb";
+	char in_name1[] = "KerasInput_input_27";
+	char out_name1[] = "KerasOutput_24/BiasAdd";
 
-	char net_path3[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/tanh/net_tanh_3.pb";
-	char in_name3[] = "KerasInput_input_18";
-	char out_name3[] = "dense_24_3/Tanh";
+	char net_path2[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net_2.pb";
+	char in_name2[] = "KerasInput_input_28";
+	char out_name2[] = "KerasOutput_25/BiasAdd";
 
-	char net_path4[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/tanh/net_tanh_4.pb";
-	char in_name4[] = "KerasInput_input_19";
-	char out_name4[] = "dense_24_4/Tanh";
+	char net_path3[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net_3.pb";
+	char in_name3[] = "KerasInput_input_29";
+	char out_name3[] = "KerasOutput_26/BiasAdd";
 
-	char net_path5[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/tanh/net_tanh_5.pb";
-	char in_name5[] = "KerasInput_input_20";
-	char out_name5[] = "dense_24_5/Tanh";
+	char net_path4[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net_4.pb";
+	char in_name4[] = "KerasInput_input_30";
+	char out_name4[] = "KerasOutput_27/BiasAdd";
 
-	char net_path6[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/tanh/net_tanh_6.pb";
-	char in_name6[] = "KerasInput_input_21";
-	char out_name6[] = "dense_24_6/Tanh";
+	char net_path5[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net_5.pb";
+	char in_name5[] = "KerasInput_input_31";
+	char out_name5[] = "KerasOutput_28/BiasAdd";
 
-	char net_path7[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/tanh/net_tanh_7.pb";
-	char in_name7[] = "KerasInput_input_22";
-	char out_name7[] = "dense_24_7/Tanh";
-	*/
-	char net_path1[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net1.pb";
-	char in_name1[] = "KerasInput_input_38";
-	char out_name1[] = "KerasOutput_37/BiasAdd";
+	char net_path6[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net_6.pb";
+	char in_name6[] = "KerasInput_input_32";
+	char out_name6[] = "KerasOutput_29/BiasAdd";
 
-	char net_path2[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net2.pb";
-	char in_name2[] = "KerasInput_input_39";
-	char out_name2[] = "KerasOutput_38/BiasAdd";
-
-	char net_path3[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net3.pb";
-	char in_name3[] = "KerasInput_input_40";
-	char out_name3[] = "KerasOutput_39/BiasAdd";
-
-	char net_path4[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net4.pb";
-	char in_name4[] = "KerasInput_input_41";
-	char out_name4[] = "KerasOutput_40/BiasAdd";
-
-	char net_path5[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net5.pb";
-	char in_name5[] = "KerasInput_input_42";
-	char out_name5[] = "KerasOutput_41/BiasAdd";
-
-	char net_path6[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net6.pb";
-	char in_name6[] = "KerasInput_input_43";
-	char out_name6[] = "KerasOutput_42/BiasAdd";
-
-	char net_path7[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/linear/net7.pb";
-	char in_name7[] = "KerasInput_input_44";
-	char out_name7[] = "KerasOutput_43/BiasAdd";
+	char net_path7[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net_7.pb";
+	char in_name7[] = "KerasInput_input_33";
+	char out_name7[] = "KerasOutput_30/BiasAdd";
 
 
 	Kuka_State state;
@@ -284,80 +257,56 @@ int main(int argc, char *argv[])
 		Controller.dQsave_filtered.push_back(Controller.Filter(Controller.dQsave,20));
 		
 		Controller.d2Qsave_filtered.push_back(Controller.Filter(Controller.d2Qsave,20));
-		
-		std::cout << CycleCounter << "--\n--";
-
-
-		//average prediction time around 0.1 ms
 
 		input1(0) = Torques_ref(0) + G(0);
 		input1(1) = Controller.Q(0) ;
 		input1(2) = Controller.dQ(0);
-		//output1 = net1.predict(input1) * 30.0;
 		output1 = net1.predict(input1);
 
 		input2(0) = Torques_ref(1) + G(1);
 		input2(1) = Controller.Q(1);
 		input2(2) = Controller.dQ(1);
-		//output2 = net2.predict(input2) * 30.0;		
 		output2 = net2.predict(input2);		
 		
 		input3(0) = Torques_ref(2) + G(2);
 		input3(1) = Controller.Q(2);
 		input3(2) = Controller.dQ(2);
-		//output3 = net3.predict(input3) * 30.0;		
 		output3 = net3.predict(input3);		
 
 		input4(0) = Torques_ref(3) + G(3);
 		input4(1) = Controller.Q(3);
 		input4(2) = Controller.dQ(3);
-		//output4 = net4.predict(input4) * 30.0;	
 		output4 = net4.predict(input4);	
 
 		input5(0) = Torques_ref(4) + G(4);
 		input5(1) = Controller.Q(4);
 		input5(2) = Controller.dQ(4);
-		//output5 = net5.predict(input5) * 30.0;	
 		output5 = net5.predict(input5);	
 
 		input6(0) = Torques_ref(5) + G(5);
 		input6(1) = Controller.Q(5);
 		input6(2) = Controller.dQ(5);
-		//output6 = net6.predict(input6) * 30.0;	
 		output6 = net6.predict(input6);	
 
 		input7(0) = Torques_ref(6) + G(6);
 		input7(1) = Controller.Q(6);
 		input7(2) = Controller.dQ(6);
-		//output7 = net7.predict(input7) * 30.0;	
 		output7 = net7.predict(input7);	
 
-		//FOR CHECKING ESTIMATION SUM, FOR PILOTING SUBTRAT
 
 		torques_temp = Torques_ref;
-		
-		
-		torques_temp(0) = Torques_ref(0) + output1 + G(0);
-		torques_temp(1) = Torques_ref(1) + output2 + G(1);
-		torques_temp(2) = Torques_ref(2) + output3 + G(2);
-		torques_temp(3) = Torques_ref(3) + output4 + G(3);
-		torques_temp(4) = Torques_ref(4) + output5 + G(4);
-		torques_temp(5) = Torques_ref(5) + output6 + G(5);
-		torques_temp(6) = Torques_ref(6) + output7 + G(6);
-		
-		/*
-		torques_temp(0) = Torques_ref(0) - output1 + G(0);
-		torques_temp(1) = Torques_ref(1) - output2 + G(1);
-		torques_temp(2) = Torques_ref(2) - output3 + G(2);
-		torques_temp(3) = Torques_ref(3) - output4 + G(3);
-		torques_temp(4) = Torques_ref(4) - output5 + G(4);
-		torques_temp(5) = Torques_ref(5) - output6 + G(5);
-		torques_temp(6) = Torques_ref(6) - output7 + G(6);
-		*/
-		
-		Controller.SetTorques(Torques_ref);
 
-		//Controller.SetTorques(torques_temp);
+		torques_temp(0) = output1;
+		torques_temp(1) = output2;
+		torques_temp(2) = output3;
+		torques_temp(3) = output4;
+		torques_temp(4) = output5;
+		//torques_temp(5) = output6;
+		torques_temp(6) = output7;
+		
+		//Controller.SetTorques(Torques_ref);
+
+		Controller.SetTorques(torques_temp - G);
 
 		//Controller.SetJointsPositions(Q_ref);
 		
@@ -367,7 +316,7 @@ int main(int argc, char *argv[])
 
 		Controller.end_eff_pos.push_back(end_effector);
 
-		Controller.torque_assigned = Torques_ref + G;
+		//Controller.torque_assigned = Torques_ref + G;
 
 		Controller.MeasureJointTorques();	
 		
