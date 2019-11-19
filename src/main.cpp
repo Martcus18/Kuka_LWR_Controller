@@ -83,15 +83,18 @@ int main(int argc, char *argv[])
 	std::string Xdata = "X.txt";
 	std::string Ydata = "Y.txt";
 	
-	char net_path1[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net_1.pb";
-	char in_name1[] =  "KerasInput_input_13";
-	char out_name1[] = "KerasOutput_13/BiasAdd";
+	char net_path1[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net.pb";
+	char in_name1[] =  "KerasInput_input_18";
+	char out_name1[] = "KerasOutput_18/BiasAdd";
 
-	
 	Kuka_State state;
-	
-	tf_network net1(net_path1,in_name1,out_name1);
-	
+
+	Network_Output output;
+
+	Network_Input input;
+
+	tf_network net(net_path1,in_name1,out_name1);
+
 	controller_kuka Controller(Mode);
 
 	if (Controller.FRI->IsMachineOK())
@@ -214,12 +217,11 @@ int main(int argc, char *argv[])
 		// Y = [torque_need + G]
 		// torque_need = Y - G
 		
-		/*
-		input1(0) = Torques_ref(0) + G(0);
-		input1(1) = Controller.Q(0) ;
-		input1(2) = Controller.dQ(0);
-		output1 = net1.predict(input1);
-		*/
+		input.block<7,1>(0,0) = Torques_ref;
+		input.block<7,1>(0,7) = Controller.Q;
+
+		//output = net.predict(input);
+		
 		torques_temp = Torques_ref;
 
 		//torques_temp(0) = output1 - G(0);

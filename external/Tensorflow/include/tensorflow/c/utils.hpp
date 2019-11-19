@@ -1,4 +1,4 @@
-#define INPUT_SIZE 21
+#define INPUT_SIZE 14
 #define OUTPUT_SIZE 7
 #include <Eigen/Dense>
 
