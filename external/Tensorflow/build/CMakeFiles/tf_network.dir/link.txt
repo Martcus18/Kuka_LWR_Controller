@@ -1,1 +1,0 @@
-/usr/bin/c++  -fPIC  -pthread -std=c++11 -w -Ofast  -shared -Wl,-soname,libtf_network.so -o libtf_network.so CMakeFiles/tf_network.dir/src/tf_network.cpp.o ../lib/libtensorflow_framework.so ../lib/libtensorflow.so -Wl,-rpath,/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/lib 
