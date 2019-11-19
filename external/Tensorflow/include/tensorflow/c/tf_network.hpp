@@ -1,6 +1,7 @@
 #ifndef TF_NETWORK_
 #define TF_NETWORK_
 
+#include<tensorflow/c/utils.hpp>
 #include<tensorflow/c/c_api.h>
 #include<tensorflow/c/c_api_experimental.h>
 #include <iostream>
@@ -16,10 +17,10 @@
 #include <stdio.h>
 #include <thread>
 #include <string.h>
-#include <Eigen/Dense>
 
-#define INPUT_SIZE 3
-#define OUTPUT_SIZE 1
+
+
+
 
 class tf_network
 {
@@ -48,15 +49,13 @@ class tf_network
             strcpy(output_name, out_name);
             
         };
-
-        //NOT GENERAL, TO CHANGE Vector3d to the input size or VectorXd
         
-        double predict(Eigen::Vector3d);
+        Network_Output predict(Network_Input input);
 
         protected:
 
-            void EigToArray(Eigen::Vector3d IN,float *OUT);
-            Eigen::Vector3d ArrayToEig(float *IN);
+            void EigToArray(Network_Input IN,float *OUT);
+            Network_Output ArrayToEig(float *IN);
 
             TF_Buffer* read_file(const char* file);
             TF_Session * session;

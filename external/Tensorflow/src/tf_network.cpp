@@ -27,35 +27,35 @@ TF_Buffer* tf_network::read_file(const char* file)
 	return buf;
 };
 
-void tf_network::EigToArray(Eigen::Vector3d IN,float *OUT)
+void tf_network::EigToArray(Network_Input IN,float *OUT)
 {
-	for(int i=0;i<3;i++)
+	for(int i=0;i<INPUT_SIZE;i++)
     {
         OUT[i] = IN(i);
     }
 };
 
 
-Eigen::Vector3d tf_network::ArrayToEig(float *IN)
+Network_Output tf_network::ArrayToEig(float *IN)
 {
-	Eigen::Vector3d OUT;
-	for(int i=0;i<3;i++)
+	Network_Output OUT;
+	for(int i=0;i<INPUT_SIZE;i++)
     {
         OUT(i) = IN[i];
     }
 };
 
-double tf_network::predict(Eigen::Vector3d X)
+Network_Output tf_network::predict(Network_Input X)
 {
 	std::vector<TF_Output> inputs;
 	std::vector<TF_Tensor*> input_values;
 	std::vector<TF_Output> outputs;
 	std::vector<TF_Tensor*> output_values;
-	
+	Network_Output result;
+
 	float in[INPUT_SIZE];
 	float out[OUTPUT_SIZE];
-	double result;
-	this->EigToArray(X, in);
+	EigToArray(X, in);
 
 	inputs.push_back({ TF_GraphOperationByName(graph, input_name), 0 });
 	outputs.push_back({ TF_GraphOperationByName(graph, output_name), 0 });
@@ -64,6 +64,6 @@ double tf_network::predict(Eigen::Vector3d X)
 	TF_SessionRun(session, nullptr,	&inputs[0], &input_values[0], 1, &outputs[0], &output_values[0], 1, nullptr, 0, nullptr, status);
 	const auto data = static_cast<float*>(TF_TensorData(input_values.at(0)));
 	const auto tau_data = static_cast<float*>(TF_TensorData(output_values.at(0)));
-	result = tau_data[0];
+	result = ArrayToEig(tau_data);
 	return result;
 };

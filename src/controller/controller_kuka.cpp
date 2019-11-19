@@ -97,6 +97,7 @@ Kuka_Vec controller_kuka::PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Ku
     return control;
 };
 
+
 Kuka_Vec controller_kuka::TorqueAdjuster(Kuka_Vec torques, Kuka_Vec Q, Kuka_Vec dQ)
 {
     Kuka_Vec torques_adjusted;

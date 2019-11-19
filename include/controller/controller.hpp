@@ -67,6 +67,8 @@ class controller
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kp;
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kd;
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Ki;
+        Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kp_torque;
+        Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kd_torque;
 
 };
 #endif /* CONTROLLER_HPP_ */
