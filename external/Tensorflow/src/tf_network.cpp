@@ -39,7 +39,7 @@ void tf_network::EigToArray(Network_Input IN,float *OUT)
 Network_Output tf_network::ArrayToEig(float *IN)
 {
 	Network_Output OUT;
-	for(int i=0;i<INPUT_SIZE;i++)
+	for(int i=0;i<OUTPUT_SIZE;i++)
     {
         OUT(i) = IN[i];
     }
@@ -56,7 +56,7 @@ Network_Output tf_network::predict(Network_Input X)
 	float in[INPUT_SIZE];
 	float out[OUTPUT_SIZE];
 	EigToArray(X, in);
-
+	
 	inputs.push_back({ TF_GraphOperationByName(graph, input_name), 0 });
 	outputs.push_back({ TF_GraphOperationByName(graph, output_name), 0 });
 	input_values.push_back(TF_NewTensor(TF_FLOAT, in_dims, 2, in, num_bytes_in, &Deallocator, 0));

@@ -217,25 +217,47 @@ int main(int argc, char *argv[])
 		// Y = [torque_need + G]
 		// torque_need = Y - G
 		
-		input.block<7,1>(0,0) = Torques_ref;
-		input.block<7,1>(0,7) = Controller.Q;
-
-		//output = net.predict(input);
+		//input.block<7,1>(0,0) = Torques_ref;
+		//input.block<7,1>(0,7) = Controller.Q;
 		
-		torques_temp = Torques_ref;
+		input(0) = Torques_ref(0);
+		input(1) = Torques_ref(1);
+		input(2) = Torques_ref(2);
+		input(3) = Torques_ref(3);
+		input(4) = Torques_ref(4);
+		input(5) = Torques_ref(5);
+		input(6) = Torques_ref(6);
+		input(7) = Controller.Q(0);
+		input(8) = Controller.Q(1);
+		input(9) = Controller.Q(2);
+		input(10) = Controller.Q(3);
+		input(11) = Controller.Q(4);
+		input(12) = Controller.Q(5);
+		input(13) = Controller.Q(6);
 
-		//torques_temp(0) = output1 - G(0);
-		//torques_temp(1) = output2 - G(1);
-		//torques_temp(2) = output3 - G(2);
-		//torques_temp(3) = output4 - G(3);
-		//torques_temp(4) = output5 - G(4);
-		//torques_temp(5) = output6 - G(5);
-		//torques_temp(6) = output7 - G(6);
-		
+		output = net.predict(input);
+		std::cout << output << "\n";
 
-		//Controller.SetTorques(Torques_ref);
+/*		
+		torques_temp(0) = output(0) - G(0);
+		torques_temp(1) = output(1) - G(1);
+		torques_temp(2) = output(2) - G(2);
+		torques_temp(3) = output(3) - G(3);
+		torques_temp(4) = output(4) - G(4);
+		torques_temp(5) = output(5) - G(5);
+		torques_temp(6) = output(6) - G(6);
+*/
+		torques_temp(0) = output(0) + G(0);
+		torques_temp(1) = output(1) + G(1);
+		torques_temp(2) = output(2) + G(2);
+		torques_temp(3) = output(3) + G(3);
+		torques_temp(4) = output(4) + G(4);
+		torques_temp(5) = output(5) + G(5);
+		torques_temp(6) = output(6) + G(6);		
 
-		Controller.SetTorques(torques_temp);
+		Controller.SetTorques(Torques_ref);
+
+		//Controller.SetTorques(torques_temp);
 		
 		//Controller.SetJointsPositions(Q_ref);
 		
