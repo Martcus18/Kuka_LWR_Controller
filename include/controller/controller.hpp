@@ -22,8 +22,10 @@ class controller
         {
                 data_manager writer();
                 Kp.diagonal() << 55,55,55,55,55,55,55;
-                Kd.diagonal() << 8,8,8,8,8,8,8;
-                Ki.diagonal() << 3,3,3,3,3,3,3;
+                //Kd.diagonal() << 8,8,8,8,8,8,8;
+                Kd.diagonal() << 15,15,15,15,15,15,15;
+                //Ki.diagonal() << 3,3,3,3,3,3,3;
+                Ki.diagonal() << 0,0,0,0,0,0,0;
         };
 
         ~controller(){};

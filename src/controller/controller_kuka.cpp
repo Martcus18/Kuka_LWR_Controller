@@ -43,6 +43,7 @@ Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Ve
     }
 
     TauFl = B_eig * reference + C_eig + g_eig + friction_eig;
+    //TauFl = B_eig * reference + C_eig + g_eig;
     return TauFl;
  };
 
@@ -247,6 +248,8 @@ void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vecto
     }
 };
 
+
+//DA CONTROLLARE
 Kuka_Vec controller_kuka::GearDiff(std::vector<Kuka_Vec> &signal)
 {
     Kuka_Vec dsignal;
@@ -261,4 +264,34 @@ Kuka_Vec controller_kuka::GearDiff(std::vector<Kuka_Vec> &signal)
         }
     }
     return dsignal;
+};
+
+bool controller_kuka::JointSafety(Kuka_Vec Q)
+{
+    bool flag = true;
+    if((std::fabs(Q(0))>QL1)||(std::fabs(Q(1))>QL2)||(std::fabs(Q(2))>QL3)||(std::fabs(Q(3))>QL4)||(std::fabs(Q(4))>QL5)||(std::fabs(Q(5))>QL6)||(std::fabs(Q(6))>QL7))
+    {
+            flag = false;
+            std::cout << "Joints bounds violation" << "\n";
+            return flag;
+    }
+    return flag;
+};
+
+bool controller_kuka::VelocitySafety(Kuka_Vec dQ)
+{
+    bool flag = true;
+    if((std::fabs(dQ(0))>VL1)||(std::fabs(dQ(1))>VL2)||(std::fabs(dQ(2))>VL3)||(std::fabs(dQ(3))>VL4)||(std::fabs(dQ(4))>VL5)||(std::fabs(dQ(5))>VL6)||(std::fabs(dQ(6))>VL7))
+    {
+            flag = false;
+            std::cout << "Velocities bounds violation" << "\n";
+            return flag;
+    }
+    return flag;
+};
+
+bool controller_kuka::TorqueSafety(Kuka_Vec dQ)
+{
+    bool flag = true;
+    return flag;
 };

@@ -82,18 +82,8 @@ int main(int argc, char *argv[])
 	std::string ref = "ref_acc.txt";
 	std::string Xdata = "X.txt";
 	std::string Ydata = "Y.txt";
-	
-	char net_path1[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net.pb";
-	char in_name1[] =  "KerasInput_input_18";
-	char out_name1[] = "KerasOutput_18/BiasAdd";
 
 	Kuka_State state;
-
-	Network_Output output;
-
-	Network_Input input;
-
-	tf_network net(net_path1,in_name1,out_name1);
 
 	controller_kuka Controller(Mode);
 
@@ -147,40 +137,55 @@ int main(int argc, char *argv[])
 
 		//CHECKING USING NOT FILTERED STATE
 		//temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
-		temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass);
+		//temp_Vec = Controller.Regressor->DataPoint(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass);
 		
 
 		//CHECKING USING FILTERED STATE
 		//temp_Vec = Controller.Regressor->DataPoint(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Kuka_Vec::Constant(0.0), Mass);
 
-		Controller.foo.push_back(temp_Vec);
+		//Controller.foo.push_back(temp_Vec);
 		
 		//CHECKING USING NOT FILTERED STATE
-		Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass);
+		//Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass);
 		
 		//CHECKING USING FILTERED STATE
 		//Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Prediction, Mass);
 
-		Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(2*Time));
-		dQ_ref = Kuka_Vec::Constant(0.2*std::cos(2*Time));
-		d2Q_ref = Kuka_Vec::Constant(-0.4*std::sin(2*Time));
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(0.1*Time));
+		//dQ_ref = Kuka_Vec::Constant(0.1*0.1*std::cos(Time));
+		//d2Q_ref = Kuka_Vec::Constant(-0.1*0.1*std::sin(Time));
 
+		Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(Time));
+		dQ_ref = Kuka_Vec::Constant(0.1*std::cos(Time));
+		d2Q_ref = Kuka_Vec::Constant(-0.1*std::sin(Time));
+
+
+		//std::cout << "---- velocity check = " << Controller.VelocitySafety(Controller.dQ) << "Ts = " << Time << "---\n";
+		std::cout << "Ts = " << Time << "---\n";
+		if((!Controller.VelocitySafety(Controller.dQ)) || (!Controller.JointSafety(Controller.Q)))
+		{	
+			exit(1);
+		}
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.1);
+		//dQ_ref = Kuka_Vec::Constant(0.0);
+		//d2Q_ref = Kuka_Vec::Constant(0.0);
+		//d2Q_ref = Kuka_Vec::Constant(0.1);
 
 		Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
 
 		G = Controller.GetGravity();
 
 		//CHECKING USING NOT FILTERED STATE
-		Controller.foo2.push_back(Controller.FeedbackLinearization(Controller.Qsave.back(), Controller.dQsave.back(),d2Q_filtered));
+		//Controller.foo2.push_back(Controller.FeedbackLinearization(Controller.Qsave.back(), Controller.dQsave.back(),d2Q_filtered));
 		//Controller.foo2.push_back(Controller.FeedbackLinearization(Controller.Qsave.back(), Controller.dQsave.back(),Controller.d2Q));
 
 		//CHECKING USING FILTERED STATE
-		//Controller.foo2.push_back(Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_filtered));
+		Controller.foo2.push_back(Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_filtered));
 
-		d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+		//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 		
-		//d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered, d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
-		//Ref_Acc.push_back(d2Q_ref);
+		d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered, d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
+		
 		Ref_Acc.push_back(d2Q_ref);
 
 		//FOR TORQUE CONTROL
@@ -190,9 +195,9 @@ int main(int argc, char *argv[])
 
 		//Torques_ref = Torques_ref + Prediction;
 
-		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G + Prediction;
+		Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G;
 
-		Torques_ref = Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+		//Torques_ref = Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 
 		//Torque th for checking feedback linearization
 		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_filtered);
@@ -207,57 +212,13 @@ int main(int argc, char *argv[])
 
 		Controller.d2Qold = Controller.d2Q;	
 
-		//Controller.Qsave_filtered.push_back(Controller.Filter(Controller.Qsave,20));
+		Controller.Qsave_filtered.push_back(Controller.Filter(Controller.Qsave,20));
 
 		Controller.dQsave_filtered.push_back(Controller.Filter(Controller.dQsave,20));
 		
 		Controller.d2Qsave_filtered.push_back(Controller.Filter(Controller.d2Qsave,20));
 
-		// X = [torque_des + G, Q, dQ]
-		// Y = [torque_need + G]
-		// torque_need = Y - G
-		
-		//input.block<7,1>(0,0) = Torques_ref;
-		//input.block<7,1>(0,7) = Controller.Q;
-		
-		input(0) = Torques_ref(0);
-		input(1) = Torques_ref(1);
-		input(2) = Torques_ref(2);
-		input(3) = Torques_ref(3);
-		input(4) = Torques_ref(4);
-		input(5) = Torques_ref(5);
-		input(6) = Torques_ref(6);
-		input(7) = Controller.Q(0);
-		input(8) = Controller.Q(1);
-		input(9) = Controller.Q(2);
-		input(10) = Controller.Q(3);
-		input(11) = Controller.Q(4);
-		input(12) = Controller.Q(5);
-		input(13) = Controller.Q(6);
-
-		output = net.predict(input);
-		std::cout << output << "\n";
-
-/*		
-		torques_temp(0) = output(0) - G(0);
-		torques_temp(1) = output(1) - G(1);
-		torques_temp(2) = output(2) - G(2);
-		torques_temp(3) = output(3) - G(3);
-		torques_temp(4) = output(4) - G(4);
-		torques_temp(5) = output(5) - G(5);
-		torques_temp(6) = output(6) - G(6);
-*/
-		torques_temp(0) = output(0) + G(0);
-		torques_temp(1) = output(1) + G(1);
-		torques_temp(2) = output(2) + G(2);
-		torques_temp(3) = output(3) + G(3);
-		torques_temp(4) = output(4) + G(4);
-		torques_temp(5) = output(5) + G(5);
-		torques_temp(6) = output(6) + G(6);		
-
 		Controller.SetTorques(Torques_ref);
-
-		//Controller.SetTorques(torques_temp);
 		
 		//Controller.SetJointsPositions(Q_ref);
 		
@@ -284,18 +245,16 @@ int main(int argc, char *argv[])
 		//Controller.Tor_meas_filtered.push_back(Controller.Filter(Controller.Tor_meas,20));
 
 		Controller.Tor_meas_filtered.push_back(Controller.torque_measured);
-		
-		//Controller.Tor_th.push_back(Torques_ref);
-		
-		//Controller.Tor_th.push_back(Torques_ref + G);
 
-		//Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,Controller.dQ));
+		Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,Controller.Q,Controller.dQ));
+
+		//Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref,Controller.Q,Controller.dQ));
 		
-		Controller.Qsave_filtered.push_back(Torques_ref + G);
+		//Controller.Qsave_filtered.push_back(Torques_ref + G);
 
-		//torques_temp = Controller.TorqueAdjuster(Torques_ref+G,Controller.Q, Controller.dQ);
+		torques_temp = Controller.TorqueAdjuster(Torques_ref+G,Controller.Q, Controller.dQ);
 
-		Controller.Tor_th.push_back(torques_temp);
+		//Controller.Tor_th.push_back(torques_temp);
 
 		//Controller.Tor_th.push_back(Controller.TorqueAdjuster(Torques_ref+G,Controller.Q, Controller.dQ));
 		
@@ -318,6 +277,7 @@ int main(int argc, char *argv[])
 	fprintf(stdout, "Deleting the object...\n");
 	
 	//KINEMATIC VARIABLES PRINTING
+	
 	Controller.FromKukaToDyn(temp,Controller.Qsave);
 	Controller.writer.write_data(qsave,temp);
 	
@@ -349,10 +309,10 @@ int main(int argc, char *argv[])
 	//REFERENCE ACCELERATION PRINTING	
 	Controller.FromKukaToDyn(temp,Ref_Acc);
 	Controller.writer.write_data(ref,temp);
-
+	/*
 	//TEMP VARIABLES PRINTING
-	Controller.FromKukaToDyn(temp,Controller.foo);
-	Controller.writer.write_data(foo,temp);
+	//Controller.FromKukaToDyn(temp,Controller.foo);
+	//Controller.writer.write_data(foo,temp);
 	
 	Controller.FromKukaToDyn(temp,Controller.foo2);
 	Controller.writer.write_data(foo2,temp);
@@ -376,11 +336,12 @@ int main(int argc, char *argv[])
 
 	Controller.FromKukaToDyn(temp,Controller.P);
 	Controller.writer.write_data(P,temp);
-	
+	*/
+
 	//DELETING POINTERS
 
 	delete Controller.FRI;
-	//delete Controller.dyn;
+	delete Controller.dyn;
 	//delete Controller.Regressor;
 
 	fprintf(stdout, "Objects deleted...\n");

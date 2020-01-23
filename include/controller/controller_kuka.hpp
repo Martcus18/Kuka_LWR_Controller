@@ -3,6 +3,7 @@
 
 #include <controller/controller.hpp>
 
+
 class controller_kuka : public controller
 {
     public:
@@ -138,6 +139,13 @@ class controller_kuka : public controller
         //From Kuka_Vec to std::Vector<Eigen::VectorXd>
         void FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vector<Kuka_Vec>& OUT);
         
+        //Safety Mechanisms
+        bool JointSafety(Kuka_Vec Q);
+        
+        bool VelocitySafety(Kuka_Vec dQ);
+
+        bool TorqueSafety(Kuka_Vec Torque);
+
         //Attributes definition
 
         FastResearchInterface	*FRI;
