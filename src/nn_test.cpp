@@ -10,8 +10,8 @@ int main(int argc, char *argv[])
 	data_manager dataX;
     data_manager dataY;
 	
-	std::string Xtest = "Xtest3.txt";
-    std::string Ytest = "Ytest3.txt";
+	std::string Xtest = "Xtest2.txt";
+    std::string Ytest = "Ytest2.txt";
 	std::string Prediction = "Prediction.txt";
 	
 	std::vector<Eigen::VectorXd> X;
@@ -22,9 +22,9 @@ int main(int argc, char *argv[])
 
     dataY.read_data(Ytest,Y,1);
 
-	char net_path1[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net_3.pb";
-    char in_name1[] =  "KerasInput_input_2";
-    char out_name1[] = "KerasOutput_2/BiasAdd";
+	char net_path1[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net_2.pb";
+    char in_name1[] =  "KerasInput_input_1";
+    char out_name1[] = "KerasOutput_1/BiasAdd";
 
     Network_Output output;
     Network_Input input;
