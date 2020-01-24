@@ -1,5 +1,5 @@
-#define INPUT_SIZE 14
-#define OUTPUT_SIZE 7
+#define INPUT_SIZE 3
+#define OUTPUT_SIZE 1
 #include <Eigen/Dense>
 
 typedef Eigen::Matrix< double , INPUT_SIZE , 1>  Network_Input;

@@ -43,6 +43,7 @@ Network_Output tf_network::ArrayToEig(float *IN)
     {
         OUT(i) = IN[i];
     }
+	return OUT;
 };
 
 Network_Output tf_network::predict(Network_Input X)

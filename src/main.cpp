@@ -12,8 +12,6 @@ int main(int argc, char *argv[])
 	double elapsed_time;
 
 	unsigned int TimeoutValueInMicroSeconds = 0;
-	
-	int filter_length = 300;
 
 	Kuka_Vec Q0;
 
@@ -85,6 +83,15 @@ int main(int argc, char *argv[])
 
 	Kuka_State state;
 
+	char net_path1[] = "/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/models/inverse_mapping/net_1.pb";
+    char in_name1[] =  "KerasInput_input";
+    char out_name1[] = "KerasOutput/BiasAdd";
+
+    Network_Output output;
+    Network_Input input;
+
+    tf_network net(net_path1,in_name1,out_name1);
+
 	controller_kuka Controller(Mode);
 
 	if (Controller.FRI->IsMachineOK())
@@ -151,14 +158,19 @@ int main(int argc, char *argv[])
 		//CHECKING USING FILTERED STATE
 		//Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, d2Q_ref, Prediction, Mass);
 
-		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(0.1*Time));
-		//dQ_ref = Kuka_Vec::Constant(0.1*0.1*std::cos(Time));
-		//d2Q_ref = Kuka_Vec::Constant(-0.1*0.1*std::sin(Time));
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.1);
+		//dQ_ref = Kuka_Vec::Constant(0.0);
+		//d2Q_ref = Kuka_Vec::Constant(0.0);
 
-		Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(Time));
-		dQ_ref = Kuka_Vec::Constant(0.1*std::cos(Time));
-		d2Q_ref = Kuka_Vec::Constant(-0.1*std::sin(Time));
+		//Q_ref = Q0 + Kuka_Vec::Constant(0.1*std::sin(Time));
+		//dQ_ref = Kuka_Vec::Constant(0.1*std::cos(Time));
+		//d2Q_ref = Kuka_Vec::Constant(-0.1*std::sin(Time));
 
+		
+		Q_ref = Q0 + Kuka_Vec::Constant(0.1*(1.0 - std::cos(Time)));
+		dQ_ref = Kuka_Vec::Constant(0.1*std::sin(Time));
+		d2Q_ref = Kuka_Vec::Constant(0.1*std::cos(Time));
+		
 
 		//std::cout << "---- velocity check = " << Controller.VelocitySafety(Controller.dQ) << "Ts = " << Time << "---\n";
 		std::cout << "Ts = " << Time << "---\n";
@@ -189,20 +201,29 @@ int main(int argc, char *argv[])
 		Ref_Acc.push_back(d2Q_ref);
 
 		//FOR TORQUE CONTROL
-		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G;
 		//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
-		
-
-		//Torques_ref = Torques_ref + Prediction;
 
 		Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G;
 
 		//Torques_ref = Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+		
+		input(0) = Torques_ref(0) + G(0);
+		input(1) = Controller.Q(0);
+		input(2) = Controller.dQ(0);
+		
+		std::cout << "input = " << input << "\n";
 
-		//Torque th for checking feedback linearization
-		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_filtered);
-
-		//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered , d2Q_ref);
+		//std::cout << "input = " << input << " \n";
+		/*
+		try
+		{
+			output = net.predict(input);
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+		}
+		*/
 
 		Controller.Qsave.push_back(Controller.Q);
 

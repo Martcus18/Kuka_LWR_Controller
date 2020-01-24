@@ -72,8 +72,11 @@ target_link_libraries(controller_kuka PUBLIC controller utils learning tf_networ
 
 add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 
+add_executable(nn_test "${CMAKE_CURRENT_SOURCE_DIR}/src/nn_test.cpp")
+
 add_executable(gp "${CMAKE_CURRENT_SOURCE_DIR}/src/gp.cpp")
 
 target_link_libraries(gp ${TBB_LIBRARIES} ${Boost_LIBRARIES} utils)
 
 target_link_libraries(main controller_kuka)
+target_link_libraries(nn_test controller_kuka)

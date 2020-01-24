@@ -11,13 +11,13 @@
 #define QL7 3.14
 
 //Joints velocities limits in Radians/s
-#define VL1 0.5
-#define VL2 0.5
-#define VL3 0.5
-#define VL4 0.5
-#define VL5 0.5
-#define VL6 0.5
-#define VL7 0.5
+#define VL1 1.0
+#define VL2 1.0
+#define VL3 1.0
+#define VL4 1.0
+#define VL5 1.0
+#define VL6 1.0
+#define VL7 1.0
 
 #include<controller/controller.hpp>
 
