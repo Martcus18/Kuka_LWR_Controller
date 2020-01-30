@@ -25,6 +25,7 @@ class learning
 
     learning()
     {
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         GP_t gp(NUMBER_OF_JOINTS*3,NUMBER_OF_JOINTS);
         
         //gp.load<serialize::TextArchive>("myGP");

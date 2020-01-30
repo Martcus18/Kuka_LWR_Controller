@@ -8,7 +8,7 @@ class controller_kuka : public controller
 {
     public:
         //Constructors
-        
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         controller_kuka(){};
         ~controller_kuka(){};
         controller_kuka(std::string MODE)

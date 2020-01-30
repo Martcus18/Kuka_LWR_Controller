@@ -17,7 +17,7 @@
 class controller
 {
     public:
-        
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         controller()
         {
                 data_manager writer();

@@ -4,6 +4,8 @@ class data_manager
 {
     public:
     
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    
     //Class constructors
 
     data_manager();
