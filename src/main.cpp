@@ -87,10 +87,10 @@ int main(int argc, char *argv[])
     char in_name1[] =  "KerasInput_input";
     char out_name1[] = "KerasOutput/BiasAdd";
 
-    Network_Output output;
-    Network_Input input;
+    //Network_Output output;
+    //Network_Input input;
 
-    tf_network net(net_path1,in_name1,out_name1);
+    //tf_network net(net_path1,in_name1,out_name1);
 
 	controller_kuka Controller(Mode);
 
@@ -207,11 +207,11 @@ int main(int argc, char *argv[])
 
 		//Torques_ref = Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 		
-		input(0) = Torques_ref(0) + G(0);
-		input(1) = Controller.Q(0);
-		input(2) = Controller.dQ(0);
+		//input(0) = Torques_ref(0) + G(0);
+		//input(1) = Controller.Q(0);
+		//input(2) = Controller.dQ(0);
 		
-		std::cout << "input = " << input << "\n";
+		//std::cout << "input = " << input << "\n";
 
 		//std::cout << "input = " << input << " \n";
 		/*

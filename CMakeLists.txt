@@ -45,7 +45,6 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/ehvi")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/hv")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/FRILibrary")
 
-
 link_directories("/usr/local/lib/" ${TBB_LIBRARY})
 
 add_library(controller SHARED "${CMAKE_CURRENT_SOURCE_DIR}/src/controller/controller.cpp" )
