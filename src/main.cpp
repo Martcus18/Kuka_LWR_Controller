@@ -42,12 +42,22 @@ int main(int argc, char *argv[])
 	Kuka_Vec d2Q_filtered;
 
 	Kuka_Vec Prediction = Kuka_Vec::Constant(0.0);
-	
+
+/*	
 	std::vector<Kuka_Vec> Prediction_array;
 
 	std::vector<Kuka_Vec> Ref_Acc;
 
 	std::vector<Kuka_Vec> Time_array;
+*/
+
+	VectorKukaVec Prediction_array;
+
+	VectorKukaVec Ref_Acc;
+
+	VectorKukaVec Time_array;
+
+
 	
 	Kuka_Vec Kuka_temp;
 

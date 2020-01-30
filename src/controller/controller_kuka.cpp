@@ -213,7 +213,8 @@ Kuka_Mat controller_kuka::GetMass(Kuka_Vec Q)
     return Mass;
 }
 
-Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal, int filter_length)
+Kuka_Vec controller_kuka::Filter(VectorKukaVec &signal, int filter_length)
+//Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal, int filter_length)
 {
     int signal_length = signal.size();
     
@@ -236,7 +237,8 @@ Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal, int filter_lengt
 
 void controller_kuka::dataset_creation(Eigen::VectorXd State, Eigen::VectorXd OldState, Eigen::VectorXd reference, Eigen::VectorXd prediction){};
 
-void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vector<Kuka_Vec>& OUT)
+//void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vector<Kuka_Vec>& OUT)
+void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, VectorKukaVec &OUT)
 {
     int length = OUT.size();
     
@@ -249,8 +251,9 @@ void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vecto
 };
 
 
-//DA CONTROLLARE
-Kuka_Vec controller_kuka::GearDiff(std::vector<Kuka_Vec> &signal)
+//DA CONTROLLARE VectorKukaVec
+//Kuka_Vec controller_kuka::GearDiff(std::vector<Kuka_Vec> &signal)
+Kuka_Vec controller_kuka::GearDiff(VectorKukaVec &signal)
 {
     Kuka_Vec dsignal;
     Kuka_Vec temp;

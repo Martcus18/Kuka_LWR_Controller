@@ -66,3 +66,5 @@
 typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , 1> Kuka_Vec;
 typedef Eigen::Matrix< double , NUMBER_OF_JOINTS*2 , 1> Kuka_State;
 typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , NUMBER_OF_JOINTS> Kuka_Mat;
+
+typedef std::vector<Kuka_Vec, Eigen::aligned_allocator<Kuka_Vec>> VectorKukaVec;

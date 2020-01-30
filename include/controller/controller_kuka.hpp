@@ -131,13 +131,16 @@ class controller_kuka : public controller
         Kuka_Vec EulerDifferentiation(Kuka_Vec X, Kuka_Vec Xold);
 
         //Signal filter
-        Kuka_Vec Filter(std::vector<Kuka_Vec> &signal, int filter_length);
+        Kuka_Vec Filter(VectorKukaVec &signal, int filter_length);
+        //Kuka_Vec Filter(std::vector<Kuka_Vec> &signal, int filter_length);
 
         //Gear Differentiation
-        Kuka_Vec GearDiff(std::vector<Kuka_Vec> &signal);
+        //Kuka_Vec GearDiff(std::vector<Kuka_Vec> &signal);
+        Kuka_Vec GearDiff(VectorKukaVec &signal);
 
         //From Kuka_Vec to std::Vector<Eigen::VectorXd>
-        void FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vector<Kuka_Vec>& OUT);
+        //void FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vector<Kuka_Vec>& OUT);
+        void FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, VectorKukaVec &OUT);
         
         //Safety Mechanisms
         bool JointSafety(Kuka_Vec Q);
@@ -181,6 +184,7 @@ class controller_kuka : public controller
                 GravityVector                   [NUMBER_OF_JOINTS];
         float   MassMatrix                    [NUMBER_OF_JOINTS][NUMBER_OF_JOINTS];
         
+        /*
         std::vector<Kuka_Vec> alpha;
         std::vector<Kuka_Vec> beta;
         std::vector<Kuka_Vec> gamma;
@@ -189,6 +193,16 @@ class controller_kuka : public controller
         std::vector<Kuka_Vec> epsilon;
         std::vector<Kuka_Vec> P;
         std::vector<Kuka_Vec> K;
+        */
+        VectorKukaVec alpha;
+        VectorKukaVec beta;
+        VectorKukaVec gamma;
+        VectorKukaVec eta;
+
+        VectorKukaVec epsilon;
+        VectorKukaVec P;
+        VectorKukaVec K;
+
         Kuka_Vec integralsum = Kuka_Vec::Constant(0.0);
 
 protected:

@@ -47,6 +47,7 @@ class controller
 
         //In order to be generic with respect to the number of DOF of the manipulator
 
+        /*
         std::vector<Kuka_Vec> Qsave;
         std::vector<Kuka_Vec> dQsave;
         std::vector<Kuka_Vec> d2Qsave;
@@ -64,7 +65,26 @@ class controller
         std::vector<Kuka_Vec> Tor_th;
         std::vector<Kuka_Vec> Tor_meas;
         std::vector<Kuka_Vec> Tor_meas_filtered;
+        */
         
+        VectorKukaVec Qsave;
+        VectorKukaVec dQsave;
+        VectorKukaVec d2Qsave;
+
+        VectorKukaVec Qsave_filtered;
+        VectorKukaVec dQsave_filtered;
+        VectorKukaVec d2Qsave_filtered;
+        VectorKukaVec foo;
+        VectorKukaVec foo2;
+
+        std::vector<Eigen::VectorXd> fooXd;
+
+        std::vector<Eigen::VectorXd> end_eff_pos;
+        
+        VectorKukaVec Tor_th;
+        VectorKukaVec Tor_meas;
+        VectorKukaVec Tor_meas_filtered;
+
         data_manager writer;
 
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kp;
