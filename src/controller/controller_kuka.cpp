@@ -42,6 +42,10 @@ Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Qnow, Kuka_Vec dQnow, K
         friction_eig(i) = friction[i];
     }
 
+    //TauFl = B_eig * reference + C_eig + g_eig;
+
+    //REMEMBER TO UNCOMMENT FOR REAL ROBOT PERFORMANCE
+    
     TauFl = B_eig * reference + C_eig + g_eig + friction_eig;
 
     return TauFl;
@@ -158,11 +162,14 @@ Kuka_State controller_kuka::GetState(bool FLAG)
     this->old_robot_state = this->robot_state;
 
     //MOVED HERE OTHERWISE NOT WORKING ON THE REAL ROBOT
-    this->dQold = this->dQ;
+    
+    //this->dQold = this->dQ;
 
     // IN CASE OF ROBOT CONTROL READING THE ENCODERS
     if(FLAG)
     {
+        this->dQold = this->dQ;
+
         // IN ROBOT LOOP THIS READS THE ENCODERS
         this->MeasureJointPositions();
 
@@ -400,10 +407,13 @@ Kuka_Vec controller_kuka::SimDynamicModel(Kuka_Vec Qnow,Kuka_Vec dQnow,Kuka_Vec 
         friction_eig(i) = friction[i];
     }
 
-    Torque_temp = Torque - C_eig - g_eig - 0.01*friction_eig - 0.0001 * dQnow;
+    //Torque_temp = Torque - C_eig - g_eig - 0.01*friction_eig - 0.0001 * dQnow;
+    //Torque_temp(6) = Torque(6) - C_eig(6) - g_eig(6);
+    //Torque_temp(5) = Torque(5) - C_eig(5) - g_eig(5);
+    
+    Torque_temp = Torque - C_eig - g_eig;
 
-    Torque_temp(6) = Torque(6) - C_eig(6) - g_eig(6);
-    Torque_temp(5) = Torque(5) - C_eig(5) - g_eig(5);
+
 
     //result = B_eig.inverse() * (Torque - C_eig - g_eig - 0.01*friction_eig - 0.0001 * dQnow);
     //Torque_temp = Torque - C_eig - g_eig;

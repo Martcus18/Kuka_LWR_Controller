@@ -105,9 +105,9 @@ struct Params {
     
     struct model_sparse_gp
     {   // FOR 5 ms
-        //BO_PARAM(int, max_points, 150);
+        BO_PARAM(int, max_points, 150);
         // FOR 10 ms
-        BO_PARAM(int, max_points, 200);
+        //BO_PARAM(int, max_points, 200);
     };
     
 };

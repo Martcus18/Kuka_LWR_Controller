@@ -239,14 +239,14 @@ int main(int argc, char *argv[])
 			//d2Q_ref(2) = Kuka_temp2(2);
 
 			Temp_array.push_back(d2Q_ref);
-			
+			/*
 			if(CycleCounter > (1 * FILTER_LENGTH_LEARNING))
 			{
 				//Prediction =  Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref);
 				Prediction =  Controller.Regressor->GpPredict(Controller.Q,dQ_filtered,d2Q_ref);
 				Prediction = Controller.SignalAdjuster(Prediction,2.5);
 			}			
-			
+			*/
 			//std::cout << "prediction = " << Prediction << "\n";
 				
 			Prediction_array.push_back(Prediction);			

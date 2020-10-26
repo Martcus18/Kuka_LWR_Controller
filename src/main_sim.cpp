@@ -97,6 +97,8 @@ int main(int argc, char *argv[])
 
 	std::cout << "Simulation LOOP" << "\n";
 
+	std::cout << "\n Remember to insert friction compensation for REAL robot experiment \n";
+
 	Controller.Qold = Controller.Q;
 
 	Q0 = Controller.Q;
@@ -114,27 +116,27 @@ int main(int argc, char *argv[])
 			
 			d2Q_ref = Kuka_Vec::Constant(0.1*std::cos(Time));
 
-			//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+			d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 			
-			/*
+			
 			if(CycleCounter > (2 * FILTER_LENGTH))
 			{
 				Prediction =  Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref);
 				Prediction_array.push_back(Prediction);
 				
 			}
-			*/
+			
 			//MODEL INTEGRATION
 
 			Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) + Prediction;
 
-			Kuka_temp = Controller.GetFriction(Controller.Q,Controller.dQ) * 0.01;
+			//Kuka_temp = Controller.GetFriction(Controller.Q,Controller.dQ) * 0.01;
 
-			Temp_array.push_back(Kuka_temp);
+			//Temp_array.push_back(Kuka_temp);
 
-			//Controller.d2Q = Controller.SimDynamicModelFake(Controller.Q, Controller.dQ, Torques_ref);
+			Controller.d2Q = Controller.SimDynamicModelFake(Controller.Q, Controller.dQ, Torques_ref);
 
-			Controller.d2Q = Controller.SimDynamicModel(Controller.Q, Controller.dQ, Torques_ref);
+			//Controller.d2Q = Controller.SimDynamicModel(Controller.Q, Controller.dQ, Torques_ref);
 
 			Controller.Qold = Controller.Q;
 
@@ -144,13 +146,12 @@ int main(int argc, char *argv[])
 
 			Controller.GetState(FLAG);
 
-			/*
+			
 			if(CycleCounter > FILTER_LENGTH)
 			{
 				Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass,Controller.d2Qsave,FLAG);
 				Controller.Regressor->GpUpdate();
 			}
-			*/
 
 			//ARRAY SAVING
 			
@@ -193,20 +194,19 @@ int main(int argc, char *argv[])
 		Controller.FromKukaToDyn(temp,d2Q_ref_vec);
 		Controller.writer.write_data(d2Q_ref_file,temp);
 
-		//Controller.writer.write_data(Xdata,Controller.Regressor->DatasetX);
+		Controller.writer.write_data(Xdata,Controller.Regressor->DatasetX);
 
-		//Controller.writer.write_data(Ydata,Controller.Regressor->DatasetY);
-
+		Controller.writer.write_data(Ydata,Controller.Regressor->DatasetY);
+		
 		Controller.FromKukaToDyn(temp,Temp_array);
 		Controller.writer.write_data(friction,temp);
 
 		Controller.FromKukaToDyn(temp,Controller.Tor_th);
 		Controller.writer.write_data(torque_th,temp);
-
-		/*
+		
 		Controller.FromKukaToDyn(temp,Prediction_array);
 		Controller.writer.write_data(foo_pred,temp);
-		*/
+		
 
 return 0;
 }

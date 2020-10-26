@@ -21,14 +21,19 @@ class controller
         controller()
         {
                 data_manager writer();
+
+                // FOR REAL ROBOT
                 Kp.diagonal() << 500,500,500,500,500,500,500;
                 Kd.diagonal() << 15,15,15,15,15,15,15;
                 
-
                 //Kp.diagonal() << 105,105,105,105,105,105,105;
-                //Kd.diagonal() << 5,5,5,5,5,5,5;
-                
-                //Kd.diagonal() << 50,50,50,50,50,50,50;
+                //Kd.diagonal() << 5,5,5,5,5,5,5;                
+
+
+                //FOR SIMULATION
+                //Kp.diagonal() << 10,10,10,10,10,10,10;
+                //Kd.diagonal() << 1,1,1,1,1,1,1;
+
                 Ki.diagonal() << 0,0,0,0,0,0,0;
         };
 
