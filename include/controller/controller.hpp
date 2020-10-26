@@ -17,15 +17,18 @@
 class controller
 {
     public:
-        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        
         controller()
         {
                 data_manager writer();
-                Kp.diagonal() << 55,55,55,55,55,55,55;
-                //Kp.diagonal() << 75,75,75,75,75,75,75;
-                //Kd.diagonal() << 8,8,8,8,8,8,8;
+                Kp.diagonal() << 500,500,500,500,500,500,500;
                 Kd.diagonal() << 15,15,15,15,15,15,15;
-                //Ki.diagonal() << 3,3,3,3,3,3,3;
+                
+
+                //Kp.diagonal() << 105,105,105,105,105,105,105;
+                //Kd.diagonal() << 5,5,5,5,5,5,5;
+                
+                //Kd.diagonal() << 50,50,50,50,50,50,50;
                 Ki.diagonal() << 0,0,0,0,0,0,0;
         };
 
@@ -47,7 +50,6 @@ class controller
 
         //In order to be generic with respect to the number of DOF of the manipulator
 
-        /*
         std::vector<Kuka_Vec> Qsave;
         std::vector<Kuka_Vec> dQsave;
         std::vector<Kuka_Vec> d2Qsave;
@@ -65,26 +67,7 @@ class controller
         std::vector<Kuka_Vec> Tor_th;
         std::vector<Kuka_Vec> Tor_meas;
         std::vector<Kuka_Vec> Tor_meas_filtered;
-        */
         
-        VectorKukaVec Qsave;
-        VectorKukaVec dQsave;
-        VectorKukaVec d2Qsave;
-
-        VectorKukaVec Qsave_filtered;
-        VectorKukaVec dQsave_filtered;
-        VectorKukaVec d2Qsave_filtered;
-        VectorKukaVec foo;
-        VectorKukaVec foo2;
-
-        std::vector<Eigen::VectorXd> fooXd;
-
-        std::vector<Eigen::VectorXd> end_eff_pos;
-        
-        VectorKukaVec Tor_th;
-        VectorKukaVec Tor_meas;
-        VectorKukaVec Tor_meas_filtered;
-
         data_manager writer;
 
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kp;

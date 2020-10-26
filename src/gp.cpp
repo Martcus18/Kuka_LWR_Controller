@@ -50,6 +50,7 @@
 #include <limbo/kernel/exp.hpp>
 #include <limbo/kernel/squared_exp_ard.hpp>
 #include <limbo/mean/data.hpp>
+#include<limbo/mean/constant.hpp>
 #include <limbo/model/gp.hpp>
 #include <limbo/model/multi_gp.hpp>
 #include <limbo/model/multi_gp/parallel_lf_opt.hpp>
@@ -73,40 +74,55 @@ using namespace std;
 using namespace Eigen;
 using namespace boost;
 
-
-
 struct Params {
-    struct kernel_exp 
+    
+    struct kernel_exp
     {
-        BO_PARAM(double, sigma_sq, 1.0);
-        BO_PARAM(double, l, 0.2);
+            BO_PARAM(double, sigma_sq, 1.0);
+            BO_PARAM(double, l, 0.2);
     };
-    struct kernel : public defaults::kernel {
+    struct kernel_maternfivehalves 
+    {
+            BO_PARAM(double, sigma_sq, 1);
+            BO_PARAM(double, l, 0.2);
     };
-    struct kernel_squared_exp_ard : public defaults::kernel_squared_exp_ard {
+
+    struct kernel_squared_exp_ard
+    {
+        BO_PARAM(double,sigma_sq,1.0);
+        BO_PARAM(int,k,0);
     };
-    struct opt_rprop : public defaults::opt_rprop {
+
+    struct mean_constant
+    {
+        BO_PARAM(double,constant,0.0);
     };
+
+    //struct kernel_squared_exp_ard : public defaults::kernel_squared_exp_ard {};
+    struct kernel : public defaults::kernel {};
+    struct opt_rprop : public defaults::opt_rprop {};
     //In case of sparse GP define the number of maximum points as parameters
-    /*
+    
     struct model_sparse_gp
-    {
+    {   // FOR 5 ms
+        //BO_PARAM(int, max_points, 150);
+        // FOR 10 ms
         BO_PARAM(int, max_points, 200);
     };
-    */
     
 };
 
+//using Kernel_t = kernel::MaternFiveHalves<Params>;
 using Kernel_t = kernel::SquaredExpARD<Params>;
-using Mean_t = mean::Data<Params>;
+//using Mean_t = mean::Data<Params>;
+using Mean_t = mean::Constant<Params>;
 //Using exact model 
 using GP_t = model::GP<Params, Kernel_t, Mean_t, model::gp::KernelLFOpt<Params>>;
+//SPARSE GP
+//using GP_t_sparse = model::SparsifiedGP<Params, Kernel_t, Mean_t, model::gp::MeanLFOpt<Params>>;
+using GP_t_sparse = model::SparsifiedGP<Params, Kernel_t, Mean_t, model::gp::KernelLFOpt<Params>>;
+using MultiGP_t = model::MultiGP<Params, model::SparsifiedGP, Kernel_t, Mean_t, model::multi_gp::ParallelLFOpt<Params, model::gp::KernelLFOpt<Params>>>;
 
-/*
-using Kernel_t = kernel::Exp<Params>;
-using Mean_t = mean::Data<Params>;
-using GP_t = model::GP<Params, Kernel_t, Mean_t>;
-*/
 
 //Using sparse model for accelerating the process
 //Optimize hyperparameters for kernel matching
@@ -119,75 +135,122 @@ int main(int argc, char** argv)
 
     std::string Xtrain = "X.txt";
     std::string Ytrain = "Y.txt";
+    //std::string Xtrain = "Xpatch.txt";
+    //std::string Ytrain = "Ypatch.txt";    
+    std::string Xtest = "Xtest.txt";
+    std::string Ytest = "Ytest.txt";
+
     std::string Prediction_file = "gp_prediction.dat";
+    std::string Ground_truth = "ground_truth.dat";
     data_manager dataX;
     data_manager dataY;
-    
-    data_manager dataX_opti;
-    data_manager dataY_opti;
+    data_manager dataXtest;
+    data_manager dataYtest;
+
 
     std::vector<Eigen::VectorXd> X;
     std::vector<Eigen::VectorXd> Y;
+    std::vector<Eigen::VectorXd> Xnew;
+    std::vector<Eigen::VectorXd> Ynew;    
+    std::vector<Eigen::VectorXd> Xtrain_vec;
+    std::vector<Eigen::VectorXd> Ytrain_vec;
+    std::vector<Eigen::VectorXd> Xshuffled;
+    std::vector<Eigen::VectorXd> Yshuffled;
 
-    GP_t gp(21, 7);
+
+    //GP_t_sparse gp(21, 7);
+
+    //MultiGP_t gp(12,4);
+
+    MultiGP_t gp(21,7);
+
+    //GP_t gp(3, 1);
+    //GP_t gp(21, 7);
 
     //Loading gp hyperparameters
     //gp.load<serialize::TextArchive>("myGP");
 
     //Specify Input and Output dimension
+    //dataX.read_data(Xtrain,X,12);
     dataX.read_data(Xtrain,X,21);
-
+    //dataY.read_data(Ytrain,Y,4);
     dataY.read_data(Ytrain,Y,7);
-    //std::cout << "I am here 4 \n";
-    
-    dataX.normalize_data(X);
-    //dataX.de_normalize_data(X);
-    dataY.normalize_data(Y);
-    
+    //dataXtest.read_data(Xtest,Xnew,21);
+    //dataYtest.read_data(Ytest,Ynew,7);
 
-    //std::vector<Eigen::VectorXd>::iterator first = X.begin();
-    //std::vector<Eigen::VectorXd>::iterator last =  X.begin() + 800;
-    //std::vector<Eigen::VectorXd> X_opti(first, last);
-    //dataX.normalize_data(X_opti);
+    Xshuffled = X;
+    Yshuffled = Y;
 
-    //first = Y.begin();
-    //last =  Y.begin() + 800;
-    //std::vector<Eigen::VectorXd> Y_opti(first, last);
-    //dataY.normalize_data(Y_opti);
+    //Xshuffled = Xnew;
+    //Yshuffled = Ynew;    
 
-    //gp.compute(X_opti, Y_opti, true);
-    chrono::steady_clock sc;
-    auto start = sc.now(); 
-    gp.compute(X, Y, true);
-    auto end = sc.now();
-    auto time_span = static_cast<chrono::duration<double>>(end - start);   // measure time span between start & end
-    std::cout<<"Operation took: "<<time_span.count()<<" seconds !!!" << "\n";
-    //chrono::steady_clock sc;   // create an object of `steady_clock` class
-    //auto start = sc.now(); 
-    //gp.optimize_hyperparams();
-    //auto end = sc.now();
-    //auto time_span = static_cast<chrono::duration<double>>(end - start);   // measure time span between start & end
-    //std::cout<<"Operation took: "<<time_span.count()<<" seconds !!!" << "\n";
+    /*
+    auto seed = unsigned ( std::time(0) );
+    std::srand ( seed );
+    std::random_shuffle ( Xshuffled.begin(), Xshuffled.end() );
+
+    std::srand ( seed );
+    std::random_shuffle ( Yshuffled.begin(), Yshuffled.end() );
+
+    auto startx = Xshuffled.begin(); 
+    auto endx = Xshuffled.begin() + 101; 
+
+    auto starty = Yshuffled.begin();
+    auto endy = Yshuffled.begin() + 101; 
+
+    std::copy(starty, endy,std::back_inserter(Ytrain_vec));
+    std::copy(startx, endx,std::back_inserter(Xtrain_vec));
+    */
+
+    gp.compute(X, Y, false);    
     
-    // Sometimes is useful to save an optimized GP
-    //gp.save<serialize::TextArchive>("myGP");
+    gp.optimize_hyperparams();
+
+    gp.save<serialize::TextArchive>("myGP"); 
+    
+    /*
+    
     std::vector<Eigen::VectorXd> Prediction;
+
     Eigen::VectorXd mu;
+
     Eigen::VectorXd v;
-    double sigma;
+
+    std::vector<Eigen::VectorXd> Ground;
     
-    for (int i = 1; i <400 ; ++i) 
-    {
-        v = X[i];
+    //double sigma;
+
+    Eigen::VectorXd sigma;
+    
+    std::cout << "I am here 1" << "\n";
+    
+    for (int i = 0; i <490 ; i++){
+    //for (int i = 1; i <Xshuffled.size()-1 ; ++i)
+
+        v = Xshuffled[i];
+
+        Ground.push_back(Yshuffled[i]);
+
+        //auto start = sc.now(); 
         
-        auto start = sc.now(); 
         std::tie(mu, sigma) = gp.query(v);
+
         Prediction.push_back(mu);
     }
-    dataY.de_normalize_data(Prediction);
+
+    //dataY.de_normalize_data(Prediction);
+    
+    std::cout << "I am here 2" << "\n";
     
     //Writing limbo format of file
+    
     dataY.write_data(Prediction_file,Prediction);
     
+    std::cout << "I am here 3" << "\n";
+    
+    dataY.write_data(Ground_truth,Ground);
+    
+    std::cout << "I am here 4" << "\n";
+    */  
     return 0;
 }

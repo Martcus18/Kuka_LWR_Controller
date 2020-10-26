@@ -1,8 +1,8 @@
 #define RUN_TIME_IN_SECONDS             300.0
-#define DELTAT                  0.005
-#define MAX_GP                  50
-#define MIN_GP                  -50
-
+#define DELTAT                  0.01
+//#define DELTAT                  0.005
+#define MAX_GP                  1
+#define MIN_GP                  -1
 
 #ifndef RAD
 #define RAD(A)  ((A) * PI / 180.0 )
@@ -15,6 +15,21 @@
 #ifndef NUMBER_OF_JOINTS
 #define NUMBER_OF_JOINTS                        7
 #endif
+
+#define DIMX                    21
+#define DIMY                    7
+
+#ifndef NLOPT
+#define NLOPT
+#endif
+
+#ifndef USE_TBB
+#define USE_TBB
+#endif
+
+#define ROBOT_CONTROL   true
+#define SIM_CONTROL     false
+
 #if defined(_USE_MATH_DEFINES) && !defined(_MATH_DEFINES_DEFINED)
 #define _MATH_DEFINES_DEFINED
 
@@ -55,16 +70,16 @@
 
 #endif  /* _USE_MATH_DEFINES */
 #include <Eigen/Dense>
+#include <vector>
 #include<fstream>
 #include <iostream>
 #include <string.h>
 #include <pthread.h>
 #include <chrono>
-
+#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
 typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , 1> Kuka_Vec;
-typedef Eigen::Matrix< double , NUMBER_OF_JOINTS*2 , 1> Kuka_State;
+typedef Eigen::Matrix< double , NUMBER_OF_JOINTS * 3 , 1> Input_Vec;
+typedef Eigen::Matrix< double , NUMBER_OF_JOINTS * 2 , 1> Kuka_State;
 typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , NUMBER_OF_JOINTS> Kuka_Mat;
-
-typedef std::vector<Kuka_Vec, Eigen::aligned_allocator<Kuka_Vec>> VectorKukaVec;

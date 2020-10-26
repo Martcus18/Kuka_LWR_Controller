@@ -169,7 +169,10 @@ namespace limbo {
                 Eigen::VectorXd mean_vector = _mean_function(sample, *this);
                 assert(mean_vector.size() == _dim_out);
 
-                limbo::tools::par::loop(0, _dim_out, [&](size_t i) {
+                //MODIFICATO DA MARCO
+                int local_dim_out = 4;
+                limbo::tools::par::loop(0, local_dim_out, [&](size_t i) {
+                //limbo::tools::par::loop(0, _dim_out, [&](size_t i) {
                     _gp_models[i].add_sample(sample, limbo::tools::make_vector(observation[i] - mean_vector[i]));
                 });
             }
@@ -207,7 +210,15 @@ namespace limbo {
                 Eigen::VectorXd mu(_dim_out);
                 Eigen::VectorXd mean_vector = _mean_function(v, *this);
 
-                limbo::tools::par::loop(0, _dim_out, [&](size_t i) {
+                //MODIFICATO DA MARCO
+                
+                int local_dim_out = 4;
+                mu(4) = 0.0;
+                mu(5) = 0.0;
+                mu(6) = 0.0;
+                
+                limbo::tools::par::loop(0, local_dim_out, [&](size_t i) {
+                //limbo::tools::par::loop(0, _dim_out, [&](size_t i) {
                     mu(i) = _gp_models[i].mu(v)[0] + mean_vector(i);
                 });
 
@@ -386,9 +397,9 @@ namespace limbo {
                 if (recompute)
                     this->recompute(true, true);
             }
-
-        protected:
             std::vector<GP_t> _gp_models;
+        protected:
+            //std::vector<GP_t> _gp_models;
             int _dim_in, _dim_out;
             HyperParamsOptimizer _hp_optimize;
             MeanFunction _mean_function;

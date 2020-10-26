@@ -10,3 +10,8 @@ data/*
 /home/kuka_linux/Desktop/Kuka_Controller/external/mpc/bin/
 external/Tensorflow/models/
 unused_code/
+*.so
+*.o
+*.a
+*.bin
+/external/*

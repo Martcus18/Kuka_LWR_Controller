@@ -1,7 +1,7 @@
 #include <controller/controller_kuka.hpp>
 
 
-Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec reference)
+Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec reference)
  {  
     float* q = new float[7];
     float* dq = new float[7];
@@ -22,8 +22,8 @@ Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Ve
     for(i=0; i<NUMBER_OF_JOINTS; i++)
 	{
         B[i] = new float[NUMBER_OF_JOINTS];
-        q[i] = Q(i);
-        dq[i] = dQ(i);
+        q[i] = Qnow(i);
+        dq[i] = dQnow(i);
     }
     
     dyn->get_B(B,q);
@@ -43,7 +43,7 @@ Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Ve
     }
 
     TauFl = B_eig * reference + C_eig + g_eig + friction_eig;
-    //TauFl = B_eig * reference + C_eig + g_eig;
+
     return TauFl;
  };
 
@@ -82,14 +82,14 @@ void controller_kuka::MeasureJointTorques()
     }
 };
 
-Kuka_Vec controller_kuka::PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd)
+Kuka_Vec controller_kuka::PDController(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec d2Qnow, Kuka_Vec Qd, Kuka_Vec dQd, Kuka_Vec d2Qd)
 {
     Kuka_Vec e;
     Kuka_Vec de;
     Kuka_Vec control;
     
-    e = Qd - Q;
-    de = dQd - dQ;
+    e = Qd - Qnow;
+    de = dQd - dQnow;
     
     integralsum = integralsum + e;
 
@@ -99,13 +99,30 @@ Kuka_Vec controller_kuka::PDController(Kuka_Vec Q, Kuka_Vec dQ, Kuka_Vec d2Q, Ku
 };
 
 
-Kuka_Vec controller_kuka::TorqueAdjuster(Kuka_Vec torques, Kuka_Vec Q, Kuka_Vec dQ)
+Kuka_Vec controller_kuka::SignalAdjuster(Kuka_Vec signal, double threshold)
 {
-    Kuka_Vec torques_adjusted;
+    Kuka_Vec signal_adjusted;
 
-    torques_adjusted = torques;
+    for(int i=0;i<NUMBER_OF_JOINTS;i++)
+    {
+        if(std::fabs(signal(i)) > threshold)
+        {
+            if(std::signbit(signal(i)))
+            {
+                signal_adjusted(i) = -threshold;
+            }
+            else
+            {
+                signal_adjusted(i) = threshold;
+            }
+        }
+        else
+        {
+            signal_adjusted(i) = signal(i);
+        }
+    }
     
-    return torques_adjusted;
+    return signal_adjusted;
 };
 
 Kuka_Vec controller_kuka::EulerDifferentiation(Kuka_Vec X, Kuka_Vec Xold)
@@ -131,24 +148,41 @@ void controller_kuka::SetJointsPositions(Kuka_Vec positions)
     this->FRI->SetCommandedJointPositions(CommandedJointPositions);
 };
 
-Kuka_State controller_kuka::GetState()
+Kuka_State controller_kuka::GetState(bool FLAG)
 {
     Kuka_State state;
+    Kuka_Vec gear_prova;
 
-    old_robot_state = robot_state;
+    std::vector<Kuka_Vec> Qtemp = this->Qsave;
 
-    MeasureJointPositions();
+    this->old_robot_state = this->robot_state;
 
-    for(int i=0;i<NUMBER_OF_JOINTS; i++)
+    //MOVED HERE OTHERWISE NOT WORKING ON THE REAL ROBOT
+    this->dQold = this->dQ;
+
+    // IN CASE OF ROBOT CONTROL READING THE ENCODERS
+    if(FLAG)
     {
-        Qold(i) = Q(i);
-        Q(i) = JointValuesInRad[i];
-    }
+        // IN ROBOT LOOP THIS READS THE ENCODERS
+        this->MeasureJointPositions();
+
+        for(int i=0;i<NUMBER_OF_JOINTS; i++)
+        {
+            this->Qold(i) = this->Q(i);
+            this->Q(i) = JointValuesInRad[i];
+        }
     
-    dQold = dQ;
-    dQ = EulerDifferentiation(Q,Qold);
-    state<<Q,dQ;
+
+    // NUMERICAL DIFFERENTIATION  
+    this->dQ = EulerDifferentiation(this->Q,this->Qold);
+    //this->dQ = GearDiff(Qtemp, 500);
+
+    }
+
+    state<<this->Q,this->dQ;
+
     robot_state = state;
+    
     return state;
 };
 
@@ -162,7 +196,29 @@ Kuka_Vec controller_kuka::GetGravity()
     return Gravity;
 };
 
-Kuka_Vec controller_kuka::GetFriction(Kuka_Vec Q, Kuka_Vec dQ)
+Kuka_Vec controller_kuka::GetGravityFL(Kuka_Vec Qnow)
+{
+    float* q = new float[7];
+    float* g = new float[7];
+    int i;
+    Kuka_Vec g_eig;
+    
+    for(i=0; i<NUMBER_OF_JOINTS; i++)
+	{
+        q[i] = Qnow(i);
+    }
+    
+    dyn->get_g(g,q);
+    
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {    
+        g_eig (i)= g[i];
+    }
+    
+    return g_eig;
+}
+
+Kuka_Vec controller_kuka::GetFriction(Kuka_Vec Qnow, Kuka_Vec dQnow)
 {
     float* friction = new float[7];
     float* q = new float[7];
@@ -173,8 +229,8 @@ Kuka_Vec controller_kuka::GetFriction(Kuka_Vec Q, Kuka_Vec dQ)
     
     for(i=0; i<NUMBER_OF_JOINTS; i++)
 	{
-        q[i] = Q(i);
-        dq[i] = dQ(i);
+        q[i] = Qnow(i);
+        dq[i] = dQnow(i);
     }
     
     dyn->get_friction(friction,dq);
@@ -186,7 +242,7 @@ Kuka_Vec controller_kuka::GetFriction(Kuka_Vec Q, Kuka_Vec dQ)
     return friction_eig;
 }
 
-Kuka_Mat controller_kuka::GetMass(Kuka_Vec Q)
+Kuka_Mat controller_kuka::GetMass(Kuka_Vec Qnow)
 {    
     Kuka_Mat Mass;
     float** B = new float*[7];
@@ -196,7 +252,7 @@ Kuka_Mat controller_kuka::GetMass(Kuka_Vec Q)
 
     for(i=0; i<NUMBER_OF_JOINTS; i++)
 	{
-        q[i] = Q(i);
+        q[i] = Qnow(i);
         B[i] = new float[NUMBER_OF_JOINTS];
     }
     
@@ -213,8 +269,7 @@ Kuka_Mat controller_kuka::GetMass(Kuka_Vec Q)
     return Mass;
 }
 
-Kuka_Vec controller_kuka::Filter(VectorKukaVec &signal, int filter_length)
-//Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal, int filter_length)
+Kuka_Vec controller_kuka::Filter(std::vector<Kuka_Vec> &signal, int filter_length)
 {
     int signal_length = signal.size();
     
@@ -224,7 +279,7 @@ Kuka_Vec controller_kuka::Filter(VectorKukaVec &signal, int filter_length)
     {
             for(int i=0;i<filter_length;i++)
             {
-                output = output + signal[signal_length-i];
+                output = output + signal[signal_length - i -1];
             }
             output = output / filter_length;
     }
@@ -235,10 +290,7 @@ Kuka_Vec controller_kuka::Filter(VectorKukaVec &signal, int filter_length)
     return output;
 };
 
-void controller_kuka::dataset_creation(Eigen::VectorXd State, Eigen::VectorXd OldState, Eigen::VectorXd reference, Eigen::VectorXd prediction){};
-
-//void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vector<Kuka_Vec>& OUT)
-void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, VectorKukaVec &OUT)
+void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vector<Kuka_Vec>& OUT)
 {
     int length = OUT.size();
     
@@ -251,28 +303,32 @@ void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, VectorKuka
 };
 
 
-//DA CONTROLLARE VectorKukaVec
-//Kuka_Vec controller_kuka::GearDiff(std::vector<Kuka_Vec> &signal)
-Kuka_Vec controller_kuka::GearDiff(VectorKukaVec &signal)
+Kuka_Vec controller_kuka::GearDiff(std::vector<Kuka_Vec> &signal, int filter_length)
 {
-    Kuka_Vec dsignal;
-    Kuka_Vec temp;
-    int length = signal.size();
     
-    if(length > 4)
+    Kuka_Vec dsignal;
+    int length = signal.size();
+
+    if(length > filter_length)
     {
         for(int i=0;i<NUMBER_OF_JOINTS;i++)
         {
-            dsignal(i) = (1.0 / DELTAT) *  ((25.0/12.0) * signal[length](i) - 4.0 * signal[length-1](i) + 3*signal[length-2](i) - (4.0/3.0) * signal[length-3](i) + (1.0/4.0) * signal[length-4](i));
+            dsignal(i) = (1.0 / DELTAT) *  ((25.0/12.0) * signal[length-1](i) - 4.0 * signal[length-2](i) + 3*signal[length-3](i) - (4.0/3.0) * signal[length-4](i) + (1.0/4.0) * signal[length-5](i));
         }
     }
+    else
+    {
+        //In case of Q seq length < filter_length use Euler
+        dsignal = (1.0 / DELTAT) * (signal[length-1] - signal[length-2]);
+    }
+
     return dsignal;
 };
 
-bool controller_kuka::JointSafety(Kuka_Vec Q)
+bool controller_kuka::JointSafety(Kuka_Vec Qnow)
 {
     bool flag = true;
-    if((std::fabs(Q(0))>QL1)||(std::fabs(Q(1))>QL2)||(std::fabs(Q(2))>QL3)||(std::fabs(Q(3))>QL4)||(std::fabs(Q(4))>QL5)||(std::fabs(Q(5))>QL6)||(std::fabs(Q(6))>QL7))
+    if((std::fabs(Qnow(0))>QL1)||(std::fabs(Qnow(1))>QL2)||(std::fabs(Qnow(2))>QL3)||(std::fabs(Qnow(3))>QL4)||(std::fabs(Qnow(4))>QL5)||(std::fabs(Qnow(5))>QL6)||(std::fabs(Qnow(6))>QL7))
     {
             flag = false;
             std::cout << "Joints bounds violation" << "\n";
@@ -281,10 +337,10 @@ bool controller_kuka::JointSafety(Kuka_Vec Q)
     return flag;
 };
 
-bool controller_kuka::VelocitySafety(Kuka_Vec dQ)
+bool controller_kuka::VelocitySafety(Kuka_Vec dQnow)
 {
     bool flag = true;
-    if((std::fabs(dQ(0))>VL1)||(std::fabs(dQ(1))>VL2)||(std::fabs(dQ(2))>VL3)||(std::fabs(dQ(3))>VL4)||(std::fabs(dQ(4))>VL5)||(std::fabs(dQ(5))>VL6)||(std::fabs(dQ(6))>VL7))
+    if((std::fabs(dQnow(0))>VL1)||(std::fabs(dQnow(1))>VL2)||(std::fabs(dQnow(2))>VL3)||(std::fabs(dQnow(3))>VL4)||(std::fabs(dQnow(4))>VL5)||(std::fabs(dQnow(5))>VL6)||(std::fabs(dQnow(6))>VL7))
     {
             flag = false;
             std::cout << "Velocities bounds violation" << "\n";
@@ -293,8 +349,125 @@ bool controller_kuka::VelocitySafety(Kuka_Vec dQ)
     return flag;
 };
 
-bool controller_kuka::TorqueSafety(Kuka_Vec dQ)
+bool controller_kuka::TorqueSafety(Kuka_Vec dQnow)
 {
     bool flag = true;
     return flag;
+};
+
+
+//DYNAMIC MODEL FOR SIMULATION
+Kuka_Vec controller_kuka::SimDynamicModel(Kuka_Vec Qnow,Kuka_Vec dQnow,Kuka_Vec Torque)
+{
+    float* q = new float[7];
+    float* dq = new float[7];
+    float* C = new float[7];
+    float* g = new float[7];
+    float* friction = new float[7];
+    float** B = new float*[7];
+    
+    int i,j;
+    
+    Kuka_Mat B_eig;
+
+    Kuka_Vec C_eig;
+    Kuka_Vec g_eig;
+    Kuka_Vec friction_eig;
+    Kuka_Vec Torque_temp;
+
+    Kuka_Vec result;
+
+    for(i=0; i<NUMBER_OF_JOINTS; i++)
+	{
+        B[i] = new float[NUMBER_OF_JOINTS];
+        q[i] = Qnow(i);
+        dq[i] = dQnow(i);
+    }
+    
+    dyn->get_B(B,q);
+    dyn->get_c(C,q,dq);
+    dyn->get_g(g,q);
+    dyn->get_friction(friction,dq);
+    
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {    
+        for(int j=0;j<NUMBER_OF_JOINTS;j++)
+        {
+            B_eig(i,j) = B[i][j];
+        }
+        C_eig(i) = C[i];
+        g_eig (i)= g[i];
+        friction_eig(i) = friction[i];
+    }
+
+    Torque_temp = Torque - C_eig - g_eig - 0.01*friction_eig - 0.0001 * dQnow;
+
+    Torque_temp(6) = Torque(6) - C_eig(6) - g_eig(6);
+    Torque_temp(5) = Torque(5) - C_eig(5) - g_eig(5);
+
+    //result = B_eig.inverse() * (Torque - C_eig - g_eig - 0.01*friction_eig - 0.0001 * dQnow);
+    //Torque_temp = Torque - C_eig - g_eig;
+    result = B_eig.inverse() * (Torque_temp);
+
+    return result;
+};
+
+Kuka_Vec controller_kuka::EulerIntegration(Kuka_Vec dX,Kuka_Vec X)
+{
+    Kuka_Vec Xnew;
+
+    Xnew = X + dX * DELTAT;
+    
+    return Xnew;
+};
+
+
+//FAKE DYNAMIC MODEL FOR SIMULATION
+Kuka_Vec controller_kuka::SimDynamicModelFake(Kuka_Vec Qnow,Kuka_Vec dQnow,Kuka_Vec Torque)
+{
+    float* q = new float[7];
+    float* dq = new float[7];
+    float* C = new float[7];
+    float* g = new float[7];
+    float* friction = new float[7];
+    float** B = new float*[7];
+    
+    int i,j;
+    
+    Kuka_Mat B_eig;
+
+    Kuka_Vec C_eig;
+    Kuka_Vec g_eig;
+    Kuka_Vec friction_eig;
+    Kuka_Vec Torque_temp;
+
+    Kuka_Vec result;
+
+    for(i=0; i<NUMBER_OF_JOINTS; i++)
+	{
+        B[i] = new float[NUMBER_OF_JOINTS];
+        q[i] = Qnow(i);
+        dq[i] = dQnow(i);
+    }
+    
+    dyn->get_B_fake(B,q);
+    dyn->get_c(C,q,dq);
+    // TO FIX get_c
+    dyn->get_g_fake(g,q);
+    dyn->get_friction(friction,dq);
+    
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {    
+        for(int j=0;j<NUMBER_OF_JOINTS;j++)
+        {
+            B_eig(i,j) = B[i][j];
+        }
+        C_eig(i) = C[i];
+        g_eig (i)= g[i];
+        friction_eig(i) = friction[i];
+    }
+    
+    result = B_eig.inverse() * (Torque - C_eig - g_eig - 0.01*friction_eig);
+
+    return result;
 };

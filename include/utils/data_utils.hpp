@@ -4,8 +4,6 @@ class data_manager
 {
     public:
     
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    
     //Class constructors
 
     data_manager();
@@ -14,7 +12,7 @@ class data_manager
 
     //Read Data for limbo  GP -> <Xtrain,Ytrain>
 
-    void read_data(std::string &filename, std::vector<Eigen::VectorXd> &container,int width);
+    bool read_data(std::string &filename, std::vector<Eigen::VectorXd> &container,int width);
 
     //Write Data for limbo GP -> <Prediction,Variance>
 

@@ -32,6 +32,8 @@ class CLWR_Dynamic_Model_Lib
 		// outputs: none
 		void get_S(float **S, float *q, float *dq, float* dyn_pars_tip = NULL);
 
+		void get_S_fake(float **S, float *q, float *dq, float* dyn_pars_tip = NULL);
+
 		// get_B returns the numerical computation of the current inertia matrix B(q)
 		// inputs:
 		//	-	float** B: a pointer to a 7-by-7 matrix, which will be filled with the numerical
@@ -40,6 +42,8 @@ class CLWR_Dynamic_Model_Lib
 		//		joint positions in radians
 		// outputs: none
 		void get_B(float** B, float* q, float* dyn_pars_tip = NULL);
+
+		void get_B_fake(float** B, float* q, float* dyn_pars_tip = NULL);
 
 		// get_c returns the numerical computation of the current Coriolis vector c(q,dq)
 		// inputs:
@@ -73,6 +77,8 @@ class CLWR_Dynamic_Model_Lib
 		//			[mass [Kg], cog_x [m], cog_y [m], cog_z [m], Jxx [Kg*m^2], Jxy [Kg*m^2], Jxz [Kg*m^2], Jyy [Kg*m^2], Jyz [Kg*m^2], Jzz [Kg*m^2]] 
 		// outputs: none
 		void get_g(float* g, float* q, float* dyn_pars_tip = NULL);
+
+		void get_g_fake(float* g, float* q, float* dyn_pars_tip = NULL);
 
 		// get_tau returns the numerical computation of the current torques vector tau(q,dq,ddq)
 		// inputs:

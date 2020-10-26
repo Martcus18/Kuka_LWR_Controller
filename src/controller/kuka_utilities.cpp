@@ -198,3 +198,47 @@ MatrixXd compute_Weighted_Damped_pinv(MatrixXd j,MatrixXd Q)
     return J_inv_w;
 }
 */
+
+//IN ORDER TO HAVE METHOD FOR FILTERING ALSO IN LEARNING CLASS
+Kuka_Vec Filter2(std::vector<Kuka_Vec> &signal, int filter_length)
+{
+    int signal_length = signal.size();
+    
+    Kuka_Vec output = Kuka_Vec::Constant(0.0);
+
+    if(signal_length > filter_length)
+    {
+            for(int i=0;i<filter_length;i++)
+            {
+                output = output + signal[signal_length - i -1];
+            }
+            output = output / filter_length;
+    }
+    else
+    {
+        output = signal.back();
+    }
+    return output;
+};
+
+//IN ORDER TO HAVE METHOD FOR FILTERING ALSO IN LEARNING CLASS FOR DATASETS
+Eigen::VectorXd Filter3(std::vector<Eigen::VectorXd> &signal, int filter_length)
+{
+    int signal_length = signal.size();
+    
+    Eigen::VectorXd output = Eigen::VectorXd::Constant(DIMY,0.0);
+
+    if(signal_length > filter_length)
+    {
+            for(int i=0;i<filter_length;i++)
+            {
+                output = output + signal[signal_length - i -1];
+            }
+            output = output / filter_length;
+    }
+    else
+    {
+        output = signal.back();
+    }
+    return output;
+};

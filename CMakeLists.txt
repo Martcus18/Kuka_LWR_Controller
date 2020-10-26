@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.8)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -w -Ofast  -lpthread" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -w -Ofast  -lpthread " CACHE STRING "" FORCE)
 
 project(controller)
 
@@ -17,6 +17,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(Eigen3 REQUIRED)
 find_package(TBB 4.2 REQUIRED)
+find_package(NLopt 2.6.2 REQUIRED)
 
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -40,10 +41,12 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/FRILibrary/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/Tensorflow/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/include")
+include_directories(${NLopt_INCLUDE_DIR})
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/ehvi")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/hv")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/FRILibrary")
+
 
 link_directories("/usr/local/lib/" ${TBB_LIBRARY})
 
@@ -67,9 +70,9 @@ target_link_libraries(learning ${TBB_LIBRARIES} ${Boost_LIBRARIES})
 
 target_link_libraries(tf_network PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/Tensorflow/lib/libtensorflow_framework.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/Tensorflow/lib/libtensorflow.so")
 
-target_link_libraries(controller_kuka PUBLIC controller utils learning tf_network "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so" "${CMAKE_CURRENT_SOURCE_DIR}/build/libkuka_utilities.so")
-
 add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+
+target_link_libraries(controller_kuka PUBLIC controller utils learning tf_network "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so" "${CMAKE_CURRENT_SOURCE_DIR}/build/libkuka_utilities.so")
 
 add_executable(nn_test "${CMAKE_CURRENT_SOURCE_DIR}/src/nn_test.cpp")
 
@@ -78,4 +81,5 @@ add_executable(gp "${CMAKE_CURRENT_SOURCE_DIR}/src/gp.cpp")
 target_link_libraries(gp ${TBB_LIBRARIES} ${Boost_LIBRARIES} utils)
 
 target_link_libraries(main controller_kuka)
+
 target_link_libraries(nn_test controller_kuka)
