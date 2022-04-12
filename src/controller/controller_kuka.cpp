@@ -42,11 +42,11 @@ Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Qnow, Kuka_Vec dQnow, K
         friction_eig(i) = friction[i];
     }
 
-    //TauFl = B_eig * reference + C_eig + g_eig;
+    TauFl = B_eig * reference + C_eig + g_eig;
 
     //REMEMBER TO UNCOMMENT FOR REAL ROBOT PERFORMANCE
     
-    TauFl = B_eig * reference + C_eig + g_eig + friction_eig;
+    //TauFl = B_eig * reference + C_eig + g_eig + friction_eig;
 
     return TauFl;
  };
@@ -312,7 +312,7 @@ void controller_kuka::FromKukaToDyn(std::vector<Eigen::VectorXd>& IN, std::vecto
 
 Kuka_Vec controller_kuka::GearDiff(std::vector<Kuka_Vec> &signal, int filter_length)
 {
-    
+    // DA FIXARE
     Kuka_Vec dsignal;
     int length = signal.size();
 
@@ -358,6 +358,7 @@ bool controller_kuka::VelocitySafety(Kuka_Vec dQnow)
 
 bool controller_kuka::TorqueSafety(Kuka_Vec dQnow)
 {
+    // FINTO DA FIXARE
     bool flag = true;
     return flag;
 };

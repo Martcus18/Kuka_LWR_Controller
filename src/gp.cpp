@@ -202,12 +202,16 @@ int main(int argc, char** argv)
     std::copy(startx, endx,std::back_inserter(Xtrain_vec));
     */
 
+   std::cout << "Optimizing hyperparameters of the GPs" << "\n";
+
     gp.compute(X, Y, false);    
     
     gp.optimize_hyperparams();
 
     gp.save<serialize::TextArchive>("myGP"); 
     
+
+
     /*
     
     std::vector<Eigen::VectorXd> Prediction;
@@ -221,8 +225,6 @@ int main(int argc, char** argv)
     //double sigma;
 
     Eigen::VectorXd sigma;
-    
-    std::cout << "I am here 1" << "\n";
     
     for (int i = 0; i <490 ; i++){
     //for (int i = 1; i <Xshuffled.size()-1 ; ++i)

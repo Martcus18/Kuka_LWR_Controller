@@ -182,9 +182,9 @@ void learning::DatasetUpdate(Kuka_State State, Kuka_State OldState, Kuka_Vec ref
     }
     
 
-    tempX << OldState,acc;
+    //tempX << OldState,acc;
 
-    //tempX << OldState,reference;
+    tempX << OldState,reference;
 
     //std::cout << "OldState for Xtrain = " << OldState << "\n";
 

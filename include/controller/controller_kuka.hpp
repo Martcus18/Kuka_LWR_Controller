@@ -29,13 +29,13 @@ class controller_kuka : public controller
             
             Kuka_Vec temp_zero = Kuka_Vec::Constant(0.0);
             
-            std::cout << "\n Initialization of the GP \n";
+            //std::cout << "\n Initialization of the GP \n";
             
             Regressor = new learning();
             
             //Regressor->InitializeGp(Xdata,Ydata);
 
-            Regressor->InitializeMultiGP(Dir);
+            //Regressor->InitializeMultiGP(Dir);
 
             //dyn = new CLWR_Dynamic_Model_Lib();
 
@@ -44,13 +44,15 @@ class controller_kuka : public controller
                 const float TimeOutValueInSeconds = 120.0;
                 //FRI starting
                 FRI			=	new FastResearchInterface("/home/kuka_linux/Desktop/Kuka_Controller/external/FRILibrary/etc/980039-FRI-Driver.init");	        
-                
+                std::cout << "\n Initialization of the FRI \n";
                 //Choosing the controlling mode
                 if(!MODE.compare(IMP))
                 {
                         ResultValue = FRI->StartRobot(		FastResearchInterface::JOINT_IMPEDANCE_CONTROL, TimeOutValueInSeconds);
                         this->FRI->SetCommandedJointStiffness(CommandedStiffness);
                         this->FRI->SetCommandedJointDamping(CommandedDamping);
+                        MeasureJointPositions();
+                        this->FRI->SetCommandedJointPositions(JointValuesInRad);
                 }
                 if(!MODE.compare(POS))
                 {
@@ -100,7 +102,7 @@ class controller_kuka : public controller
             old_robot_state << Q, dQ;
             state_filtered << Q , dQ;
             old_state_filtered << Q, dQ;            
-
+            std::cout << "I am here \n";
         };
 
         //Set torques in impedence control mode

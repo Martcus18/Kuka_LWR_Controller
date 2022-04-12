@@ -94,8 +94,7 @@ int main(int argc, char *argv[])
 	bool FLAG = ROBOT_CONTROL;
 
 
-	//CHECKING THE SAMPLE TIME
-
+	//CHECKING THE SAMPLE TIME	
 	controller_kuka Controller(Mode,FLAG);
 
 		if (Controller.FRI->IsMachineOK())
@@ -123,7 +122,7 @@ int main(int argc, char *argv[])
 		{	
 			Time = Controller.FRI->GetFRICycleTime() * (float)CycleCounter;
 			
-			std::cout << "CycleTime = " << Controller.FRI->GetFRICycleTime() << "\n";
+			//std::cout << "CycleTime = " << Controller.FRI->GetFRICycleTime() << "\n";
 
 			Tic = std::chrono::system_clock::now();
 
@@ -221,16 +220,19 @@ int main(int argc, char *argv[])
 				break;
 			}
 
-			
+			/*
 			if(CycleCounter > FILTER_LENGTH_LEARNING)
 			{
 				Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, Temp_array.back(), Prediction, Mass,Controller.d2Qsave,FLAG);
 				//Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, Temp_array.back(), Prediction, Mass,Controller.d2Qsave,FLAG);
 				Controller.Regressor->GpUpdate();
 			}
-			
+			*/
 									
-			d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+			//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+			
+			// USANDO INFORMAZIONI FILTRATE
+			d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered,d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
 
 			//Kuka_temp2 = d2Q_ref;
 			
@@ -239,8 +241,9 @@ int main(int argc, char *argv[])
 			//d2Q_ref(2) = Kuka_temp2(2);
 
 			Temp_array.push_back(d2Q_ref);
+			
 			/*
-			if(CycleCounter > (1 * FILTER_LENGTH_LEARNING))
+			if(CycleCounter > FILTER_LENGTH_PREDICTING)
 			{
 				//Prediction =  Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref);
 				Prediction =  Controller.Regressor->GpPredict(Controller.Q,dQ_filtered,d2Q_ref);
@@ -249,15 +252,23 @@ int main(int argc, char *argv[])
 			*/
 			//std::cout << "prediction = " << Prediction << "\n";
 				
-			Prediction_array.push_back(Prediction);			
+			//Prediction_array.push_back(Prediction);			
 
-			Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G + Prediction;
+			//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G + Prediction;
+			
+			//USANDO INFORMAZIONI FILTRATE
+
+			//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G + Prediction;
 
 			//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
 
 			//Torques_ref = Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+			
+			Torques_ref = Controller.PDController(Q_filtered, dQ_filtered, d2Q_filtered, Q_ref, dQ_ref , Controller.d2Q);
 
-			//TORQUE COMMANDING
+			//TORQUE COMMANDING			
+
+			Controller.FRI->SetCommandedJointPositions(Controller.JointValuesInRad);
 
 			Controller.SetTorques(Torques_ref);
 			
@@ -350,23 +361,23 @@ int main(int argc, char *argv[])
 		Controller.FromKukaToDyn(temp,Q_ref_vec);
 		Controller.writer.write_data(Q_ref_file,temp);
 
-		Controller.FromKukaToDyn(temp,dQ_ref_vec);
+		//Controller.FromKukaToDyn(temp,dQ_ref_vec);
 
-		Controller.writer.write_data(Xdata,Controller.Regressor->DatasetX);
+		//Controller.writer.write_data(Xdata,Controller.Regressor->DatasetX);
 
-		Controller.writer.write_data(Ydata,Controller.Regressor->DatasetY);
+		//Controller.writer.write_data(Ydata,Controller.Regressor->DatasetY);
 
-		Controller.FromKukaToDyn(temp,Prediction_array);
-		Controller.writer.write_data(foo_pred,temp);
+		//Controller.FromKukaToDyn(temp,Prediction_array);
+		//Controller.writer.write_data(foo_pred,temp);
 
-		Controller.FromKukaToDyn(temp,Temp_array);
-		Controller.writer.write_data(foo3,temp);
+		//Controller.FromKukaToDyn(temp,Temp_array);
+		//Controller.writer.write_data(foo3,temp);
 
 		//DELETING POINTERS
 
 		delete Controller.FRI;
 		//delete Controller.dyn;
-		//delete Controller.Regressor;
+		delete Controller.Regressor;
 
 		fprintf(stdout, "Objects deleted...\n");
 		

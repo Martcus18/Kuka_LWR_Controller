@@ -86,8 +86,9 @@ int main(int argc, char *argv[])
 	std::string Q_ref_file = "Qref.txt";
 	std::string dQ_ref_file = "dQref.txt";
 	std::string d2Q_ref_file = "d2Qref.txt";
-	std::string Xdata = "X.txt";
-	std::string Ydata = "Y.txt";
+	
+	//std::string Xdata = "X.txt";
+	//std::string Ydata = "Y.txt";
 
 	Kuka_State state;
 
@@ -104,7 +105,7 @@ int main(int argc, char *argv[])
 	Q0 = Controller.Q;
 
 	//SIMULATION LOOP
-	while ((float)CycleCounter * DELTAT < 10)
+	while ((float)CycleCounter * DELTAT < 3)
 	{
 			Time = DELTAT * (float)CycleCounter;
 
@@ -118,13 +119,14 @@ int main(int argc, char *argv[])
 
 			d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 			
-			
+			/*
 			if(CycleCounter > (2 * FILTER_LENGTH))
 			{
 				Prediction =  Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref);
 				Prediction_array.push_back(Prediction);
 				
 			}
+			*/
 			
 			//MODEL INTEGRATION
 
@@ -134,9 +136,9 @@ int main(int argc, char *argv[])
 
 			//Temp_array.push_back(Kuka_temp);
 
-			Controller.d2Q = Controller.SimDynamicModelFake(Controller.Q, Controller.dQ, Torques_ref);
+			//Controller.d2Q = Controller.SimDynamicModelFake(Controller.Q, Controller.dQ, Torques_ref);
 
-			//Controller.d2Q = Controller.SimDynamicModel(Controller.Q, Controller.dQ, Torques_ref);
+			Controller.d2Q = Controller.SimDynamicModel(Controller.Q, Controller.dQ, Torques_ref);
 
 			Controller.Qold = Controller.Q;
 
@@ -146,12 +148,13 @@ int main(int argc, char *argv[])
 
 			Controller.GetState(FLAG);
 
-			
+			/*
 			if(CycleCounter > FILTER_LENGTH)
 			{
 				Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass,Controller.d2Qsave,FLAG);
 				Controller.Regressor->GpUpdate();
 			}
+			*/
 
 			//ARRAY SAVING
 			
@@ -183,7 +186,7 @@ int main(int argc, char *argv[])
 		Controller.writer.write_data(dqsave,temp);
 
 		Controller.FromKukaToDyn(temp,Controller.d2Qsave);
-		Controller.writer.write_data(d2qsave,temp);
+		Controller.writer.write_data(d2qsave,temp);		
 
 		Controller.FromKukaToDyn(temp,Q_ref_vec);
 		Controller.writer.write_data(Q_ref_file,temp);
@@ -193,19 +196,15 @@ int main(int argc, char *argv[])
 
 		Controller.FromKukaToDyn(temp,d2Q_ref_vec);
 		Controller.writer.write_data(d2Q_ref_file,temp);
-
-		Controller.writer.write_data(Xdata,Controller.Regressor->DatasetX);
-
-		Controller.writer.write_data(Ydata,Controller.Regressor->DatasetY);
 		
-		Controller.FromKukaToDyn(temp,Temp_array);
-		Controller.writer.write_data(friction,temp);
+		//Controller.FromKukaToDyn(temp,Temp_array);
+		//Controller.writer.write_data(friction,temp);
 
-		Controller.FromKukaToDyn(temp,Controller.Tor_th);
-		Controller.writer.write_data(torque_th,temp);
+		//Controller.FromKukaToDyn(temp,Controller.Tor_th);
+		//Controller.writer.write_data(torque_th,temp);
 		
-		Controller.FromKukaToDyn(temp,Prediction_array);
-		Controller.writer.write_data(foo_pred,temp);
+		//Controller.FromKukaToDyn(temp,Prediction_array);
+		//Controller.writer.write_data(foo_pred,temp);
 		
 
 return 0;

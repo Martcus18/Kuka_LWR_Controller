@@ -19,9 +19,21 @@
 #define VL6 0.5
 #define VL7 0.5
 
+
+#define FILTER_LENGTH 7
+
+#define FILTER_LENGTH_LEARNING 7
+
+#define FILTER_LENGTH_PREDICTING 10
+
+
+/*
 #define FILTER_LENGTH 3
 
 #define FILTER_LENGTH_LEARNING 3
+
+#define FILTER_LENGTH_PREDICTING 10
+*/
 
 #include<controller/controller.hpp>
 

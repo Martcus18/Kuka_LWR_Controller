@@ -72,6 +72,8 @@ target_link_libraries(tf_network PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/Te
 
 add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 
+add_executable(main_sim "${CMAKE_CURRENT_SOURCE_DIR}/src/main_sim.cpp")
+
 target_link_libraries(controller_kuka PUBLIC controller utils learning tf_network "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so" "${CMAKE_CURRENT_SOURCE_DIR}/build/libkuka_utilities.so")
 
 add_executable(nn_test "${CMAKE_CURRENT_SOURCE_DIR}/src/nn_test.cpp")
@@ -81,5 +83,7 @@ add_executable(gp "${CMAKE_CURRENT_SOURCE_DIR}/src/gp.cpp")
 target_link_libraries(gp ${TBB_LIBRARIES} ${Boost_LIBRARIES} utils)
 
 target_link_libraries(main controller_kuka)
+
+target_link_libraries(main_sim controller_kuka)
 
 target_link_libraries(nn_test controller_kuka)

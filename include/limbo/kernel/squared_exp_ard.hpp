@@ -84,7 +84,7 @@ namespace limbo {
             {
                 Eigen::VectorXd p = Eigen::VectorXd::Zero(_ell.size() + _ell.size() * Params::kernel_squared_exp_ard::k() + 1);
                 p(p.size() - 1) = std::log(std::sqrt(Params::kernel_squared_exp_ard::sigma_sq()));
-                std::cout << "p.size() = " << p.size() << "\n";
+                //std::cout << "p.size() = " << p.size() << "\n";
                 this->set_params(p);
             }
 
