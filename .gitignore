@@ -1,0 +1,17 @@
+build/*
+bin/*
+data/*
+.vscode/*
+/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/lib/
+/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/build/
+/home/kuka_linux/Desktop/Kuka_Controller/external/Tensorflow/bin/
+/home/kuka_linux/Desktop/Kuka_Controller/external/mpc/build/
+/home/kuka_linux/Desktop/Kuka_Controller/external/mpc/lib/
+/home/kuka_linux/Desktop/Kuka_Controller/external/mpc/bin/
+external/Tensorflow/models/
+unused_code/
+*.so
+*.o
+*.a
+*.bin
+
