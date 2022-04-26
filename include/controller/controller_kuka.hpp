@@ -33,6 +33,10 @@ class controller_kuka : public controller
             sum1 = Kuka_Vec::Constant(0.0);
             sum2 = Kuka_Vec::Constant(0.0);
             r = Kuka_Vec::Constant(0.0);
+
+            sum1_ob = Kuka_Vec::Constant(0.0);
+            sum2_ob = Kuka_Vec::Constant(0.0);
+            r_ob = Kuka_Vec::Constant(0.0);
             
             Kuka_Vec temp_zero = Kuka_Vec::Constant(0.0);
             
@@ -100,12 +104,15 @@ class controller_kuka : public controller
             }
 
             dQ_hat = k0 * Q;
+
+            p0_hat = GetMass(Q)*dQ_hat;
             
             Qsave.push_back(Q);
             dQsave.push_back(dQ);
             d2Qsave.push_back(d2Q);
             dQ_hat_save.push_back(dQ_hat);
             r_save.push_back(r);
+            r_obs_save.push_back(r_ob);
             Qsave_filtered.push_back(Q);
             dQsave_filtered.push_back(dQ);
             d2Qsave_filtered.push_back(d2Q);
@@ -210,6 +217,10 @@ class controller_kuka : public controller
 
         Kuka_Vec Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torque_nominal, Kuka_Vec r, int index);
 
+        //Evaluation of the residual using the estimated joint velocities
+
+        Kuka_Vec Residual_obs(Kuka_Vec Qnow, Kuka_Vec dQnow_hat, Kuka_Vec Torque_nominal, Kuka_Vec r, int index);
+
         //Generation of an external torque
 
         Kuka_Vec ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec Q, Eigen::Vector3d Force);
@@ -251,6 +262,10 @@ class controller_kuka : public controller
         Kuka_Vec r;
         Kuka_Vec sum1;
         Kuka_Vec sum2;
+        Kuka_Vec r_ob;
+        Kuka_Vec sum1_ob;
+        Kuka_Vec sum2_ob;
+        Kuka_Vec p0_hat;
         
         Kuka_Vec torque_measured;
         Kuka_Vec torque_assigned;

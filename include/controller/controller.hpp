@@ -85,6 +85,7 @@ class controller
         std::vector<Kuka_Vec> dQ_hat_save;
 
         std::vector<Kuka_Vec> r_save;
+        std::vector<Kuka_Vec> r_obs_save;
 
         std::vector<Kuka_Vec> Qsave_filtered;
         std::vector<Kuka_Vec> dQsave_filtered;
