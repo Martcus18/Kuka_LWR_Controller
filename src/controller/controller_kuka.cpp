@@ -564,6 +564,78 @@ Kuka_Vec controller_kuka::Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torqu
 
 }
 
+//EVALUATION OF THE RESIDUAL USING THE ESTIMATED JOINT VELOCITIES
+Kuka_Vec controller_kuka::Residual_obs(Kuka_Vec Qnow, Kuka_Vec dQnow_hat, Kuka_Vec Torque_nominal, Kuka_Vec r, int index) 
+{
+    float* q = new float[7];
+    float* dq = new float[7];
+    float** S = new float*[7];
+    float* g = new float[7];
+    float* friction = new float[7];
+    float** B = new float*[7];
+
+    int i,j;
+
+    Kuka_Vec dQ_eig;
+
+    Kuka_Mat B_eig;
+    Kuka_Mat S_eig;
+
+    Kuka_Vec g_eig;
+    Kuka_Vec friction_eig;
+    Kuka_Vec Torque_temp;
+
+    Kuka_Vec p_eig; 
+
+    Kuka_Vec result;
+
+    for(i=0; i<NUMBER_OF_JOINTS; i++)
+	{
+        B[i] = new float[NUMBER_OF_JOINTS];
+        S[i] = new float[NUMBER_OF_JOINTS];
+        q[i] = Qnow(i);
+        dq[i] = dQnow_hat(i);
+        dQ_eig(i) = dQnow_hat(i);
+    }
+    
+    dyn->get_B(B,q);
+    dyn->get_S(S,q,dq);
+    dyn->get_g(g,q);
+    dyn->get_friction(friction,dq);
+
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {    
+        for(int j=0;j<NUMBER_OF_JOINTS;j++)
+        {
+            B_eig(i,j) = B[i][j];
+            S_eig(i,j) = S[i][j]; //I already save the transpose!!!
+        }
+        g_eig (i)= g[i];
+        friction_eig(i) = friction[i];
+    }
+
+    //we evaluate the current generalized momentum
+    p_eig = B_eig*dQ_eig;
+
+    //we update the value of sum1
+    sum1_ob += (Torque_nominal + S_eig.transpose()*dQ_eig - g_eig)*DELTAT;
+
+    //we update the value of sum2
+    if (index!=0)
+    {
+        sum2_ob += r*DELTAT;
+    }
+
+    //return the result
+
+    Kuka_Mat m = eye + K*DELTAT;
+
+    result = m.inverse()*K*(p_eig-sum1_ob-sum2_ob-p0_hat);
+
+    return result;
+
+}
+
 //GENERATION OF AN EXTERNAL FORCE
 Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec Q, Eigen::Vector3d Force)
 {

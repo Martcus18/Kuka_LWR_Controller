@@ -109,6 +109,7 @@ int main(int argc, char *argv[])
 	std::string d2Q_ref_file = "d2Qref.txt";
 	std::string dqhatsave = "dQ_hat.txt";
 	std::string rsave = "res.txt";
+	std::string r_obsave = "res_ob.txt";
 	std::string torque_save = "torque_ref.txt";
 	std::string fault_torque_save = "torque_faulty.txt";
 
@@ -191,6 +192,8 @@ int main(int argc, char *argv[])
 
 			Controller.dQ_hat = Controller.z + Controller.k0*Controller.Q;
 
+			Controller.r_ob = Controller.Residual_obs(Controller.Q, Controller.dQ_hat, Torques_nom, Controller.r_ob, CycleCounter);
+
 			Controller.GetState(FLAG);
 
 			/*
@@ -212,6 +215,8 @@ int main(int argc, char *argv[])
 			Controller.dQ_hat_save.push_back(Controller.dQ_hat);
 
 			Controller.r_save.push_back(Controller.r);
+
+			Controller.r_obs_save.push_back(Controller.r_ob);
 
 			Q_ref_vec.push_back(Q_ref);
 
@@ -243,7 +248,10 @@ int main(int argc, char *argv[])
 		Controller.writer.write_data(dqhatsave,temp);	
 
 		Controller.FromKukaToDyn(temp,Controller.r_save);
-		Controller.writer.write_data(rsave,temp);	
+		Controller.writer.write_data(rsave,temp);
+
+		Controller.FromKukaToDyn(temp,Controller.r_obs_save);
+		Controller.writer.write_data(r_obsave,temp);	
 
 		Controller.FromKukaToDyn(temp,Controller.Tor_th);
 		Controller.writer.write_data(torque_save,temp);	
