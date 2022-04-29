@@ -133,17 +133,18 @@ int main(int argc, char *argv[])
 	Q0 = Controller.Q;
 
 	//SIMULATION LOOP
-	while ((float)CycleCounter * DELTAT < 3)
+	//while ((float)CycleCounter * DELTAT < 3)
+	while (CycleCounter < 2000)
 	{
 			Time = DELTAT * (float)CycleCounter;
 
 			Mass = Controller.GetMass(Controller.Q);
 
-			Q_ref = Q0 + Kuka_Vec::Constant(0.1*(1.0 - std::cos(Time)));
+			Q_ref = Q0 + Kuka_Vec::Constant(1.0*(1.0 - std::cos(1.0 * Time)));
 			
-			dQ_ref = Kuka_Vec::Constant(0.1*std::sin(Time));
+			dQ_ref = Kuka_Vec::Constant(1.0*std::sin(1.0 * Time));
 			
-			d2Q_ref = Kuka_Vec::Constant(0.1*std::cos(Time));
+			d2Q_ref = Kuka_Vec::Constant(1.0*std::cos(1.0 * Time));
 
 			d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 			

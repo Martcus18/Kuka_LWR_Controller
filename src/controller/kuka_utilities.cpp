@@ -141,8 +141,8 @@ Eigen::MatrixXd diff_Jacobian2(Kuka_Vec q, Kuka_Vec qdot)
 
 // the tolerance is e ( change if needed)
 //damped pesudo inverse
-/*
-//template <typename Derived1, typename Derived2>
+
+template <typename Derived1, typename Derived2>
 void dampedPseudoInverse(const Eigen::MatrixXd& A,double dampingFactor,double e,Eigen::MatrixXd& Apinv,unsigned int computationOptions)
 {
     int m = A.rows(), n = A.cols(), k = (m < n) ? m : n;
@@ -166,6 +166,7 @@ void dampedPseudoInverse(const Eigen::MatrixXd& A,double dampingFactor,double e,
 
 //dampingFactor is 0.1( change if needed)
 //return pesudo inverse computed in dampedPseudoInverse function
+/*
 Eigen::MatrixXd compute_Damped_pinv(Eigen::MatrixXd j, double f, double e)
 {
 
@@ -178,7 +179,7 @@ Eigen::MatrixXd compute_Damped_pinv(Eigen::MatrixXd j, double f, double e)
 
     return pJacobian;
 }
-
+*/
 /*
 //weighted pseudo inverse
 MatrixXd compute_Weighted_Damped_pinv(MatrixXd j,MatrixXd Q)

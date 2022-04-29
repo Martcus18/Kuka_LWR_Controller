@@ -40,7 +40,7 @@ include_directories(${CRYPTOPP_INCLUDE_DIR})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/FRILibrary/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/include")
 #include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/Tensorflow/include")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/include")
+#include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/include")
 include_directories(${NLopt_INCLUDE_DIR})
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/ehvi")
@@ -76,7 +76,8 @@ add_executable(main_sim "${CMAKE_CURRENT_SOURCE_DIR}/src/main_sim.cpp")
 
 #target_link_libraries(controller_kuka PUBLIC controller utils learning tf_network "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so" "${CMAKE_CURRENT_SOURCE_DIR}/build/libkuka_utilities.so")
 
-target_link_libraries(controller_kuka PUBLIC controller utils "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so" "${CMAKE_CURRENT_SOURCE_DIR}/build/libkuka_utilities.so")
+target_link_libraries(controller_kuka PUBLIC controller utils "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/build/libkuka_utilities.so")
+#target_link_libraries(controller_kuka PUBLIC controller utils "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so" "${CMAKE_CURRENT_SOURCE_DIR}/build/libkuka_utilities.so")
 
 #add_executable(nn_test "${CMAKE_CURRENT_SOURCE_DIR}/src/nn_test.cpp")
 

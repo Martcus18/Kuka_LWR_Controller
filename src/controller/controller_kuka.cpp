@@ -476,7 +476,8 @@ Kuka_Vec controller_kuka::SimReducedObserver(Kuka_Vec Q, Kuka_Vec dQ_hat, Kuka_V
             
             if (i==j)
             {
-                P_eig(i) = k0*q[i];
+                //P_eig(i) = k0*q[i];
+                P_eig(i) = k0*dq_hat[i];
             }
 
         }

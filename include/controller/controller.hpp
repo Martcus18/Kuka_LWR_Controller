@@ -56,6 +56,7 @@ class controller
 
                 //LINEAR GAIN FOR THE REDUCED OBSERVER
                 k0 = 0.0004;
+                //k0 = 0.1;
         };
 
         ~controller(){};
