@@ -101,7 +101,7 @@ JEE(2,5)= l4*C2*C5*C6*S4 - l4*C2*C4*S6 - l4*C3*S2*S4*S6 + l4*C6*S2*S3*S5 - l4*C3
 
 }
 
-Eigen::MatrixXd diff_Jacobian2(Kuka_Vec q, Kuka_Vec qdot)
+Eigen::MatrixXd diff_Jacobian(Kuka_Vec q, Kuka_Vec qdot)
 {
     Eigen::MatrixXd dJ(3,6);
     double c1,s1,c2,s2,c3,s3,c4,s4,c5,s5,c6,s6;
@@ -142,7 +142,7 @@ Eigen::MatrixXd diff_Jacobian2(Kuka_Vec q, Kuka_Vec qdot)
 // the tolerance is e ( change if needed)
 //damped pesudo inverse
 
-template <typename Derived1, typename Derived2>
+//template <typename Derived1, typename Derived2>
 void dampedPseudoInverse(const Eigen::MatrixXd& A,double dampingFactor,double e,Eigen::MatrixXd& Apinv,unsigned int computationOptions)
 {
     int m = A.rows(), n = A.cols(), k = (m < n) ? m : n;

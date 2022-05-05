@@ -36,6 +36,11 @@ class controller
 
                 Ki.diagonal() << 0,0,0,0,0,0,0;
 
+                //Cartesian PD
+
+                Kp_cart.diagonal() << 100,100,400;
+                Kd_cart.diagonal() << 10, 10, 50;
+
                 //IDENTITY MATRIX OF DIMENSION 7x7
                 eye << 1,0,0,0,0,0,0,
                         0,1,0,0,0,0,0,
@@ -55,8 +60,10 @@ class controller
                         0,0,0,0,0,0,50;
 
                 //LINEAR GAIN FOR THE REDUCED OBSERVER
-                k0 = 0.0004;
+                //k0 = 0.0004;
                 //k0 = 0.1;
+                k0 = 10;
+                //k0 = 100;
         };
 
         ~controller(){};
@@ -112,6 +119,9 @@ class controller
 
         Kuka_Mat eye;
         Kuka_Mat K;
+
+        Eigen::DiagonalMatrix<double, 3> Kp_cart;
+        Eigen::DiagonalMatrix<double, 3> Kd_cart;
 
 };
 #endif /* CONTROLLER_HPP_ */

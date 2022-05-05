@@ -225,6 +225,22 @@ class controller_kuka : public controller
 
         Kuka_Vec ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec Q, Eigen::Vector3d Force);
 
+        //Direct Kinematics
+
+        Eigen::Vector3d DirKin(Kuka_Vec Q);
+
+        //Jacobian
+
+        Eigen::MatrixXd Jac(Kuka_Vec Q);
+
+        //Derivative of the Jacobian
+
+        Eigen::MatrixXd diff_Jac(Kuka_Vec Q, Kuka_Vec dQ);
+
+        //Damped Least Square Pseudoinverse
+
+        void dls_pinv(const Eigen::MatrixXd& A,double dampingFactor,double e, Eigen::MatrixXd& Apinv);
+
         ~controller_kuka()
         {
                 //delete this->FRI;

@@ -49,10 +49,7 @@ Kuka_Vec Filter2(std::vector<Kuka_Vec> &signal, int filter_length);
 
 Eigen::VectorXd Filter3(std::vector<Eigen::VectorXd> &signal, int filter_length);
 
-
-
-template <typename Derived1, typename Derived2>
-void dampedPseudoInverse(const Eigen::MatrixBase<Derived1>& A,double dampingFactor,Eigen::MatrixBase<Derived2>& Apinv,unsigned int computationOptions);
+void dampedPseudoInverse(const Eigen::MatrixXd& A,double dampingFactor,double e,Eigen::MatrixXd& Apinv,unsigned int computationOptions);
 
 
 #endif // KUKA_UTILITIES

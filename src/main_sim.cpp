@@ -6,6 +6,10 @@ int main(int argc, char *argv[])
 	unsigned int				CycleCounter	=	0;
 	int							ResultValue		=	0;
 	double 						Time = 0.0;
+	double						frequency = 1.0;
+	double 						tf = 10.0;
+	double						damping = 0.1; // needed for pseudoinverse
+	double						e = 1.0; // needed for pseudoinverse
 
 	std::chrono::time_point<std::chrono::system_clock> Tic, Toc;
 
@@ -14,6 +18,7 @@ int main(int argc, char *argv[])
 	unsigned int TimeoutValueInMicroSeconds = 0;
 
 	std::cout << "Choose what external force you want to simulate: \n"; 
+	std::cout << "0 --> nominal condition \n";
 	std::cout << "1 --> fault on 1-st motor \n";
 	std::cout << "2 --> fault on 2-nd motor \n";
 	std::cout << "3 --> fault on 3-rd motor \n";
@@ -86,6 +91,36 @@ int main(int argc, char *argv[])
 
 	Eigen::Vector3d end_effector;
 
+	Eigen::Vector3d p_0 ;
+
+	Eigen::Vector3d dp_0;
+
+	Eigen::Vector3d d2p_0(0,0,0); //initial accelerations are zero 
+
+	Eigen::Vector3d p_ref;
+
+	Eigen::Vector3d dp_ref;
+
+	Eigen::Vector3d d2p_ref;
+
+	Eigen::Vector3d d2p_ff;
+
+	Eigen::Vector3d p;
+
+	Eigen::Vector3d dp;
+
+	Eigen::Vector3d d2p;
+
+	Eigen::Vector3d err_p;
+
+	Eigen::Vector3d err_dp;
+
+	Eigen::MatrixXd J;
+
+	Eigen::MatrixXd dJ;
+
+	Eigen::MatrixXd Jpinv;
+
 	std::string Mode("impedence");
 	
 	//std::string Mode("position");
@@ -114,6 +149,9 @@ int main(int argc, char *argv[])
 	std::string fault_torque_save = "torque_faulty.txt";
 
 	Eigen::Vector3d F(10,10,0);
+
+	//Eigen::Vector3d F(10,10,0);
+	//Eigen::Vector3d F(10,10,0);
 	
 	//std::string Xdata = "X.txt";
 	//std::string Ydata = "Y.txt";
@@ -132,14 +170,20 @@ int main(int argc, char *argv[])
 
 	Q0 = Controller.Q;
 
+	p_0 = Controller.DirKin(Controller.Q);
+	
+	dp_0 = Controller.Jac(Controller.Q)*Controller.dQ; 
+	
 	//SIMULATION LOOP
 	//while ((float)CycleCounter * DELTAT < 3)
-	while (CycleCounter < 2000)
-	{
-			Time = DELTAT * (float)CycleCounter;
+	while (Time < tf)
+	{		
+
+			//Time = DELTAT * (float)CycleCounter;
 
 			Mass = Controller.GetMass(Controller.Q);
 
+			/*
 			Q_ref = Q0 + Kuka_Vec::Constant(1.0*(1.0 - std::cos(1.0 * Time)));
 			
 			dQ_ref = Kuka_Vec::Constant(1.0*std::sin(1.0 * Time));
@@ -147,15 +191,40 @@ int main(int argc, char *argv[])
 			d2Q_ref = Kuka_Vec::Constant(1.0*std::cos(1.0 * Time));
 
 			d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
-			
-			/*
-			if(CycleCounter > (2 * FILTER_LENGTH))
-			{
-				Prediction =  Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref);
-				Prediction_array.push_back(Prediction);
-				
-			}
 			*/
+			
+			//CIRCULAR TRAJECTORY
+
+			p_ref[0] = p_0[0] - 0.1*(1.0-std::cos(frequency*Time));
+			p_ref[1] = p_0[1] - 0.1*(std::sin(frequency*Time));
+			p_ref[2] = p_0[2];
+			
+			dp_ref[0] = dp_0[0] - 0.1*frequency*std::sin(frequency*Time);
+			dp_ref[1] = dp_0[1] - 0.1*frequency*std::cos(frequency*Time);
+			dp_ref[2] = dp_0[2];
+
+			d2p_ff[0] = d2p_0[0] - 0.1*frequency*frequency*std::cos(frequency*Time);
+			d2p_ff[1] = d2p_0[1] + 0.1*frequency*frequency*std::sin(frequency*Time);
+			d2p_ff[2] = d2p_0[2];
+
+			p = Controller.DirKin(Controller.Q);
+			J = Controller.Jac(Controller.Q);
+			dJ = Controller.diff_Jac(Controller.Q, Controller.dQ);
+
+			dp = J * Controller.dQ;
+			d2p = dJ * Controller.dQ + J * Controller.d2Q;
+
+			err_p = p_ref -p;
+			err_dp = dp_ref - dp;
+
+			d2p_ref = Controller.Kp_cart * err_p + Controller.Kd_cart * err_dp + d2p_ff;
+
+			// damped least square pseudo inverse
+
+			Controller.dls_pinv(J, damping, e, Jpinv);
+			//std::cout << Jpinv << "\n";
+
+			d2Q_ref = Jpinv*(d2p_ref-dJ*Controller.dQ);
 			
 			//MODEL INTEGRATION
 
@@ -163,7 +232,7 @@ int main(int argc, char *argv[])
 
 			Torques_nom = Torques_ref;
 
-			if (CycleCounter>=100) 
+			if (Time >= 5.0) 
 			{
 				Torques_faulty = Controller.ExtTorque(Torques_nom, fault, Controller.Q, F);
 				Torques_ref += Torques_faulty; 
@@ -232,6 +301,8 @@ int main(int argc, char *argv[])
 			std::cout << "Step = " << CycleCounter << "\n";
 
 			CycleCounter++;
+
+			Time += DELTAT;
 	}
 
 	//Writing Simulation Variables

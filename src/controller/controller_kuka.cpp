@@ -437,7 +437,7 @@ Kuka_Vec controller_kuka::SimReducedObserver(Kuka_Vec Q, Kuka_Vec dQ_hat, Kuka_V
 {
     float* q = new float[7];
     float* dq_hat = new float[7];
-    float* C_hat = new float[7];
+    float** S_hat = new float*[7];
     float* g = new float[7];
     float* friction = new float[7];
     float** B = new float*[7];
@@ -447,9 +447,9 @@ Kuka_Vec controller_kuka::SimReducedObserver(Kuka_Vec Q, Kuka_Vec dQ_hat, Kuka_V
     Kuka_Mat B_eig;
 
     //here we put the partial derivative of the gain times dq_hat
-    Kuka_Vec P_eig; 
+    //Kuka_Vec P_eig; 
 
-    Kuka_Vec C_hat_eig;
+    Kuka_Mat S_hat_eig;
     Kuka_Vec g_eig;
     Kuka_Vec friction_eig;
     Kuka_Vec Torque_temp;
@@ -459,12 +459,13 @@ Kuka_Vec controller_kuka::SimReducedObserver(Kuka_Vec Q, Kuka_Vec dQ_hat, Kuka_V
     for(i=0; i<NUMBER_OF_JOINTS; i++)
 	{
         B[i] = new float[NUMBER_OF_JOINTS];
+        S_hat[i] = new float[NUMBER_OF_JOINTS];
         q[i] = Q(i);
         dq_hat[i] = dQ_hat(i);
     }
     
     dyn->get_B(B,q);
-    dyn->get_c(C_hat,q,dq_hat);
+    dyn->get_S(S_hat,q,dq_hat);
     dyn->get_g(g,q);
     dyn->get_friction(friction,dq_hat);
     
@@ -473,20 +474,22 @@ Kuka_Vec controller_kuka::SimReducedObserver(Kuka_Vec Q, Kuka_Vec dQ_hat, Kuka_V
         for(int j=0;j<NUMBER_OF_JOINTS;j++)
         {
             B_eig(i,j) = B[i][j];
+            S_hat_eig(i,j) = S_hat[i][j];
             
-            if (i==j)
+            /*if (i==j)
             {
                 //P_eig(i) = k0*q[i];
                 P_eig(i) = k0*dq_hat[i];
-            }
+            }*/
 
         }
-        C_hat_eig(i) = C_hat[i];
+        
         g_eig(i)= g[i];
         friction_eig(i) = friction[i];
     }
     
-    Torque_temp = Torque - C_hat_eig - g_eig - B_eig*P_eig;
+    //Torque_temp = Torque - C_hat_eig - g_eig - B_eig*P_eig;
+    Torque_temp = Torque - S_hat_eig*dQ_hat - g_eig - B_eig*k0*eye*dQ_hat;
 
     result = B_eig.inverse() * (Torque_temp);
 
@@ -537,7 +540,7 @@ Kuka_Vec controller_kuka::Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torqu
         for(int j=0;j<NUMBER_OF_JOINTS;j++)
         {
             B_eig(i,j) = B[i][j];
-            S_eig(i,j) = S[i][j]; //I already save the transpose!!!
+            S_eig(i,j) = S[i][j]; 
         }
         g_eig (i)= g[i];
         friction_eig(i) = friction[i];
@@ -650,7 +653,7 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
     switch (fault) 
     {
         case 1:
-            result(0) = -0.7*Torque_nominal(0);
+            result(0) = -0.9*Torque_nominal(0);
             break;
 
         case 2:
@@ -658,7 +661,7 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
             break;
         
         case 3:
-            result(2) = -0.7*Torque_nominal(2);
+            result(2) = -0.4*Torque_nominal(2);
             break;
 
         case 4:
@@ -666,7 +669,7 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
             break;
 
         case 5:
-            result(4) = -0.7*Torque_nominal(4);
+            result(4) = -0.9*Torque_nominal(4);
             break;
 
         case 6:
@@ -674,11 +677,11 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
             break;
 
         case 7:
-            result(6) = -0.7*Torque_nominal(6);
+            result(6) = -0.9*Torque_nominal(6);
             break;
 
         case 8:
-            result(3) = -0.7*Torque_nominal(3);
+            result(3) = -0.2*Torque_nominal(3);
             result(5) = -0.7*Torque_nominal(5);
             break;
 
@@ -699,6 +702,53 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
     return result;
 }
 
+//DIRECT KINEMATICS
+Eigen::Vector3d controller_kuka::DirKin(Kuka_Vec Q)
+{
+    Eigen::Vector3d result;
+
+    result = D_kin(Q);
+
+    return result;
+}
+
+//JACOBIAN
+Eigen::MatrixXd controller_kuka::Jac(Kuka_Vec Q)
+{
+    Eigen::MatrixXd result(3,7);
+    Eigen::MatrixXd J;
+    Eigen::MatrixXd zero_col(3,1);
+
+    zero_col  << 0,0,0;
+
+    J = Jacobian(Q);
+
+    result << J,zero_col;
+
+    return result;
+}
+
+//DERIVATIVE OF THE JACOBIAN
+Eigen::MatrixXd controller_kuka::diff_Jac(Kuka_Vec Q, Kuka_Vec dQ)
+{
+    Eigen::MatrixXd result(3,7);
+    Eigen::MatrixXd dJ;
+    Eigen::MatrixXd zero_col(3,1);
+
+    zero_col  << 0,0,0;
+
+    dJ = diff_Jacobian(Q,dQ);
+
+    result << dJ,zero_col;
+
+    return result;
+}
+
+//DAMPED LEAST SQUARE PSEUDOINVERSE
+void controller_kuka::dls_pinv(const Eigen::MatrixXd& A,double dampingFactor,double e, Eigen::MatrixXd& Apinv)
+{
+    dampedPseudoInverse(A, dampingFactor, e, Apinv, Eigen::ComputeThinU | Eigen::ComputeThinV);
+}
 
 
 
