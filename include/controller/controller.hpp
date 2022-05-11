@@ -10,6 +10,7 @@
 #include <OSAbstraction.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <cmath>
 #include <TypeIRML.h>
 #include <LWR_Dynamic_Model_Lib.h>
 #include <controller/kuka_utilities.h>
