@@ -37,10 +37,14 @@ class controller
 
                 Ki.diagonal() << 0,0,0,0,0,0,0;
 
-                //Cartesian PD
+                //CARTESIAN PD
 
                 Kp_cart.diagonal() << 100,100,400;
                 Kd_cart.diagonal() << 10, 10, 50;
+
+                //DAMPING
+
+                K_damp.diagonal() << 200,200,200,200,200,200,200;
 
                 //IDENTITY MATRIX OF DIMENSION 7x7
                 eye << 1,0,0,0,0,0,0,
@@ -61,10 +65,13 @@ class controller
                         0,0,0,0,0,0,50;
 
                 //LINEAR GAIN FOR THE REDUCED OBSERVER
-                //k0 = 0.0004;
-                //k0 = 0.1;
+                
                 k0 = 10;
-                //k0 = 100;
+
+                //RESIDUAL THRESHOLDS: these are defined accordingly to the values the torque assume in nominal condition
+
+                th << 0.1,28.70,0.18,3.48,0.08,0.07,0.001;
+
         };
 
         ~controller(){};
@@ -92,6 +99,7 @@ class controller
         std::vector<Kuka_Vec> d2Qsave;
 
         std::vector<Kuka_Vec> dQ_hat_save;
+        std::vector<Kuka_Vec> dQ_num_save;
 
         std::vector<Kuka_Vec> r_save;
         std::vector<Kuka_Vec> r_obs_save;
@@ -117,12 +125,15 @@ class controller
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Ki;
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kp_torque;
         Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> Kd_torque;
+        Eigen::DiagonalMatrix<double, NUMBER_OF_JOINTS> K_damp;
 
         Kuka_Mat eye;
         Kuka_Mat K;
 
         Eigen::DiagonalMatrix<double, 3> Kp_cart;
         Eigen::DiagonalMatrix<double, 3> Kd_cart;
+
+        Kuka_Vec th;
 
 };
 #endif /* CONTROLLER_HPP_ */

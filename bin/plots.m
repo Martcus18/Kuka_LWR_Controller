@@ -8,6 +8,7 @@ r = load("res.txt");
 r_ob = load("res_ob.txt");
 torque_fl = load("torque_ref.txt");
 torque_faulty = load("torque_faulty.txt");
+q = load("Q.txt");
 
 %% joint speed
 
@@ -18,6 +19,7 @@ for i=1:7
     plot(dq(:,i));
 end
 title('joint speed');
+legend('1','2','3','4','5','6','7');
 
 %% estimated joint speed
 
@@ -27,6 +29,7 @@ for i=1:7
     plot(dq_hat(:,i));
 end
 title('estimated joint speed');
+legend('1','2','3','4','5','6','7');
 
 %% Comparison velocities
 
@@ -34,37 +37,37 @@ figure(3)
 subplot(241)
 plot(dq(:,1),'b',dq_hat(:,1),'r')
 hold on; grid on;
-title('1-st residual');
+title('1-st joint');
 
 subplot(242)
 plot(dq(:,2),'b',dq_hat(:,2),'r');
 hold on; grid on;
-title('2-nd residual');
+title('2-nd joint');
 
 subplot(243)
 plot(dq(:,3),'b',dq_hat(:,3),'r');
 hold on; grid on;
-title('3-rd residual');
+title('3-rd joint');
 
 subplot(244)
 plot(dq(:,4),'b',dq_hat(:,4),'r')
 hold on; grid on;
-title('4-th residual');
+title('4-th joint');
 
 subplot(245)
 plot(dq(:,5),'b',dq_hat(:,5),'r')
 hold on; grid on;
-title('5-th residual');
+title('5-th joint');
 
 subplot(246)
 plot(dq(:,6),'b',dq_hat(:,6),'r')
 hold on; grid on;
-title('6-th residual');
+title('6-th joint');
 
 subplot(247)
 plot(dq(:,7),'b',dq_hat(:,7),'r')
 hold on; grid on;
-title('7-th residual');
+title('7-th joint');
 
 S  = axes( 'visible', 'off', 'title', 'Comparison between velocities' );
 
@@ -203,5 +206,17 @@ hold on; grid on;
 title('7-th residual');
 
 S  = axes( 'visible', 'off', 'title', 'Residual with estimated joint velocities' );
+
+%% Joint position
+
+figure(7)
+hold on; grid on;
+for i=1:7
+    hold on;
+    plot(q(:,i));
+end
+title('joint position');
+legend('1','2','3','4','5','6','7');
+
 
 

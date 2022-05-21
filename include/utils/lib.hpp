@@ -1,7 +1,8 @@
 #define RUN_TIME_IN_SECONDS             300.0
 
-#define DELTAT                  0.01
+//#define DELTAT                  0.01
 //#define DELTAT                  0.001
+#define DELTAT                  0.005
 
 #define MAX_GP                  1
 #define MIN_GP                  -1

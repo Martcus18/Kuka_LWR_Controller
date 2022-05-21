@@ -24,6 +24,7 @@ class controller_kuka : public controller
 
             dQ = Kuka_Vec::Constant(0.0);
 	    dQold = Kuka_Vec::Constant(0.0);
+            dQ_num = Kuka_Vec::Constant(0.0);
             d2Q = Kuka_Vec::Constant(0.0);
             d2Qold = Kuka_Vec::Constant(0.0);
 
@@ -112,6 +113,7 @@ class controller_kuka : public controller
             dQsave.push_back(dQ);
             d2Qsave.push_back(d2Q);
             dQ_hat_save.push_back(dQ_hat);
+            dQ_num_save.push_back(dQ_num);
             r_save.push_back(r);
             r_obs_save.push_back(r_ob);
             Qsave_filtered.push_back(Q);
@@ -242,6 +244,10 @@ class controller_kuka : public controller
 
         void dls_pinv(const Eigen::MatrixXd& A,double dampingFactor,double e, Eigen::MatrixXd& Apinv);
 
+        //Check if a collision has occurred
+
+        std::array<int,7> collision(Kuka_Vec r,double Time);
+
         ~controller_kuka()
         {
                 //delete this->FRI;
@@ -269,6 +275,7 @@ class controller_kuka : public controller
 
 	Kuka_Vec dQ;
 	Kuka_Vec dQold;
+        Kuka_Vec dQ_num;
         
         Kuka_Vec d2Q;
         Kuka_Vec d2Qold;

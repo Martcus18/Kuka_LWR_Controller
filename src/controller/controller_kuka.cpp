@@ -657,7 +657,7 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
             break;
 
         case 2:
-            result(1) = -0.7*Torque_nominal(1);
+            result(1) = -0.6*Torque_nominal(1);
             break;
         
         case 3:
@@ -748,6 +748,50 @@ Eigen::MatrixXd controller_kuka::diff_Jac(Kuka_Vec Q, Kuka_Vec dQ)
 void controller_kuka::dls_pinv(const Eigen::MatrixXd& A,double dampingFactor,double e, Eigen::MatrixXd& Apinv)
 {
     dampedPseudoInverse(A, dampingFactor, e, Apinv, Eigen::ComputeThinU | Eigen::ComputeThinV);
+}
+
+//CHECKING IF A FAULT/COLLISION HAS OCCURED (COMPARISON WITH THE THRESHOLDS)
+std::array<int,7> controller_kuka::collision(Kuka_Vec r, double Time)
+{
+    std::array<int,7> flag = {0,0,0,0,0,0,0};
+
+    if (abs(r(0))>th(0))
+	{
+		//std::cout << "fault/collision on first motor" << "\n" << Time << "\n";
+		flag[0] = 1;
+	}
+	if (abs(r(1))>=th(1))
+	{
+		//std::cout << "fault/collision on second motor" << "\n" << Time << "\n";
+		flag[1] = 1;
+	}
+	if (abs(r(2))>=th(2))
+	{
+		//std::cout << "fault/collision on third motor" << "\n" << Time << "\n";
+		flag[2] = 1;
+	}
+	if (abs(r(3))>=th(3))
+	{
+		//std::cout << "fault/collision on 4-th motor" << "\n" << Time << "\n";
+		flag[3] = 1;
+	}
+	if (abs(r(4))>=th(4))
+	{
+		//std::cout << "fault/collision on 5-th motor" << "\n" << Time << "\n";
+		flag[4] = 1;
+	}
+	if (abs(r(5))>=th(5))
+	{
+		//std::cout << "fault/collision on 6-th motor" << "\n" << Time << "\n";
+		flag[5] = 1;
+	}
+	if (abs(r(6))>=th(6))
+	{
+		//std::cout << "fault/collision on 7-th motor" << "\n" << Time << "\n";
+		flag[6] = 1;
+	}
+
+    return flag;
 }
 
 

@@ -88,11 +88,15 @@ int main(int argc, char *argv[])
 	std::string d2Q_ref_file = "d2Qref.txt";
 	std::string Xdata = "X.txt";
 	std::string Ydata = "Y.txt";
+	std::string dqhatsave = "dQ_hat.txt";
+	std::string rsave = "res.txt";
+	std::string r_obsave = "res_ob.txt";
 
 	Kuka_State state;
 
 	bool FLAG = ROBOT_CONTROL;
 
+	std::array<int,7> flag = {0,0,0,0,0,0,0};
 
 	//CHECKING THE SAMPLE TIME	
 	controller_kuka Controller(Mode,FLAG);
@@ -118,6 +122,8 @@ int main(int argc, char *argv[])
 		
 		Mass = Controller.GetMass(Controller.Q);
 
+		bool coll = true;
+
 		while ((float)CycleCounter * Controller.FRI->GetFRICycleTime() < RUN_TIME_IN_SECONDS)
 		{	
 			Time = Controller.FRI->GetFRICycleTime() * (float)CycleCounter;
@@ -139,7 +145,7 @@ int main(int argc, char *argv[])
 			auto Tic2 = std::chrono::system_clock::now();
 
 			state = Controller.GetState(FLAG);
-
+			
 			Controller.Qsave.push_back(Controller.Q);
 
 			Controller.dQsave.push_back(Controller.dQ);
@@ -219,15 +225,6 @@ int main(int argc, char *argv[])
 				std::cout << "Breaking safety controllers for either Velocities and Joints position \n";
 				break;
 			}
-
-			/*
-			if(CycleCounter > FILTER_LENGTH_LEARNING)
-			{
-				Controller.Regressor->DatasetUpdate(Controller.state_filtered, Controller.old_state_filtered, Temp_array.back(), Prediction, Mass,Controller.d2Qsave,FLAG);
-				//Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, Temp_array.back(), Prediction, Mass,Controller.d2Qsave,FLAG);
-				Controller.Regressor->GpUpdate();
-			}
-			*/
 									
 			//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 			
@@ -240,27 +237,20 @@ int main(int argc, char *argv[])
 
 			//d2Q_ref(2) = Kuka_temp2(2);
 
-			Temp_array.push_back(d2Q_ref);
-			
-			/*
-			if(CycleCounter > FILTER_LENGTH_PREDICTING)
+			Temp_array.push_back(d2Q_ref);	
+
+			//CHECK IF A COLLISION HAS OCCURRED
+
+			if (Time>=1.0 && coll==true)
+			{	
+				coll = std::all_of(flag.begin(), flag.end(), [](int i) { return i==0; });	
+			}
+
+			if (coll == 0) 
 			{
-				//Prediction =  Controller.Regressor->GpPredict(Controller.Q,Controller.dQ,d2Q_ref);
-				Prediction =  Controller.Regressor->GpPredict(Controller.Q,dQ_filtered,d2Q_ref);
-				Prediction = Controller.SignalAdjuster(Prediction,2.5);
-			}			
-			*/
-			//std::cout << "prediction = " << Prediction << "\n";
-				
-			//Prediction_array.push_back(Prediction);			
-
-			//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G + Prediction;
-			
-			//USANDO INFORMAZIONI FILTRATE
-
-			//Torques_ref = Controller.FeedbackLinearization(Q_filtered, dQ_filtered, d2Q_ref) - G + Prediction;
-
-			//Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) - G;
+				Q_ref = Controller.Q;
+				dQ_ref = Kuka_Vec::Constant(0.0);
+			}		
 
 			//Torques_ref = Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 			
@@ -287,6 +277,32 @@ int main(int argc, char *argv[])
 			Controller.torque_measured(4) = Controller.MeasuredTorquesInNm[4];
 			Controller.torque_measured(5) = Controller.MeasuredTorquesInNm[5];
 			Controller.torque_measured(6) = Controller.MeasuredTorquesInNm[6];
+
+			//OBSERVER DYNAMICS
+
+			Controller.dz = Controller.SimReducedObserver(Controller.Q, Controller.dQ_hat, Torques_ref);
+
+			Controller.z = Controller.EulerIntegration(Controller.dz, Controller.z);
+
+			Controller.dQ_hat = Controller.z + Controller.k0*Controller.Q;
+
+			//EVALUATION OF THE RESIDUAL
+
+			Controller.r = Controller.Residual(Controller.Q, Controller.dQ, Torques_ref, Controller.r, CycleCounter);
+
+			if (Time >= 1.0)
+			{
+				Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_hat, Torques_ref, Controller.r_ob, CycleCounter);	
+			}
+			else
+			{
+				//The joint velocities are obtained through numerical differentiation
+				Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ, Torques_ref, Controller.r_ob, CycleCounter);
+			}
+
+			//COMPARISON WITH THE THRESHOLDS
+
+			flag = Controller.collision(Controller.r, Time);
 
 			//Controller.Tor_meas.push_back(Controller.torque_measured);
 			
@@ -348,6 +364,17 @@ int main(int argc, char *argv[])
 		
 		Controller.FromKukaToDyn(temp,Controller.d2Qsave_filtered);
 		Controller.writer.write_data(d2qsave_filtered,temp);
+
+		//ESTIMATED VELOCITIES
+		Controller.FromKukaToDyn(temp,Controller.dQ_hat_save);
+		Controller.writer.write_data(dqhatsave,temp);
+
+		//RESIDUALS
+		Controller.FromKukaToDyn(temp,Controller.r_save);
+		Controller.writer.write_data(rsave,temp);
+
+		Controller.FromKukaToDyn(temp,Controller.r_obs_save);
+		Controller.writer.write_data(r_obsave,temp);
 		
 		//TORQUE VARIABLES PRINTING
 		Controller.FromKukaToDyn(temp,Controller.Tor_meas_filtered);
@@ -362,16 +389,6 @@ int main(int argc, char *argv[])
 		Controller.writer.write_data(Q_ref_file,temp);
 
 		//Controller.FromKukaToDyn(temp,dQ_ref_vec);
-
-		//Controller.writer.write_data(Xdata,Controller.Regressor->DatasetX);
-
-		//Controller.writer.write_data(Ydata,Controller.Regressor->DatasetY);
-
-		//Controller.FromKukaToDyn(temp,Prediction_array);
-		//Controller.writer.write_data(foo_pred,temp);
-
-		//Controller.FromKukaToDyn(temp,Temp_array);
-		//Controller.writer.write_data(foo3,temp);
 
 		//DELETING POINTERS
 

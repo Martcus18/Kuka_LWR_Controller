@@ -33,7 +33,7 @@ controller.DataFormat = 'row';
 
 %% Fault type
 
-fault = 4;
+fault = 2;
 
 %%
 addpath('./Kinematics/'); 

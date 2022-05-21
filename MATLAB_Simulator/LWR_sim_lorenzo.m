@@ -80,6 +80,10 @@ while(t0 < tf)
     g = get_gnum(q0(1:7));
     C = get_Snum(q0(1:7),q0(8:14));
     M = get_Bnum(q0(1:7));
+    
+    if t0 >= 5
+        Uref = -(gain*q0(8:14)')';
+    end
        
     TauFL = g+C*q0(8:14)'+(M*Uref'); 
     

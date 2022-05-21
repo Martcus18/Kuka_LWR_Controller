@@ -1,4 +1,5 @@
 #include<controller/controller_kuka.hpp>
+#include<random>
 
 
 int main(int argc, char *argv[])
@@ -10,6 +11,12 @@ int main(int argc, char *argv[])
 	double 						tf = 10.0;
 	double						damping = 0.1; // needed for pseudoinverse
 	double						e = 1.0; // needed for pseudoinverse
+
+	//random generator for the gaussian noise in the torque
+	const double mean = 0.0;
+    const double stddev = 0.5;
+    std::default_random_engine generator;
+    std::normal_distribution<double> dist(mean, stddev);
 
 	std::chrono::time_point<std::chrono::system_clock> Tic, Toc;
 
@@ -47,6 +54,8 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec Torques_ref;
 
+	Kuka_Vec Torques_noisy;
+
 	Kuka_Vec Torques_nom;
 
 	Kuka_Vec Torques_faulty = Kuka_Vec::Constant(0.0);
@@ -76,6 +85,8 @@ int main(int argc, char *argv[])
 	std::vector<Kuka_Vec> d2Q_ref_vec;
 
 	std::vector<Kuka_Vec> fault_torque_vec;
+
+	std::vector<Kuka_Vec> noisy_torque_vec;
 
 	std::vector<Kuka_Vec> Time_array;
 
@@ -111,6 +122,8 @@ int main(int argc, char *argv[])
 
 	Eigen::Vector3d d2p;
 
+	std::vector<Eigen::VectorXd> p_vec;
+
 	Eigen::Vector3d err_p;
 
 	Eigen::Vector3d err_dp;
@@ -143,12 +156,15 @@ int main(int argc, char *argv[])
 	std::string dQ_ref_file = "dQref.txt";
 	std::string d2Q_ref_file = "d2Qref.txt";
 	std::string dqhatsave = "dQ_hat.txt";
+	std::string dqnumsave = "dQ_num.txt";
 	std::string rsave = "res.txt";
 	std::string r_obsave = "res_ob.txt";
 	std::string torque_save = "torque_ref.txt";
+	std::string torque_noisy_save = "torque_noisy.txt";
 	std::string fault_torque_save = "torque_faulty.txt";
+	std::string p_save = "p.txt";
 
-	Eigen::Vector3d F(10,10,0);
+	Eigen::Vector3d F(10,0,0);
 
 	//Eigen::Vector3d F(10,10,0);
 	//Eigen::Vector3d F(10,10,0);
@@ -173,26 +189,20 @@ int main(int argc, char *argv[])
 	p_0 = Controller.DirKin(Controller.Q);
 	
 	dp_0 = Controller.Jac(Controller.Q)*Controller.dQ; 
+
+	std::array<int,7> flag = {0,0,0,0,0,0,0};
+
+	bool coll = true;
 	
 	//SIMULATION LOOP
-	//while ((float)CycleCounter * DELTAT < 3)
 	while (Time < tf)
 	{		
 
-			//Time = DELTAT * (float)CycleCounter;
-
-			Mass = Controller.GetMass(Controller.Q);
-
-			/*
-			Q_ref = Q0 + Kuka_Vec::Constant(1.0*(1.0 - std::cos(1.0 * Time)));
-			
-			dQ_ref = Kuka_Vec::Constant(1.0*std::sin(1.0 * Time));
-			
-			d2Q_ref = Kuka_Vec::Constant(1.0*std::cos(1.0 * Time));
-
-			d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
-			*/
-			
+			if (Time>=1.0 && coll==true)
+			{	
+				coll = std::all_of(flag.begin(), flag.end(), [](int i) { return i==0; });	
+			}
+						
 			//CIRCULAR TRAJECTORY
 
 			p_ref[0] = p_0[0] - 0.1*(1.0-std::cos(frequency*Time));
@@ -222,13 +232,12 @@ int main(int argc, char *argv[])
 			// damped least square pseudo inverse
 
 			Controller.dls_pinv(J, damping, e, Jpinv);
-			//std::cout << Jpinv << "\n";
 
 			d2Q_ref = Jpinv*(d2p_ref-dJ*Controller.dQ);
 			
 			//MODEL INTEGRATION
 
-			Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref) + Prediction;
+			Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
 
 			Torques_nom = Torques_ref;
 
@@ -238,41 +247,84 @@ int main(int argc, char *argv[])
 				Torques_ref += Torques_faulty; 
 			}
 
+			//Here we apply the reaction to a collision: we make stop the robot in a damped way
+			
+			if (coll==0)
+			{
+				std::cout << "Collision has occurred at time: " << Time << "\n";
+				//d2Q_ref = (-1.0)*Controller.K_damp*Controller.dQ;
+				d2Q_ref = (-1.0)*Controller.Kp*Controller.dQ;
+				Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
+				Torques_nom = Torques_ref;
+				Torques_faulty = Controller.ExtTorque(Torques_nom, fault, Controller.Q, F);
+				Torques_ref += Torques_faulty;
+				Controller.d2Q = d2Q_ref;
+			}
+			
+			
+			//Addition of a gaussian noise in order to simulate better the noisy measurements of the 
+			//torque through the robot sensors
+
+			Torques_noisy(0) = Torques_ref(0) + dist(generator);
+			Torques_noisy(1) = Torques_ref(1) + dist(generator);
+			Torques_noisy(2) = Torques_ref(2) + dist(generator);
+			Torques_noisy(3) = Torques_ref(3) + dist(generator);
+			Torques_noisy(4) = Torques_ref(4) + dist(generator);
+			Torques_noisy(5) = Torques_ref(5) + dist(generator);
+			Torques_noisy(6) = Torques_ref(6) + dist(generator);
+			
+
 			//Kuka_temp = Controller.GetFriction(Controller.Q,Controller.dQ) * 0.01;
 
-			//Temp_array.push_back(Kuka_temp);
-
-			//Controller.d2Q = Controller.SimDynamicModelFake(Controller.Q, Controller.dQ, Torques_ref);
-
 			Controller.d2Q = Controller.SimDynamicModel(Controller.Q, Controller.dQ, Torques_ref);
+
+			//std::cout << "d2Q: " << Controller.d2Q << "\n";
 
 			//Reduced observer
 
 			Controller.dz = Controller.SimReducedObserver(Controller.Q, Controller.dQ_hat, Torques_ref);
 
+			//Generalized coordinates
+
 			Controller.Qold = Controller.Q;
 
-			Controller.dQ = Controller.EulerIntegration(Controller.d2Q,Controller.dQ);
+			Controller.dQold = Controller.dQ;
 
 			Controller.Q = Controller.EulerIntegration(Controller.dQ,Controller.Q);
 
+			Controller.dQ = Controller.EulerIntegration(Controller.d2Q,Controller.dQ);
+
+			Controller.dQ_num = Controller.EulerDifferentiation(Controller.Q,Controller.Qold);
+
+			//Residual
+
 			Controller.r = Controller.Residual(Controller.Q, Controller.dQ, Torques_nom, Controller.r, CycleCounter);
+
+			//Controller.r = Controller.Residual(Controller.Q, Controller.dQ, Torques_noisy, Controller.r, CycleCounter);
 
 			Controller.z = Controller.EulerIntegration(Controller.dz, Controller.z);
 
 			Controller.dQ_hat = Controller.z + Controller.k0*Controller.Q;
 
-			Controller.r_ob = Controller.Residual_obs(Controller.Q, Controller.dQ_hat, Torques_nom, Controller.r_ob, CycleCounter);
+			//For the first second we use as velocities the ones obtained through numeric derivation and then we use the ones obtained thourgh the observer so to avoid the inial peak
+			//in the residual that influences the check if a collision has occurred or not by compring the residual with a constant threshold
 
-			Controller.GetState(FLAG);
-
-			/*
-			if(CycleCounter > FILTER_LENGTH)
+			if (Time >= 1.0)
 			{
-				Controller.Regressor->DatasetUpdate(Controller.robot_state, Controller.old_robot_state, d2Q_ref, Prediction, Mass,Controller.d2Qsave,FLAG);
-				Controller.Regressor->GpUpdate();
+				Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_hat, Torques_nom, Controller.r_ob, CycleCounter);	
 			}
-			*/
+			else
+			{
+				Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_num, Torques_nom, Controller.r_ob, CycleCounter);
+			}
+
+			//Controller.r_ob = Controller.Residual_obs(Controller.Q, Controller.dQ_hat, Torques_nom, Controller.r_ob, CycleCounter);
+
+			Controller.GetState(FLAG); 
+
+			//CHECKING IF A FAULT/COLLISION HAS OCCURED (COMPARISON WITH THE THRESHOLDS)
+
+			flag = Controller.collision(Controller.r, Time);
 
 			//ARRAY SAVING
 			
@@ -284,6 +336,8 @@ int main(int argc, char *argv[])
 
 			Controller.dQ_hat_save.push_back(Controller.dQ_hat);
 
+			Controller.dQ_num_save.push_back(Controller.dQ_num);
+
 			Controller.r_save.push_back(Controller.r);
 
 			Controller.r_obs_save.push_back(Controller.r_ob);
@@ -294,9 +348,13 @@ int main(int argc, char *argv[])
 
 			d2Q_ref_vec.push_back(d2Q_ref);
 
+			noisy_torque_vec.push_back(Torques_noisy);
+
 			Controller.Tor_th.push_back(Torques_ref);
 
 			fault_torque_vec.push_back(Torques_faulty);
+
+			p_vec.push_back(p);
 
 			std::cout << "Step = " << CycleCounter << "\n";
 
@@ -304,6 +362,8 @@ int main(int argc, char *argv[])
 
 			Time += DELTAT;
 	}
+
+	//std::cout << flag[0] << "\n"<< flag[1] << "\n"<< flag[2] << "\n"<< flag[3] << "\n"<< flag[4] << "\n"<< flag[5] << "\n"<< flag[6] << "\n";
 
 	//Writing Simulation Variables
 
@@ -317,7 +377,10 @@ int main(int argc, char *argv[])
 		Controller.writer.write_data(d2qsave,temp);
 
 		Controller.FromKukaToDyn(temp,Controller.dQ_hat_save);
-		Controller.writer.write_data(dqhatsave,temp);	
+		Controller.writer.write_data(dqhatsave,temp);
+
+		Controller.FromKukaToDyn(temp,Controller.dQ_num_save);
+		Controller.writer.write_data(dqnumsave,temp);	
 
 		Controller.FromKukaToDyn(temp,Controller.r_save);
 		Controller.writer.write_data(rsave,temp);
@@ -326,7 +389,10 @@ int main(int argc, char *argv[])
 		Controller.writer.write_data(r_obsave,temp);	
 
 		Controller.FromKukaToDyn(temp,Controller.Tor_th);
-		Controller.writer.write_data(torque_save,temp);	
+		Controller.writer.write_data(torque_save,temp);
+
+		Controller.FromKukaToDyn(temp,noisy_torque_vec);
+		Controller.writer.write_data(torque_noisy_save,temp);	
 
 		Controller.FromKukaToDyn(temp,fault_torque_vec);
 		Controller.writer.write_data(fault_torque_save,temp);	
@@ -339,15 +405,8 @@ int main(int argc, char *argv[])
 
 		Controller.FromKukaToDyn(temp,d2Q_ref_vec);
 		Controller.writer.write_data(d2Q_ref_file,temp);
-		
-		//Controller.FromKukaToDyn(temp,Temp_array);
-		//Controller.writer.write_data(friction,temp);
 
-		//Controller.FromKukaToDyn(temp,Controller.Tor_th);
-		//Controller.writer.write_data(torque_th,temp);
-		
-		//Controller.FromKukaToDyn(temp,Prediction_array);
-		//Controller.writer.write_data(foo_pred,temp);
+		Controller.writer.write_data(p_save,p_vec);
 		
 
 return 0;
