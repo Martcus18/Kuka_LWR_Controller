@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
 			//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
 			
 			// USANDO INFORMAZIONI FILTRATE
-			d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered,d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
+			//d2Q_ref = d2Q_ref + Controller.PDController(Q_filtered, dQ_filtered,d2Q_filtered, Q_ref, dQ_ref , d2Q_filtered);
 
 			//Kuka_temp2 = d2Q_ref;
 			
@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
 
 			Controller.FRI->SetCommandedJointPositions(Controller.JointValuesInRad);
 
-			Controller.SetTorques(Torques_ref);
+			//Controller.SetTorques(Torques_ref);
 			
 			//Controller.SetJointsPositions(Q_ref);
 
@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
 
 		delete Controller.FRI;
 		//delete Controller.dyn;
-		delete Controller.Regressor;
+		//delete Controller.Regressor;
 
 		fprintf(stdout, "Objects deleted...\n");
 		

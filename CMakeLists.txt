@@ -64,7 +64,7 @@ add_library(kuka_utilities SHARED "${CMAKE_CURRENT_SOURCE_DIR}/src/controller/ku
 
 target_link_libraries(utils ${TBB_LIBRARIES} ${Boost_LIBRARIES})
 
-target_link_libraries(controller ${TBB_LIBRARIES} ${Boost_LIBRARIES} libFastResearchInterfaceLibrary libTypeIRML)
+target_link_libraries(controller ${TBB_LIBRARIES} ${Boost_LIBRARIES} libFastResearchInterfaceLibrary libTypeIRML kuka_utilities)
 
 #target_link_libraries(learning ${TBB_LIBRARIES} ${Boost_LIBRARIES})
 

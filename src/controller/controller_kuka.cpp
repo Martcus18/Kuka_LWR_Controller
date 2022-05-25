@@ -657,15 +657,15 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
             break;
 
         case 2:
-            result(1) = -0.6*Torque_nominal(1);
+            result(1) = -0.04*Torque_nominal(1);
             break;
         
         case 3:
-            result(2) = -0.4*Torque_nominal(2);
+            result(2) = -0.3*Torque_nominal(2);
             break;
 
         case 4:
-            result(3) = -0.7*Torque_nominal(3);
+            result(3) = -0.6*Torque_nominal(3);
             break;
 
         case 5:
@@ -673,7 +673,7 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
             break;
 
         case 6:
-            result(5) = -0.7*Torque_nominal(5);
+            result(5) = -0.6*Torque_nominal(5);
             break;
 
         case 7:

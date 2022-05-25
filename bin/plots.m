@@ -6,6 +6,7 @@ dq = load("dQ.txt");
 dq_hat = load("dQ_hat.txt");
 r = load("res.txt");
 r_ob = load("res_ob.txt");
+r_filt = load("res_filtered.txt");
 torque_fl = load("torque_ref.txt");
 torque_faulty = load("torque_faulty.txt");
 q = load("Q.txt");
@@ -218,5 +219,55 @@ end
 title('joint position');
 legend('1','2','3','4','5','6','7');
 
+%% Filtered residual
+
+%% Residual plots
+
+%f8 = figure(8)
+%subplot(241)
+%plot(r_filt(:,1),'b',torque_faulty(:,1),'r')
+%hold on; grid on;
+%ylim([-max(abs(torque_fl(:,1))) max(abs(torque_fl(:,1)))]);
+%title('1-st residual');
+
+%subplot(242)
+%plot(r_filt(:,2),'b',torque_faulty(:,2),'r');
+%hold on; grid on;
+%ylim([-max(abs(torque_fl(:,2))) max(abs(torque_fl(:,2)))]);
+%title('2-nd residual');
+
+%subplot(243)
+%plot(r_filt(:,3),'b',torque_faulty(:,3),'r');
+%hold on; grid on;
+%ylim([-max(abs(torque_fl(:,3))) max(abs(torque_fl(:,3)))]);
+%title('3-rd residual');
+
+%subplot(244)
+%plot(r_filt(:,4),'b',torque_faulty(:,4),'r')
+%hold on; grid on;
+%ylim([-max(abs(torque_fl(:,4))) max(abs(torque_fl(:,4)))]);
+%title('4-th residual');
+
+%subplot(245)
+%plot(r_filt(:,5),'b',torque_faulty(:,5),'r')
+%hold on; grid on;
+%ylim([-max(abs(torque_fl(:,5))) max(abs(torque_fl(:,5)))]);
+%title('5-th residual');
+
+%subplot(246)
+%plot(r_filt(:,6),'b',torque_faulty(:,6),'r')
+%hold on; grid on;
+%ylim([-max(abs(torque_fl(:,6))) max(abs(torque_fl(:,6)))]);
+%title('6-th residual');
+
+%subplot(247)
+%plot(r_filt(:,7),'b',torque_faulty(:,7),'r')
+%hold on; grid on;
+%ylim([-max(abs(torque_fl(:,7))) max(abs(torque_fl(:,7)))]);
+%title('7-th residual');
+
+%S  = axes( 'visible', 'off', 'title', 'Filtered residual with estimated joint velocities' );
+
+%close(f8);
 
 

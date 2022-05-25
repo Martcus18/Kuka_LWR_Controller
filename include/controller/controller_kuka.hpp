@@ -43,7 +43,7 @@ class controller_kuka : public controller
             
             //std::cout << "\n Initialization of the GP \n";
             
-            Regressor = new learning();
+            //Regressor = new learning();
             
             //Regressor->InitializeGp(Xdata,Ydata);
 
@@ -262,7 +262,7 @@ class controller_kuka : public controller
         
 	CLWR_Dynamic_Model_Lib *dyn;
 
-        learning *Regressor;
+       //learning *Regressor;
 
         Kuka_State robot_state;
         Kuka_State old_robot_state;
@@ -290,6 +290,7 @@ class controller_kuka : public controller
         Kuka_Vec sum1_ob;
         Kuka_Vec sum2_ob;
         Kuka_Vec p0_hat;
+        Kuka_Vec r_filtered;
         
         Kuka_Vec torque_measured;
         Kuka_Vec torque_assigned;

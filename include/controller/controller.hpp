@@ -1,7 +1,7 @@
 #ifndef CONTROLLER_HPP_
 #define CONTROLLER_HPP_
 
-#include<learning/learning.hpp>
+//#include<learning/learning.hpp>
 
 //#include<tensorflow/c/tf_network.hpp>
 
@@ -68,9 +68,15 @@ class controller
                 
                 k0 = 10;
 
-                //RESIDUAL THRESHOLDS: these are defined accordingly to the values the torque assume in nominal condition
+                //RESIDUAL THRESHOLDS (SIMULATION): these are defined accordingly to the values the torque assume in nominal condition  
 
-                th << 0.1,28.70,0.18,3.48,0.08,0.07,0.001;
+                //th << 0.1,28.70,0.18,3.48,0.08,0.07,0.001; //without noise
+
+                th << 0.75,1.5,0.4,1.5,0.04,0.02,0.0015; //with noise
+
+                //RESIDUAL THRESHOLDS (REAL ROBOT)
+
+                
 
         };
 
@@ -98,11 +104,16 @@ class controller
         std::vector<Kuka_Vec> dQsave;
         std::vector<Kuka_Vec> d2Qsave;
 
+        std::vector<Kuka_Vec> Qsave_meas;
+        std::vector<Kuka_Vec> dQsave_meas;
+        std::vector<Kuka_Vec> d2Qsave_meas;
+
         std::vector<Kuka_Vec> dQ_hat_save;
         std::vector<Kuka_Vec> dQ_num_save;
 
         std::vector<Kuka_Vec> r_save;
         std::vector<Kuka_Vec> r_obs_save;
+        std::vector<Kuka_Vec> r_filtered_save;
 
         std::vector<Kuka_Vec> Qsave_filtered;
         std::vector<Kuka_Vec> dQsave_filtered;
