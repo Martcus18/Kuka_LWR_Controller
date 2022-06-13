@@ -31,8 +31,8 @@ class controller_kuka : public controller
             z = Kuka_Vec::Constant(0.0);
             dz = Kuka_Vec::Constant(0.0);
 
-            sum1 = Kuka_Vec::Constant(0.0);
-            sum2 = Kuka_Vec::Constant(0.0);
+            //sum1 = Kuka_Vec::Constant(0.0);
+            //sum2 = Kuka_Vec::Constant(0.0);
             r = Kuka_Vec::Constant(0.0);
 
             sum1_ob = Kuka_Vec::Constant(0.0);
@@ -107,7 +107,11 @@ class controller_kuka : public controller
 
             dQ_hat = k0 * Q;
 
+            // initial momentum when we use the observed velocities
             p0_hat = GetMass(Q)*dQ_hat;
+
+            // initial momentum when we use the actual velocities
+            p0 = GetMass(Q)*dQ;
             
             Qsave.push_back(Q);
             dQsave.push_back(dQ);
@@ -218,11 +222,13 @@ class controller_kuka : public controller
 
         //Evaluation of the residual
 
-        Kuka_Vec Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torque_nominal, Kuka_Vec r, int index);
+        //Kuka_Vec Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torque_nominal, Kuka_Vec r, int index);
+
+        Kuka_Vec Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torque_nominal, Kuka_Vec r, int index, Kuka_Vec& SUM1, Kuka_Vec& SUM2, Kuka_Vec initial_momentum);
 
         //Evaluation of the residual using the estimated joint velocities
 
-        Kuka_Vec Residual_obs(Kuka_Vec Qnow, Kuka_Vec dQnow_hat, Kuka_Vec Torque_nominal, Kuka_Vec r, int index);
+        //Kuka_Vec Residual_obs(Kuka_Vec Qnow, Kuka_Vec dQnow_hat, Kuka_Vec Torque_nominal, Kuka_Vec r, int index);
 
         //Generation of an external torque
 
@@ -284,13 +290,13 @@ class controller_kuka : public controller
         Kuka_Vec dz;
         Kuka_Vec dQ_hat;
         Kuka_Vec r;
-        Kuka_Vec sum1;
-        Kuka_Vec sum2;
+        //Kuka_Vec sum1;
+        //Kuka_Vec sum2;
         Kuka_Vec r_ob;
         Kuka_Vec sum1_ob;
         Kuka_Vec sum2_ob;
         Kuka_Vec p0_hat;
-        Kuka_Vec r_filtered;
+        Kuka_Vec p0;
         
         Kuka_Vec torque_measured;
         Kuka_Vec torque_assigned;

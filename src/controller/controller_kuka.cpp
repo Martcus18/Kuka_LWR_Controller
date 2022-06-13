@@ -497,7 +497,7 @@ Kuka_Vec controller_kuka::SimReducedObserver(Kuka_Vec Q, Kuka_Vec dQ_hat, Kuka_V
 };
 
 //EVALUATION OF THE RESIDUAL
-Kuka_Vec controller_kuka::Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torque_nominal, Kuka_Vec r, int index) 
+Kuka_Vec controller_kuka::Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torque_nominal, Kuka_Vec r, int index, Kuka_Vec& SUM1, Kuka_Vec& SUM2, Kuka_Vec initial_momentum) 
 {
     float* q = new float[7];
     float* dq = new float[7];
@@ -542,7 +542,7 @@ Kuka_Vec controller_kuka::Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torqu
             B_eig(i,j) = B[i][j];
             S_eig(i,j) = S[i][j]; 
         }
-        g_eig (i)= g[i];
+        g_eig(i)= g[i];
         friction_eig(i) = friction[i];
     }
 
@@ -550,91 +550,19 @@ Kuka_Vec controller_kuka::Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torqu
     p_eig = B_eig*dQ_eig;
 
     //we update the value of sum1
-    sum1 += (Torque_nominal + S_eig.transpose()*dQ_eig - g_eig)*DELTAT;
+    SUM1 += (Torque_nominal + S_eig.transpose()*dQ_eig - g_eig)*DELTAT;
 
     //we update the value of sum2
     if (index!=0)
     {
-        sum2 += r*DELTAT;
+        SUM2 += r*DELTAT;
     }
 
     //return the result
 
     Kuka_Mat m = eye + K*DELTAT;
 
-    result = m.inverse()*K*(p_eig-sum1-sum2);
-
-    return result;
-
-}
-
-//EVALUATION OF THE RESIDUAL USING THE ESTIMATED JOINT VELOCITIES
-Kuka_Vec controller_kuka::Residual_obs(Kuka_Vec Qnow, Kuka_Vec dQnow_hat, Kuka_Vec Torque_nominal, Kuka_Vec r, int index) 
-{
-    float* q = new float[7];
-    float* dq = new float[7];
-    float** S = new float*[7];
-    float* g = new float[7];
-    float* friction = new float[7];
-    float** B = new float*[7];
-
-    int i,j;
-
-    Kuka_Vec dQ_eig;
-
-    Kuka_Mat B_eig;
-    Kuka_Mat S_eig;
-
-    Kuka_Vec g_eig;
-    Kuka_Vec friction_eig;
-    Kuka_Vec Torque_temp;
-
-    Kuka_Vec p_eig; 
-
-    Kuka_Vec result;
-
-    for(i=0; i<NUMBER_OF_JOINTS; i++)
-	{
-        B[i] = new float[NUMBER_OF_JOINTS];
-        S[i] = new float[NUMBER_OF_JOINTS];
-        q[i] = Qnow(i);
-        dq[i] = dQnow_hat(i);
-        dQ_eig(i) = dQnow_hat(i);
-    }
-    
-    dyn->get_B(B,q);
-    dyn->get_S(S,q,dq);
-    dyn->get_g(g,q);
-    dyn->get_friction(friction,dq);
-
-    for(i=0;i<NUMBER_OF_JOINTS;i++)
-    {    
-        for(int j=0;j<NUMBER_OF_JOINTS;j++)
-        {
-            B_eig(i,j) = B[i][j];
-            S_eig(i,j) = S[i][j]; //I already save the transpose!!!
-        }
-        g_eig (i)= g[i];
-        friction_eig(i) = friction[i];
-    }
-
-    //we evaluate the current generalized momentum
-    p_eig = B_eig*dQ_eig;
-
-    //we update the value of sum1
-    sum1_ob += (Torque_nominal + S_eig.transpose()*dQ_eig - g_eig)*DELTAT;
-
-    //we update the value of sum2
-    if (index!=0)
-    {
-        sum2_ob += r*DELTAT;
-    }
-
-    //return the result
-
-    Kuka_Mat m = eye + K*DELTAT;
-
-    result = m.inverse()*K*(p_eig-sum1_ob-sum2_ob-p0_hat);
+    result = m.inverse()*K*(p_eig-SUM1-SUM2-initial_momentum);
 
     return result;
 
@@ -657,15 +585,18 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
             break;
 
         case 2:
-            result(1) = -0.04*Torque_nominal(1);
+            //result(1) = -0.04*Torque_nominal(1);
+            result(1) = -0.9*Torque_nominal(1);
             break;
         
         case 3:
-            result(2) = -0.3*Torque_nominal(2);
+            //result(2) = -0.3*Torque_nominal(2);
+            result(2) = -0.4*Torque_nominal(2);
             break;
 
         case 4:
-            result(3) = -0.6*Torque_nominal(3);
+            //result(3) = -0.6*Torque_nominal(3);
+            result(3) = -0.7*Torque_nominal(3);
             break;
 
         case 5:
@@ -673,7 +604,8 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
             break;
 
         case 6:
-            result(5) = -0.6*Torque_nominal(5);
+            //result(5) = -0.6*Torque_nominal(5);
+            result(5) = -0.7*Torque_nominal(5);
             break;
 
         case 7:
@@ -688,9 +620,6 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
         case 9:
             J = Jacobian(Q);
             J_aug << J,zero_col;
-            //std::cout << J_aug << "\n";
-            //std::cout << J.transpose()*Force;
-            //std::cout << "\n";
             result = -J_aug.transpose()*Force;
             break;
 
@@ -794,6 +723,155 @@ std::array<int,7> controller_kuka::collision(Kuka_Vec r, double Time)
     return flag;
 }
 
+/*
+Kuka_Vec controller_kuka::Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torque_nominal, Kuka_Vec r, int index) 
+{
+    float* q = new float[7];
+    float* dq = new float[7];
+    float** S = new float*[7];
+    float* g = new float[7];
+    float* friction = new float[7];
+    float** B = new float*[7];
+
+    int i,j;
+
+    Kuka_Vec dQ_eig;
+
+    Kuka_Mat B_eig;
+    Kuka_Mat S_eig;
+
+    Kuka_Vec g_eig;
+    Kuka_Vec friction_eig;
+    Kuka_Vec Torque_temp;
+
+    Kuka_Vec p_eig; 
+
+    Kuka_Vec result;
+
+    for(i=0; i<NUMBER_OF_JOINTS; i++)
+	{
+        B[i] = new float[NUMBER_OF_JOINTS];
+        S[i] = new float[NUMBER_OF_JOINTS];
+        q[i] = Qnow(i);
+        dq[i] = dQnow(i);
+        dQ_eig(i) = dQnow(i);
+    }
+    
+    dyn->get_B(B,q);
+    dyn->get_S(S,q,dq);
+    dyn->get_g(g,q);
+    dyn->get_friction(friction,dq);
+
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {    
+        for(int j=0;j<NUMBER_OF_JOINTS;j++)
+        {
+            B_eig(i,j) = B[i][j];
+            S_eig(i,j) = S[i][j]; 
+        }
+        g_eig(i)= g[i];
+        friction_eig(i) = friction[i];
+    }
+
+    //we evaluate the current generalized momentum
+    p_eig = B_eig*dQ_eig;
+
+    //we update the value of sum1
+    sum1 += (Torque_nominal + S_eig.transpose()*dQ_eig - g_eig)*DELTAT;
+
+    //we update the value of sum2
+    if (index!=0)
+    {
+        sum2 += r*DELTAT;
+    }
+
+    //return the result
+
+    Kuka_Mat m = eye + K*DELTAT;
+
+    result = m.inverse()*K*(p_eig-sum1-sum2);
+
+    return result;
+
+}
+*/
+
+/*
+
+//EVALUATION OF THE RESIDUAL USING THE ESTIMATED JOINT VELOCITIES
+Kuka_Vec controller_kuka::Residual_obs(Kuka_Vec Qnow, Kuka_Vec dQnow_hat, Kuka_Vec Torque_nominal, Kuka_Vec r, int index) 
+{
+    float* q = new float[7];
+    float* dq = new float[7];
+    float** S = new float*[7];
+    float* g = new float[7];
+    float* friction = new float[7];
+    float** B = new float*[7];
+
+    int i,j;
+
+    Kuka_Vec dQ_eig;
+
+    Kuka_Mat B_eig;
+    Kuka_Mat S_eig;
+
+    Kuka_Vec g_eig;
+    Kuka_Vec friction_eig;
+    Kuka_Vec Torque_temp;
+
+    Kuka_Vec p_eig; 
+
+    Kuka_Vec result;
+
+    for(i=0; i<NUMBER_OF_JOINTS; i++)
+	{
+        B[i] = new float[NUMBER_OF_JOINTS];
+        S[i] = new float[NUMBER_OF_JOINTS];
+        q[i] = Qnow(i);
+        dq[i] = dQnow_hat(i);
+        dQ_eig(i) = dQnow_hat(i);
+    }
+    
+    dyn->get_B(B,q);
+    dyn->get_S(S,q,dq);
+    dyn->get_g(g,q);
+    dyn->get_friction(friction,dq);
+
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {    
+        for(int j=0;j<NUMBER_OF_JOINTS;j++)
+        {
+            B_eig(i,j) = B[i][j];
+            S_eig(i,j) = S[i][j]; //I already save the transpose!!!
+        }
+        g_eig(i)= g[i];
+        friction_eig(i) = friction[i];
+    }
+
+    //we evaluate the current generalized momentum
+    p_eig = B_eig*dQ_eig;
+
+    //we update the value of sum1
+    sum1_ob += (Torque_nominal + S_eig.transpose()*dQ_eig - g_eig)*DELTAT;
+
+    //we update the value of sum2
+    if (index!=0)
+    {
+        sum2_ob += r*DELTAT;
+    }
+
+    //return the result
+
+    Kuka_Mat m = eye + K*DELTAT;
+
+    //result = m.inverse()*K*(p_eig-sum1_ob-sum2_ob-p0_hat);
+    result = m.inverse()*K*(p_eig-sum1_ob-sum2_ob);
+
+    return result;
+
+}
+
+*/
 
 
 //FAKE DYNAMIC MODEL FOR SIMULATION
