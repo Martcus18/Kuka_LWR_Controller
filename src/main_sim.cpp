@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
 	std::string Q_ref_file = "Qref.txt";
 	std::string dQ_ref_file = "dQref.txt";
 	std::string d2Q_ref_file = "d2Qref.txt";
+	std::string qhatsave = "Q_hat.txt";
 	std::string dqhatsave = "dQ_hat.txt";
 	std::string dqnumsave = "dQ_num.txt";
 	std::string rsave = "res.txt";
@@ -218,14 +219,32 @@ int main(int argc, char *argv[])
     Kuka_Vec s2_ob = Kuka_Vec::Constant(0.0);
 
 	Time = -DELTAT;
+
+	//Variables for the full state observer
+
+	Kuka_Vec y_tilda = Kuka_Vec::Constant(0.0);
+	Kuka_Vec dx1_hat = Kuka_Vec::Constant(0.0);
+	Kuka_Vec d2Q_hat = Kuka_Vec::Constant(0.0);
+
+	//Initialization estimated varibales
+            
+	//reduced-order obs
+	//Controller.dQ_hat = Controller.k0 * Controller.Q;
+
+	//full-state obs
+	Controller.Q_hat = Controller.Q;
+	Controller.dQ_hat = Kuka_Vec::Constant(0.0);
+
+	Controller.Q_hat_save.push_back(Controller.Q_hat);
+    Controller.dQ_hat_save.push_back(Controller.dQ_hat);
 	
 	//SIMULATION LOOP
 	while (Time < tf)
 	{		
 
-		Time += DELTAT;		
+		Time += DELTAT;	
 
-		/*			
+		/*	
 		//CIRCULAR TRAJECTORY
 
 		p_ref[0] = p_0[0] - 0.1*(1.0-std::cos(frequency*Time));
@@ -258,7 +277,6 @@ int main(int argc, char *argv[])
 		Controller.dls_pinv(J, damping, e, Jpinv);
 
 		d2Q_ref = Jpinv*(d2p_ref-dJ*Controller.dQ);
-
 		*/
 
 		//GIVE DIRECTLY THE VALUES OF THE Q
@@ -298,8 +316,8 @@ int main(int argc, char *argv[])
 		if (coll)
 		{
 			std::cout << "Collision has occurred at time: " << Time << "\n";
-			//Controller.Q = Q_stop;
-			Controller.Q = Q_stop - gain*Controller.r;
+			Controller.Q = Q_stop;
+			//Controller.Q = Q_stop - gain*Controller.r;
 			Controller.dQ = Kuka_Vec::Constant(0.0);
 			d2Q_ref = Kuka_Vec::Constant(0.0);
 		}
@@ -323,7 +341,9 @@ int main(int argc, char *argv[])
 			Trestart += DELTAT;
 		}
 		
+		
 		std::cout << "Time = " << Time << std::endl;
+		
 		
 		//MODEL INTEGRATION
 
@@ -331,59 +351,72 @@ int main(int argc, char *argv[])
 
 		Torques_nom = Torques_ref;
 
+		/*
 		if ( (Time>=2.0 && Time<3.0 && do_ext_torque) || (CycleCounter>=1000 && CycleCounter<=1200 && do_ext_torque) )
 		{
 			Torques_faulty = Controller.ExtTorque(Torques_nom, fault, Controller.Q, F);
 			Torques_ref += Torques_faulty;
-		}	
-
-		//Here we apply the reaction to a collision: we make stop the robot in a damped way
-					
-		/*
-		if (coll)
-		{
-			std::cout << "Collision has occurred at time: " << Time << "\n";
-			//d2Q_ref = (-1.0)*Controller.K_damp*Controller.dQ;
-			d2Q_ref = (-1.0)*Controller.Kp*Controller.dQ;
-			Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
-			Torques_nom = Torques_ref;
-			Torques_faulty = Controller.ExtTorque(Torques_nom, fault, Controller.Q, F);
-			Torques_ref += Torques_faulty;
-			Controller.d2Q = d2Q_ref;
 		}
 		*/
 		
-		//Kuka_temp = Controller.GetFriction(Controller.Q,Controller.dQ) * 0.01;*/
+		if  (Time>=5.0 )
+		{
+			Torques_faulty = Controller.ExtTorque(Torques_nom, fault, Controller.Q, F);
+			Torques_ref += Torques_faulty;
+		}	
+		
+
+		//Here the dynamics takes into account the presence of the friction (20/06/22)
 
 		Controller.d2Q = Controller.SimDynamicModel(Controller.Q, Controller.dQ, Torques_ref);
 
 		//Reduced observer
 
-		Controller.dz = Controller.SimReducedObserver(Controller.Q, Controller.dQ_hat, Torques_ref);
+		//Controller.dz = Controller.SimReducedObserver(Controller.Q, Controller.dQ_hat, Torques_ref);
+
+		//Try to use the residual as a measure of the friction present in the model
+
+		//Mass = Controller.GetMass(Controller.Q);
+
+		//Controller.dz += Mass.inverse()*Controller.r_ob;
+
+		//Full state observer: Nicosia-Tomei
 		
+		y_tilda = Controller.Q - Controller.Q_hat;
+
+		dx1_hat = Controller.dQ_hat + Controller.kd*y_tilda;
+
+		d2Q_hat = Controller.SimObserver(Controller.Q, y_tilda, dx1_hat, Torques_ref);
+
+		Controller.Q_hat = Controller.EulerIntegration(dx1_hat, Controller.Q_hat);
+
+		Controller.dQ_hat = Controller.EulerIntegration(d2Q_hat, Controller.dQ_hat);
+		
+
 		//Generalized coordinates
 
 		Controller.Qold = Controller.Q;
 
 		Controller.dQold = Controller.dQ;
 
-		Controller.Q = Controller.EulerIntegration(Controller.dQ,Controller.Q);
-
 		Controller.dQ = Controller.EulerIntegration(Controller.d2Q,Controller.dQ);
 
+		Controller.Q = Controller.EulerIntegration(Controller.dQ,Controller.Q);
+
 		Controller.dQ_num = Controller.EulerDifferentiation(Controller.Q,Controller.Qold);
+
+		//Controller.z = Controller.EulerIntegration(Controller.dz, Controller.z);
+
+		//Controller.dQ_hat = Controller.z + Controller.k0*Controller.Q;
 
 		//Residual
 
 		Controller.r = Controller.Residual(Controller.Q, Controller.dQ, Torques_nom, Controller.r, CycleCounter, s1, s2, Controller.p0);
 		
-		Controller.z = Controller.EulerIntegration(Controller.dz, Controller.z);
-
-		Controller.dQ_hat = Controller.z + Controller.k0*Controller.Q;
-		
 		//For the first second we use as velocities the ones obtained through numeric differentiation and then we use the ones obtained thourgh the observer so to avoid the inial peak
 		//in the residual that influences the check if a collision has occurred or not by compering the residual with a constant threshold
 		
+		/*
 		if (Time >= 1.0)
 		{
 			Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_hat, Torques_nom, Controller.r_ob, CycleCounter, s1_ob, s2_ob, Controller.p0);
@@ -392,8 +425,9 @@ int main(int argc, char *argv[])
 		{
 			Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_num, Torques_nom, Controller.r_ob, CycleCounter, s1_ob, s2_ob, Controller.p0);
 		}
+		*/
 
-		//Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_num, Torques_nom, Controller.r_ob, CycleCounter, s1_ob, s2_ob, Controller.p0_hat);
+		Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_num, Torques_nom, Controller.r_ob, CycleCounter, s1_ob, s2_ob, Controller.p0_hat);
 		
 		Controller.GetState(FLAG); 
 
@@ -412,6 +446,8 @@ int main(int argc, char *argv[])
 		Controller.d2Qsave.push_back(Controller.d2Q);
 
 		Controller.dQ_hat_save.push_back(Controller.dQ_hat);
+
+		Controller.Q_hat_save.push_back(Controller.Q_hat);
 
 		Controller.dQ_num_save.push_back(Controller.dQ_num);
 
@@ -453,6 +489,9 @@ int main(int argc, char *argv[])
 
 		Controller.FromKukaToDyn(temp,Controller.dQ_hat_save);
 		Controller.writer.write_data(dqhatsave,temp);
+
+		Controller.FromKukaToDyn(temp,Controller.Q_hat_save);
+		Controller.writer.write_data(qhatsave,temp);
 
 		Controller.FromKukaToDyn(temp,Controller.dQ_num_save);
 		Controller.writer.write_data(dqnumsave,temp);	

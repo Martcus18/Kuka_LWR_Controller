@@ -70,11 +70,15 @@ target_link_libraries(controller ${TBB_LIBRARIES} ${Boost_LIBRARIES} libFastRese
 
 #target_link_libraries(tf_network PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/Tensorflow/lib/libtensorflow_framework.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/Tensorflow/lib/libtensorflow.so")
 
-add_executable(main_pos "${CMAKE_CURRENT_SOURCE_DIR}/src/main_pos.cpp")
+add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/src/main_pos.cpp")
 
 add_executable(main_sim "${CMAKE_CURRENT_SOURCE_DIR}/src/main_sim.cpp")
 
 add_executable(main_sim_noise "${CMAKE_CURRENT_SOURCE_DIR}/src/main_sim_noise.cpp")
+
+add_executable(main_pos_full_observer "${CMAKE_CURRENT_SOURCE_DIR}/src/main_pos_full_observer.cpp")
+
+add_executable(main_pos_reduced_observer "${CMAKE_CURRENT_SOURCE_DIR}/src/main_pos_reduced_observer.cpp")
 
 #target_link_libraries(controller_kuka PUBLIC controller utils learning tf_network "${CMAKE_CURRENT_SOURCE_DIR}/external/LWRDynamicalModel/build/libLWR_DYNAMICAL_MODEL.so" "${CMAKE_CURRENT_SOURCE_DIR}/external/ReflexxesTypeII/Linux/x64/release/lib/shared/libReflexxesTypeII.so" "${CMAKE_CURRENT_SOURCE_DIR}/build/libkuka_utilities.so")
 
@@ -87,10 +91,14 @@ target_link_libraries(controller_kuka PUBLIC controller utils "${CMAKE_CURRENT_S
 
 #target_link_libraries(gp ${TBB_LIBRARIES} ${Boost_LIBRARIES} utils)
 
-target_link_libraries(main_pos controller_kuka)
+target_link_libraries(main controller_kuka)
 
 target_link_libraries(main_sim controller_kuka)
 
 target_link_libraries(main_sim_noise controller_kuka)
+
+target_link_libraries(main_pos_full_observer controller_kuka)
+
+target_link_libraries(main_pos_reduced_observer controller_kuka)
 
 #target_link_libraries(nn_test controller_kuka)

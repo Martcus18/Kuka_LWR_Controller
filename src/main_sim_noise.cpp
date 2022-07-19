@@ -213,6 +213,11 @@ int main(int argc, char *argv[])
 
 	Kuka_Vec s1_ob = Kuka_Vec::Constant(0.0);
     Kuka_Vec s2_ob = Kuka_Vec::Constant(0.0);
+
+	//reduced-order obs
+	
+	Controller.dQ_hat = Controller.k0 * Controller.Q;
+	Controller.dQ_hat_save.push_back(Controller.dQ_hat);
 	
 	//SIMULATION LOOP
 	while (Time < tf)

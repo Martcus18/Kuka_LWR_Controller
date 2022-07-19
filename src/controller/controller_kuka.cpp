@@ -412,12 +412,10 @@ Kuka_Vec controller_kuka::SimDynamicModel(Kuka_Vec Qnow,Kuka_Vec dQnow,Kuka_Vec 
     //Torque_temp(6) = Torque(6) - C_eig(6) - g_eig(6);
     //Torque_temp(5) = Torque(5) - C_eig(5) - g_eig(5);
     
+    //Torque_temp = Torque - C_eig - g_eig - 0.01*friction_eig;
+    //Torque_temp = Torque - C_eig - g_eig - friction_eig;
     Torque_temp = Torque - C_eig - g_eig;
 
-
-
-    //result = B_eig.inverse() * (Torque - C_eig - g_eig - 0.01*friction_eig - 0.0001 * dQnow);
-    //Torque_temp = Torque - C_eig - g_eig;
     result = B_eig.inverse() * (Torque_temp);
 
     return result;
@@ -441,13 +439,38 @@ Kuka_Vec controller_kuka::SimReducedObserver(Kuka_Vec Q, Kuka_Vec dQ_hat, Kuka_V
     float* g = new float[7];
     float* friction = new float[7];
     float** B = new float*[7];
-    
+
+    //Friction parameters
+    /*Kuka_Mat k;
+    double k1 = -0.808532464046137;
+    double k2 = -0.0649972810944642;
+    double k3 = -0.346545525648958;
+    double k4 = -0.214487443644853;
+    double k5 = -0.109329763847656;
+    double k6 = -0.211082795657388;
+    double k7 = -0.690623131075350;
+
+    k <<  k1,0,0,0,0,0,0,
+          0,k2,0,0,0,0,0,
+          0,0,k3,0,0,0,0,
+          0,0,0,k4,0,0,0,
+          0,0,0,0,k5,0,0,
+          0,0,0,0,0,k6,0,
+          0,0,0,0,0,0,k7;
+
+    Kuka_Vec k;
+
+    k(0) = k1*dQ_hat(0);
+    k(1) = k2*dQ_hat(1);
+    k(2) = k3*dQ_hat(2);
+    k(3) = k4*dQ_hat(3);
+    k(4) = k5*dQ_hat(4);
+    k(5) = k6*dQ_hat(5);
+    k(6) = k7*dQ_hat(6);
+    */
     int i,j;
     
     Kuka_Mat B_eig;
-
-    //here we put the partial derivative of the gain times dq_hat
-    //Kuka_Vec P_eig; 
 
     Kuka_Mat S_hat_eig;
     Kuka_Vec g_eig;
@@ -475,26 +498,74 @@ Kuka_Vec controller_kuka::SimReducedObserver(Kuka_Vec Q, Kuka_Vec dQ_hat, Kuka_V
         {
             B_eig(i,j) = B[i][j];
             S_hat_eig(i,j) = S_hat[i][j];
-            
-            /*if (i==j)
-            {
-                //P_eig(i) = k0*q[i];
-                P_eig(i) = k0*dq_hat[i];
-            }*/
-
         }
         
         g_eig(i)= g[i];
         friction_eig(i) = friction[i];
     }
     
-    //Torque_temp = Torque - C_hat_eig - g_eig - B_eig*P_eig;
+    //Torque_temp = Torque - S_hat_eig*dQ_hat - g_eig - B_eig*k0*eye*dQ_hat - 0.01*friction_eig;
+    //Torque_temp = Torque - S_hat_eig*dQ_hat - g_eig - B_eig*k0*eye*dQ_hat - k;
     Torque_temp = Torque - S_hat_eig*dQ_hat - g_eig - B_eig*k0*eye*dQ_hat;
 
     result = B_eig.inverse() * (Torque_temp);
 
     return result;
 };
+
+//DYNAMIC MODEL FOR THE FULL STATE OBSERVER
+Kuka_Vec controller_kuka::SimObserver(Kuka_Vec Y, Kuka_Vec y_tilda, Kuka_Vec dX1_hat, Kuka_Vec Torque)
+{
+    float* y = new float[7];
+    float* dx1_hat = new float[7];
+    float** S_hat = new float*[7];
+    float* g = new float[7];
+    float* friction = new float[7];
+    float** B = new float*[7];
+    
+    int i,j;
+    
+    Kuka_Mat B_eig;
+
+    Kuka_Mat S_hat_eig;
+    Kuka_Vec g_eig;
+    Kuka_Vec friction_eig;
+    Kuka_Vec Torque_temp;
+
+    Kuka_Vec result;
+
+    for(i=0; i<NUMBER_OF_JOINTS; i++)
+	{
+        B[i] = new float[NUMBER_OF_JOINTS];
+        S_hat[i] = new float[NUMBER_OF_JOINTS];
+        y[i] = Y(i);
+        dx1_hat[i] = dX1_hat(i);
+    }
+    
+    dyn->get_B(B,y);
+    dyn->get_S(S_hat,y,dx1_hat);
+    dyn->get_g(g,y);
+    dyn->get_friction(friction,dx1_hat);
+    
+    for(i=0;i<NUMBER_OF_JOINTS;i++)
+    {    
+        for(int j=0;j<NUMBER_OF_JOINTS;j++)
+        {
+            B_eig(i,j) = B[i][j];
+            S_hat_eig(i,j) = S_hat[i][j];
+        }
+        
+        g_eig(i)= g[i];
+        friction_eig(i) = friction[i];
+    }
+    
+    Torque_temp = Torque - S_hat_eig*dX1_hat - g_eig + kp*y_tilda;
+
+    result = B_eig.inverse() * (Torque_temp);
+
+    return result; 
+
+}
 
 //EVALUATION OF THE RESIDUAL
 Kuka_Vec controller_kuka::Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torque_nominal, Kuka_Vec r, int index, Kuka_Vec& SUM1, Kuka_Vec& SUM2, Kuka_Vec initial_momentum) 

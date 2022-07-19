@@ -31,12 +31,7 @@ class controller_kuka : public controller
             z = Kuka_Vec::Constant(0.0);
             dz = Kuka_Vec::Constant(0.0);
 
-            //sum1 = Kuka_Vec::Constant(0.0);
-            //sum2 = Kuka_Vec::Constant(0.0);
             r = Kuka_Vec::Constant(0.0);
-
-            sum1_ob = Kuka_Vec::Constant(0.0);
-            sum2_ob = Kuka_Vec::Constant(0.0);
             r_ob = Kuka_Vec::Constant(0.0);
             
             Kuka_Vec temp_zero = Kuka_Vec::Constant(0.0);
@@ -105,8 +100,6 @@ class controller_kuka : public controller
                 Q(6) = 0;
             }
 
-            dQ_hat = k0 * Q;
-
             // initial momentum when we use the observed velocities
             p0_hat = GetMass(Q)*dQ_hat;
 
@@ -116,7 +109,6 @@ class controller_kuka : public controller
             Qsave.push_back(Q);
             dQsave.push_back(dQ);
             d2Qsave.push_back(d2Q);
-            dQ_hat_save.push_back(dQ_hat);
             dQ_num_save.push_back(dQ_num);
             r_save.push_back(r);
             r_obs_save.push_back(r_ob);
@@ -222,13 +214,7 @@ class controller_kuka : public controller
 
         //Evaluation of the residual
 
-        //Kuka_Vec Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torque_nominal, Kuka_Vec r, int index);
-
         Kuka_Vec Residual(Kuka_Vec Qnow, Kuka_Vec dQnow, Kuka_Vec Torque_nominal, Kuka_Vec r, int index, Kuka_Vec& SUM1, Kuka_Vec& SUM2, Kuka_Vec initial_momentum);
-
-        //Evaluation of the residual using the estimated joint velocities
-
-        //Kuka_Vec Residual_obs(Kuka_Vec Qnow, Kuka_Vec dQnow_hat, Kuka_Vec Torque_nominal, Kuka_Vec r, int index);
 
         //Generation of an external torque
 
@@ -253,6 +239,10 @@ class controller_kuka : public controller
         //Check if a collision has occurred
 
         std::array<int,7> collision(Kuka_Vec r,double Time);
+
+        //Full state observer
+
+        Kuka_Vec SimObserver(Kuka_Vec Y, Kuka_Vec y_tilda, Kuka_Vec dX1_hat, Kuka_Vec Torque);
 
         ~controller_kuka()
         {
@@ -290,13 +280,11 @@ class controller_kuka : public controller
         Kuka_Vec dz;
         Kuka_Vec dQ_hat;
         Kuka_Vec r;
-        //Kuka_Vec sum1;
-        //Kuka_Vec sum2;
         Kuka_Vec r_ob;
-        Kuka_Vec sum1_ob;
-        Kuka_Vec sum2_ob;
         Kuka_Vec p0_hat;
         Kuka_Vec p0;
+
+        Kuka_Vec Q_hat;
         
         Kuka_Vec torque_measured;
         Kuka_Vec torque_assigned;
