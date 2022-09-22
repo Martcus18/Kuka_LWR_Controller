@@ -229,11 +229,11 @@ int main(int argc, char *argv[])
 	//Initialization estimated varibales
             
 	//reduced-order obs
-	//Controller.dQ_hat = Controller.k0 * Controller.Q;
+	Controller.dQ_hat = Controller.k0 * Controller.Q;
 
 	//full-state obs
 	Controller.Q_hat = Controller.Q;
-	Controller.dQ_hat = Kuka_Vec::Constant(0.0);
+	//Controller.dQ_hat = Kuka_Vec::Constant(0.0);
 
 	Controller.Q_hat_save.push_back(Controller.Q_hat);
     Controller.dQ_hat_save.push_back(Controller.dQ_hat);
@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
 
 		//TRY TO RESTART THE ROBOT IF THE COLLISION HAS FINISHED
 
-		
+		/*
 		if (Time>=1.5 && !coll)
 		{	
 			coll = std::any_of(logic_flag.begin(), logic_flag.end(), [](int i) { return i==1; });
@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
 			Trestart += DELTAT;
 		}
 		
-		
+		*/
 		std::cout << "Time = " << Time << std::endl;
 		
 		
@@ -359,10 +359,14 @@ int main(int argc, char *argv[])
 		}
 		*/
 		
-		if  (Time>=5.0 )
+		if  (Time>=5.0 && Time<=8.0)
 		{
 			Torques_faulty = Controller.ExtTorque(Torques_nom, fault, Controller.Q, F);
 			Torques_ref += Torques_faulty;
+		}
+		else
+		{
+			Torques_faulty = Kuka_Vec::Constant(0.0);
 		}	
 		
 
@@ -372,26 +376,20 @@ int main(int argc, char *argv[])
 
 		//Reduced observer
 
-		//Controller.dz = Controller.SimReducedObserver(Controller.Q, Controller.dQ_hat, Torques_ref);
-
-		//Try to use the residual as a measure of the friction present in the model
-
-		//Mass = Controller.GetMass(Controller.Q);
-
-		//Controller.dz += Mass.inverse()*Controller.r_ob;
+		Controller.dz = Controller.SimReducedObserver(Controller.Q, Controller.dQ_hat, Torques_nom);
 
 		//Full state observer: Nicosia-Tomei
-		
+		/*
 		y_tilda = Controller.Q - Controller.Q_hat;
 
 		dx1_hat = Controller.dQ_hat + Controller.kd*y_tilda;
 
-		d2Q_hat = Controller.SimObserver(Controller.Q, y_tilda, dx1_hat, Torques_ref);
+		d2Q_hat = Controller.SimObserver(Controller.Q, y_tilda, dx1_hat, Torques_nom);
 
 		Controller.Q_hat = Controller.EulerIntegration(dx1_hat, Controller.Q_hat);
 
 		Controller.dQ_hat = Controller.EulerIntegration(d2Q_hat, Controller.dQ_hat);
-		
+		*/		
 
 		//Generalized coordinates
 
@@ -405,29 +403,15 @@ int main(int argc, char *argv[])
 
 		Controller.dQ_num = Controller.EulerDifferentiation(Controller.Q,Controller.Qold);
 
-		//Controller.z = Controller.EulerIntegration(Controller.dz, Controller.z);
+		Controller.z = Controller.EulerIntegration(Controller.dz, Controller.z);
 
-		//Controller.dQ_hat = Controller.z + Controller.k0*Controller.Q;
+		Controller.dQ_hat = Controller.z + Controller.k0*Controller.Q;
 
 		//Residual
 
 		Controller.r = Controller.Residual(Controller.Q, Controller.dQ, Torques_nom, Controller.r, CycleCounter, s1, s2, Controller.p0);
-		
-		//For the first second we use as velocities the ones obtained through numeric differentiation and then we use the ones obtained thourgh the observer so to avoid the inial peak
-		//in the residual that influences the check if a collision has occurred or not by compering the residual with a constant threshold
-		
-		/*
-		if (Time >= 1.0)
-		{
-			Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_hat, Torques_nom, Controller.r_ob, CycleCounter, s1_ob, s2_ob, Controller.p0);
-		}
-		else
-		{
-			Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_num, Torques_nom, Controller.r_ob, CycleCounter, s1_ob, s2_ob, Controller.p0);
-		}
-		*/
 
-		Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_num, Torques_nom, Controller.r_ob, CycleCounter, s1_ob, s2_ob, Controller.p0_hat);
+		Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_hat, Torques_nom, Controller.r_ob, CycleCounter, s1_ob, s2_ob, Controller.p0_hat);
 		
 		Controller.GetState(FLAG); 
 

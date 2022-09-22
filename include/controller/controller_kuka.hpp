@@ -101,10 +101,10 @@ class controller_kuka : public controller
             }
 
             // initial momentum when we use the observed velocities
-            p0_hat = GetMass(Q)*dQ_hat;
+            //p0_hat = GetMass(Q)*dQ_hat;
 
             // initial momentum when we use the actual velocities
-            p0 = GetMass(Q)*dQ;
+            //p0 = GetMass(Q)*dQ;
             
             Qsave.push_back(Q);
             dQsave.push_back(dQ);

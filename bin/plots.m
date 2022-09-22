@@ -94,7 +94,7 @@ title('6-th joint');
 subplot(247)
 plot(dq(:,7),'b',dq_hat(:,7),'r')
 hold on; grid on;
-%%ylim([-0.15,0.15]);
+%ylim([-0.15,0.15]);
 %legend('dq','dq\_hat','location','northeast');
 title('7-th joint');
 
@@ -153,43 +153,43 @@ figure(6)
 subplot(241)
 plot(r(:,1),'b',torque_faulty(:,1),'r')
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,1))) max(abs(torque_fl(:,1)))]);
+%%%ylim([-max(abs(torque_fl(:,1))) max(abs(torque_fl(:,1)))]);
 title('1-st residual');
 
 subplot(242)
 plot(r(:,2),'b',torque_faulty(:,2),'r');
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,2))) max(abs(torque_fl(:,2)))]);
+%%%ylim([-max(abs(torque_fl(:,2))) max(abs(torque_fl(:,2)))]);
 title('2-nd residual');
 
 subplot(243)
 plot(r(:,3),'b',torque_faulty(:,3),'r');
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,3))) max(abs(torque_fl(:,3)))]);
+%%%ylim([-max(abs(torque_fl(:,3))) max(abs(torque_fl(:,3)))]);
 title('3-rd residual');
 
 subplot(244)
 plot(r(:,4),'b',torque_faulty(:,4),'r')
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,4))) max(abs(torque_fl(:,4)))]);
+%%%ylim([-max(abs(torque_fl(:,4))) max(abs(torque_fl(:,4)))]);
 title('4-th residual');
 
 subplot(245)
 plot(r(:,5),'b',torque_faulty(:,5),'r')
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,5))) max(abs(torque_fl(:,5)))]);
+%%%ylim([-max(abs(torque_fl(:,5))) max(abs(torque_fl(:,5)))]);
 title('5-th residual');
 
 subplot(246)
 plot(r(:,6),'b',torque_faulty(:,6),'r')
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,6))) max(abs(torque_fl(:,6)))]);
+%%%ylim([-max(abs(torque_fl(:,6))) max(abs(torque_fl(:,6)))]);
 title('6-th residual');
 
 subplot(247)
 plot(r(:,7),'b',torque_faulty(:,7),'r')
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,7))) max(abs(torque_fl(:,7)))]);
+%%%ylim([-max(abs(torque_fl(:,7))) max(abs(torque_fl(:,7)))]);
 title('7-th residual');
  
 S  = axes( 'visible', 'off', 'title', 'Residual with actual joint velocities' );
@@ -198,43 +198,43 @@ figure(7)
 subplot(241)
 plot(r_ob(:,1),'b',torque_faulty(:,1),'r')
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,1))) max(abs(torque_fl(:,1)))]);
+%ylim([-30 40]);
 title('1-st residual');
 
 subplot(242)
 plot(r_ob(:,2),'b',torque_faulty(:,2),'r');
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,2))) max(abs(torque_fl(:,2)))]);
+%ylim([-40 60]);
 title('2-nd residual');
 
 subplot(243)
 plot(r_ob(:,3),'b',torque_faulty(:,3),'r');
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,3))) max(abs(torque_fl(:,3)))]);
+%ylim([-15 20]);
 title('3-rd residual');
 
 subplot(244)
 plot(r_ob(:,4),'b',torque_faulty(:,4),'r')
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,4))) max(abs(torque_fl(:,4)))]);
+%ylim([-100 100]);
 title('4-th residual');
 
 subplot(245)
 plot(r_ob(:,5),'b',torque_faulty(:,5),'r')
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,5))) max(abs(torque_fl(:,5)))]);
+%ylim([-1 1.5]);
 title('5-th residual');
 
 subplot(246)
 plot(r_ob(:,6),'b',torque_faulty(:,6),'r')
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,6))) max(abs(torque_fl(:,6)))]);
+%ylim([-1 1.5]);
 title('6-th residual');
 
 subplot(247)
 plot(r_ob(:,7),'b',torque_faulty(:,7),'r')
 hold on; grid on;
-%%ylim([-max(abs(torque_fl(:,7))) max(abs(torque_fl(:,7)))]);
+%ylim([-0.006 0.004]);
 title('7-th residual');
 
 S  = axes( 'visible', 'off', 'title', 'Residual with estimated joint velocities' );

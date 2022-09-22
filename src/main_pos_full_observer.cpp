@@ -7,8 +7,6 @@ int main(int argc, char *argv[])
 	unsigned int 				CollCounter     =   0;
 	int							ResultValue		=	0;
 	double 						Time = 0.0;
-	double						damping = 0.1;		// needed for pseudoinverse
-	double						e = 1.0;			// needed for pseudoinverse
 	double						frequency = 0.3;	
 
 	std::chrono::time_point<std::chrono::system_clock> Tic, Toc;
@@ -103,23 +101,19 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	std::cout << "RUN TIME" << RUN_TIME_IN_SECONDS << "\n";		
-
-	d2Q_ref = Kuka_Vec::Constant(0.0);
-	
-	Mass = Controller.GetMass(Controller.Q);
+	std::cout << "RUN TIME" << RUN_TIME_IN_SECONDS << "\n";
 
 	//Collision detection variables
 
 	bool coll = false;
 
-	double time_res = 0.3;
-
 	Q_stop = Q0;
+
+	double time_res = 0.3;
 
 	std::array<int,7> logic_flag;
 
-	//Residual variables
+	//Residual terms
 
 	Kuka_Vec s1 = Kuka_Vec::Constant(0.0);
     Kuka_Vec s2 = Kuka_Vec::Constant(0.0);
@@ -127,7 +121,7 @@ int main(int argc, char *argv[])
 	Kuka_Vec s1_ob = Kuka_Vec::Constant(0.0);
     Kuka_Vec s2_ob = Kuka_Vec::Constant(0.0);
 
-	//Full-state observer variables
+	//Full-order observer variables
 
 	Kuka_Vec y_tilda = Kuka_Vec::Constant(0.0);
 	Kuka_Vec dx1_hat = Kuka_Vec::Constant(0.0);
@@ -140,6 +134,12 @@ int main(int argc, char *argv[])
 	Controller.dQ_hat_save.push_back(Controller.dQ_hat);
 	Controller.Q_hat_save.push_back(Controller.Q_hat);
 
+	//Initial generalized momentum
+
+	Mass = Controller.GetMass(Controller.Q);
+	Controller.p0 = Mass*Controller.dQ;
+	Controller.p0_hat = Mass*Controller.dQ_hat;
+
 	while ((float)CycleCounter * Controller.FRI->GetFRICycleTime() < RUN_TIME_IN_SECONDS)
 	{	
 		Time = Controller.FRI->GetFRICycleTime() * (float)CycleCounter;
@@ -148,13 +148,11 @@ int main(int argc, char *argv[])
 		
 		dQ_ref = Kuka_Vec::Constant(0.2*std::sin(Time));
 		
-		d2Q_ref = Kuka_Vec::Constant(0.2*std::cos(Time));
-		
+		d2Q_ref = Kuka_Vec::Constant(0.2*std::cos(Time));		
 		
 		Q_ref(4) = Q0(4);
 		Q_ref(5) = Q0(5);
 		Q_ref(6) = Q0(6);
-
 		
 		dQ_ref(4) = 0.0;
 		dQ_ref(5) = 0.0;
@@ -166,29 +164,34 @@ int main(int argc, char *argv[])
 
 		//CHECK IF A COLLISION HAS OCCURRED
 
-		//COLL = TRUE <-----> COLLISION		
+		//COLL = TRUE <-----> COLLISION	
+
+		//Look if any of the components of the residual has exceeded the threshold, is so then coll = TRUE
 		
 		if (Time >= time_res && !coll)
 		{	
 			coll = std::any_of(logic_flag.begin(), logic_flag.end(), [](int i) { return i==1; });
 			Q_stop = Controller.Q;
 		}
+
+		//If a collision has occurred and it has passed 1 second then coll = FALSE and the robot can return 
+		//tracking the original sinusoidal reference in the joint positions
 		
 		if( (CollCounter >= 200) && coll)
 		{
 			coll = false;
 			CollCounter = 0;
-			//time_res = Time + 0.3;
 			time_res = Time + 0.9;
 		}
+
+		//If a collision has occurred and it has NOT passed 1 second then we keep as reference for the robot the 
+		//value saved in Q_stop
 		
 		if( (CollCounter < 200) && coll)
 		{
 			CollCounter++;
 			CycleCounter--;
 		}
-		
-		//std::cout << "CycleTime = " << Controller.FRI->GetFRICycleTime() << "\n";
 
 		Tic = std::chrono::system_clock::now();
 
@@ -202,25 +205,23 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		//auto Tic2 = std::chrono::system_clock::now();
+		//GetState takes the value of joint position from the encoders and then obtains joint velocities through Euler differentiation
 
 		state = Controller.GetState(FLAG);
+
+		//Saving robot state
 		
 		Controller.Qsave.push_back(Controller.Q);
 
 		Controller.dQsave.push_back(Controller.dQ);
 
-		Q_filtered = Controller.Q;
+		//Filtering the variables and saving them
 
-		//Q_filtered = Controller.Filter(Controller.Qsave,FILTER_LENGTH);
+		Q_filtered = Controller.Filter(Controller.Qsave,FILTER_LENGTH);
 
 		dQ_filtered = Controller.Filter(Controller.dQsave,FILTER_LENGTH);
 
-		//Controller.d2Q = Controller.EulerDifferentiation(Controller.dQ, Controller.dQold);
-
 		Controller.d2Q = Controller.EulerDifferentiation(dQ_filtered,Controller.dQsave_filtered.back());
-
-		//Controller.d2Qold = Controller.d2Q;
 
 		Controller.d2Qsave.push_back(Controller.d2Q);
 
@@ -235,6 +236,8 @@ int main(int argc, char *argv[])
 		Controller.old_state_filtered = Controller.state_filtered;
 
 		Controller.state_filtered << Q_filtered, dQ_filtered;
+
+		//REACTION STRATEGY: if a collision has occurred then stop the robot at the position in which it is, i.e. the value saved in Q_stop
 		
 		if (coll)
 		{
@@ -242,6 +245,7 @@ int main(int argc, char *argv[])
 			Q_ref = Q_stop;			
 		}
 		
+		//Saving state reference values
 
 		Q_ref_vec.push_back(Q_ref);
 
@@ -258,8 +262,7 @@ int main(int argc, char *argv[])
 			//EXITING THE CONTROL LOOP
 			std::cout << "Breaking safety controllers for either Velocities and Joints position \n";
 			break;
-		}
-		
+		}		
 
 		Temp_array.push_back(d2Q_ref);		
 		
@@ -290,7 +293,7 @@ int main(int argc, char *argv[])
 		
 		Controller.Tor_meas_filtered.push_back(torques_temp);
 
-		//FULL-STATE OBSERVER (Nicosia-Tomei)
+		//FULL-ORDER OBSERVER DYNAMICS
 		
 		y_tilda = Controller.Q - Controller.Q_hat;
 
@@ -300,7 +303,7 @@ int main(int argc, char *argv[])
 
 		Controller.Q_hat = Controller.EulerIntegration(dx1_hat, Controller.Q_hat);
 
-		Controller.dQ_hat = Controller.EulerIntegration(d2Q_hat, Controller.dQ_hat);		
+		Controller.dQ_hat = Controller.EulerIntegration(d2Q_hat, Controller.dQ_hat);
 		
 		//EVALUATION OF THE RESIDUAL
 
@@ -308,15 +311,13 @@ int main(int argc, char *argv[])
 
 		Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_hat, torques_temp, Controller.r_ob, CycleCounter, s1_ob, s2_ob, Controller.p0_hat);
 
-		//COMPARISON WITH THE THRESHOLDS
-
 		logic_flag = {0,0,0,0,0,0,0};
 
 		logic_flag = Controller.collision(Controller.r_ob, Time);	
 
 		std::cout << logic_flag[0] << logic_flag[1] << logic_flag[2] << logic_flag[3] << logic_flag[4] << logic_flag[5] << logic_flag[6] << std::endl;	
 
-		//SAVING VARIABLES
+		//Controller.Tor_meas_filtered.push_back(Controller.torque_measured);
 
 		Controller.r_save.push_back(Controller.r);
 
@@ -325,8 +326,6 @@ int main(int argc, char *argv[])
 		Controller.dQ_hat_save.push_back(Controller.dQ_hat);
 
 		Controller.Q_hat_save.push_back(Controller.Q_hat);
-
-		//std::cout << CycleCounter << std::endl;
 
 		CycleCounter++;
 
@@ -346,7 +345,7 @@ int main(int argc, char *argv[])
 		fprintf(stdout, "Robot successfully stopped.\n");
 	}
 
-
+	//ROBOT STATE
 	Controller.FromKukaToDyn(temp,Controller.Qsave);
 	Controller.writer.write_data(qsave,temp);
 	
@@ -356,6 +355,7 @@ int main(int argc, char *argv[])
 	Controller.FromKukaToDyn(temp,Controller.d2Qsave);
 	Controller.writer.write_data(d2qsave,temp);
 	
+	//FILTERED ROBOT STATE
 	Controller.FromKukaToDyn(temp,Controller.Qsave_filtered);
 	Controller.writer.write_data(qsave_filtered,temp);
 
@@ -384,19 +384,12 @@ int main(int argc, char *argv[])
 	Controller.FromKukaToDyn(temp,Controller.Tor_meas_filtered);
 	Controller.writer.write_data(torque_meas,temp);	
 
-	//Controller.FromKukaToDyn(temp,Controller.Tor_th);
-	//Controller.writer.write_data(torque_th,temp);
-
-	//REFERENCE TRAJECTORY PRINTING	
-
+	//REFERENCE TRAJECTORY PRINTING
 	Controller.FromKukaToDyn(temp,Q_ref_vec);
 	Controller.writer.write_data(Q_ref_file,temp);
 
 	//DELETING POINTERS
-
 	delete Controller.FRI;
-	//delete Controller.dyn;
-	//delete Controller.Regressor;
 
 	fprintf(stdout, "Objects deleted...\n");
 	

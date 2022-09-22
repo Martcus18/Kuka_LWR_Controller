@@ -38,9 +38,11 @@ Kuka_Vec controller_kuka::FeedbackLinearization(Kuka_Vec Qnow, Kuka_Vec dQnow, K
             B_eig(i,j) = B[i][j];
         }
         C_eig(i) = C[i];
-        g_eig (i)= g[i];
+        g_eig(i)= g[i];
         friction_eig(i) = friction[i];
     }
+
+    
 
     TauFl = B_eig * reference + C_eig + g_eig;
 
@@ -402,9 +404,14 @@ Kuka_Vec controller_kuka::SimDynamicModel(Kuka_Vec Qnow,Kuka_Vec dQnow,Kuka_Vec 
         for(int j=0;j<NUMBER_OF_JOINTS;j++)
         {
             B_eig(i,j) = B[i][j];
+            if (i==j) 
+            {
+                //B_eig(i,j) = B_eig(i,j)+0.3*B_eig(i,j);
+            }
         }
         C_eig(i) = C[i];
-        g_eig (i)= g[i];
+        g_eig(i)= g[i];
+        //g_eig(i)= g[i]+0.01;
         friction_eig(i) = friction[i];
     }
 
@@ -440,34 +447,6 @@ Kuka_Vec controller_kuka::SimReducedObserver(Kuka_Vec Q, Kuka_Vec dQ_hat, Kuka_V
     float* friction = new float[7];
     float** B = new float*[7];
 
-    //Friction parameters
-    /*Kuka_Mat k;
-    double k1 = -0.808532464046137;
-    double k2 = -0.0649972810944642;
-    double k3 = -0.346545525648958;
-    double k4 = -0.214487443644853;
-    double k5 = -0.109329763847656;
-    double k6 = -0.211082795657388;
-    double k7 = -0.690623131075350;
-
-    k <<  k1,0,0,0,0,0,0,
-          0,k2,0,0,0,0,0,
-          0,0,k3,0,0,0,0,
-          0,0,0,k4,0,0,0,
-          0,0,0,0,k5,0,0,
-          0,0,0,0,0,k6,0,
-          0,0,0,0,0,0,k7;
-
-    Kuka_Vec k;
-
-    k(0) = k1*dQ_hat(0);
-    k(1) = k2*dQ_hat(1);
-    k(2) = k3*dQ_hat(2);
-    k(3) = k4*dQ_hat(3);
-    k(4) = k5*dQ_hat(4);
-    k(5) = k6*dQ_hat(5);
-    k(6) = k7*dQ_hat(6);
-    */
     int i,j;
     
     Kuka_Mat B_eig;
@@ -657,12 +636,12 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
 
         case 2:
             //result(1) = -0.04*Torque_nominal(1);
-            result(1) = -0.9*Torque_nominal(1);
+            result(1) = -0.5*Torque_nominal(1);
             break;
         
         case 3:
             //result(2) = -0.3*Torque_nominal(2);
-            result(2) = -0.4*Torque_nominal(2);
+            result(2) = -0.6*Torque_nominal(2);
             break;
 
         case 4:
@@ -684,8 +663,8 @@ Kuka_Vec controller_kuka::ExtTorque(Kuka_Vec Torque_nominal, int fault, Kuka_Vec
             break;
 
         case 8:
-            result(3) = -0.2*Torque_nominal(3);
-            result(5) = -0.7*Torque_nominal(5);
+            result(0) = -0.9*Torque_nominal(0);
+            result(2) = -0.9*Torque_nominal(2);
             break;
 
         case 9:
@@ -755,37 +734,37 @@ std::array<int,7> controller_kuka::collision(Kuka_Vec r, double Time)
 {
     std::array<int,7> flag = {0,0,0,0,0,0,0};
 
-    if (abs(r(0))>th(0))
+    if (std::fabs(r(0))>th(0))
 	{
 		//std::cout << "fault/collision on first motor" << "\n" << Time << "\n";
 		flag[0] = 1;
 	}
-	if (abs(r(1))>=th(1))
+	if (std::fabs(r(1))>=th(1))
 	{
 		//std::cout << "fault/collision on second motor" << "\n" << Time << "\n";
 		flag[1] = 1;
 	}
-	if (abs(r(2))>=th(2))
+	if (std::fabs(r(2))>=th(2))
 	{
 		//std::cout << "fault/collision on third motor" << "\n" << Time << "\n";
 		flag[2] = 1;
 	}
-	if (abs(r(3))>=th(3))
+	if (std::fabs(r(3))>=th(3))
 	{
 		//std::cout << "fault/collision on 4-th motor" << "\n" << Time << "\n";
 		flag[3] = 1;
 	}
-	if (abs(r(4))>=th(4))
+	if (std::fabs(r(4))>=th(4))
 	{
 		//std::cout << "fault/collision on 5-th motor" << "\n" << Time << "\n";
 		flag[4] = 1;
 	}
-	if (abs(r(5))>=th(5))
+	if (std::fabs(r(5))>=th(5))
 	{
 		//std::cout << "fault/collision on 6-th motor" << "\n" << Time << "\n";
 		flag[5] = 1;
 	}
-	if (abs(r(6))>=th(6))
+	if (std::fabs(r(6))>=th(6))
 	{
 		//std::cout << "fault/collision on 7-th motor" << "\n" << Time << "\n";
 		flag[6] = 1;
