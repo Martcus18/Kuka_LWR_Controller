@@ -33,6 +33,9 @@ class controller_kuka : public controller
 
             r = Kuka_Vec::Constant(0.0);
             r_ob = Kuka_Vec::Constant(0.0);
+
+            p0 = Kuka_Vec::Constant(0.0);
+            p0_hat = Kuka_Vec::Constant(0.0);
             
             Kuka_Vec temp_zero = Kuka_Vec::Constant(0.0);
             
@@ -105,6 +108,8 @@ class controller_kuka : public controller
 
             // initial momentum when we use the actual velocities
             //p0 = GetMass(Q)*dQ;
+
+            z = -k0*Q;
             
             Qsave.push_back(Q);
             dQsave.push_back(dQ);
