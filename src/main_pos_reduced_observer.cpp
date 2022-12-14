@@ -110,6 +110,8 @@ int main(int argc, char *argv[])
 
 	std::array<int,7> logic_flag;
 
+	double t_rest = 300;
+
 	//Residual terms
 
 	Kuka_Vec s1 = Kuka_Vec::Constant(0.0);
@@ -120,7 +122,7 @@ int main(int argc, char *argv[])
 
 	//Initializint estimated variables
 
-	Controller.dQ_hat = Controller.k0 * Controller.Q;
+	Controller.dQ_hat = Kuka_Vec::Constant(0.0);
 	Controller.dQ_hat_save.push_back(Controller.dQ_hat);
 
 	//Initial generalized momentum
@@ -128,6 +130,31 @@ int main(int argc, char *argv[])
 	Mass = Controller.GetMass(Controller.Q);
 	Controller.p0 = Mass*Controller.dQ;
 	Controller.p0_hat = Mass*Controller.dQ_hat;
+
+	//Variables for the recovery of the trajectory
+
+	bool new_traj = 0;
+	double T_coll = 0.0;
+	Kuka_Vec Q_restart = Kuka_Vec::Constant(0.0);
+
+	double Time_new = 0.0;
+	double T_restart = 0.0;
+
+	//When the robot starts again the trajectory has to start with zero 
+	//velocity, hende we need to reset the time
+	bool reset_time = 1;
+
+	Kuka_Vec Q_in;
+	Kuka_Vec Q_fin;
+	Kuka_Vec Q_est;
+	Kuka_Vec DeltaQ;
+	Kuka_Vec Q_time;
+
+	Q_fin = Q0 + Kuka_Vec::Constant(0.4);
+	Q_fin(4) = Q0(4);
+	Q_fin(5) = Q0(5);
+	Q_fin(6) = Q0(6);
+	Q_est = Q_fin;
 
 	while ((float)CycleCounter * Controller.FRI->GetFRICycleTime() < RUN_TIME_IN_SECONDS)
 	{	
@@ -151,35 +178,6 @@ int main(int argc, char *argv[])
 		d2Q_ref(5) = 0.0;
 		d2Q_ref(6) = 0.0;
 
-		//CHECK IF A COLLISION HAS OCCURRED	
-		
-		//Look if any of the components of the residual has exceeded the threshold, is so then coll = TRUE
-
-		if (Time >= time_res && !coll)
-		{	
-			coll = std::any_of(logic_flag.begin(), logic_flag.end(), [](int i) { return i==1; });
-			Q_stop = Controller.Q;
-		}
-		
-		//If a collision has occurred and it has passed 1 second then coll = FALSE and the robot can return 
-		//tracking the original sinusoidal reference in the joint positions
-
-		if( (CollCounter >= 200) && coll)
-		{
-			coll = false;
-			CollCounter = 0;
-			time_res = Time + 0.3;
-		}
-
-		//If a collision has occurred and it has NOT passed 1 second then we keep as reference for the robot the 
-		//value saved in Q_stop
-		
-		if( (CollCounter < 200) && coll)
-		{
-			CollCounter++;
-			CycleCounter--;
-		}
-		
 		Tic = std::chrono::system_clock::now();
 
 		Controller.FRI->WaitForKRCTick(TimeoutValueInMicroSeconds);
@@ -195,6 +193,126 @@ int main(int argc, char *argv[])
 		//GetState takes the value of joint position from the encoders and then obtains joint velocities through Euler differentiation
 
 		state = Controller.GetState(FLAG);
+
+		//CHECK IF A COLLISION HAS OCCURRED	
+
+		//COMPARISON WITH THE THRESHOLDS
+
+		logic_flag = {0,0,0,0,0,0,0};
+
+		logic_flag = Controller.collision(Controller.r_ob, Time);	
+
+		std::cout << logic_flag[0] << logic_flag[1] << logic_flag[2] << logic_flag[3] << logic_flag[4] << logic_flag[5] << logic_flag[6] << std::endl;
+		
+		//Look if any of the components of the residual has exceeded the threshold, is so then coll = TRUE
+
+		if (Time >= time_res && !coll)
+		{	
+			coll = std::any_of(logic_flag.begin(), logic_flag.end(), [](int i) { return i==1; });
+			Q_stop = Controller.Q;
+			T_coll = Time;
+		}
+		
+		//If a collision has occurred and it has passed 1 second then coll = FALSE and the robot can return 
+		//tracking the original sinusoidal reference in the joint positions
+
+		if( (CollCounter >= t_rest) && coll)
+		{
+			coll = false;
+			CollCounter = 0;
+			time_res = Time + 0.3;
+			Q_restart = Controller.Q; // a.k.a where the robot is when the collision has occurred;
+			new_traj = 1;
+
+			// I need to redefine the parameter fo the joint space trajectory in such a way I start again with
+			// zero velocity
+
+			Time_new = 0.0;
+			T_restart = T_coll;
+			DeltaQ = Q_fin - Q_restart;			
+			/*Q_fin = Q0 + Kuka_Vec::Constant(0.4);
+			Q_fin(4) = Q0(4);
+			Q_fin(5) = Q0(5);
+			Q_fin(6) = Q0(6);*/
+			reset_time = 1;
+
+		}
+		
+		//After a collision we need to redefine the joint trajectory in such a way to have a match 
+		//between the actual joint configuration and the reference that we are giving to the robot
+
+		if ( new_traj && !coll)
+		{
+			std::cout << "----------------------------------------" << std::endl;
+
+			if ( std::fabs(Controller.Q(0) - Q_est(0)) <= 1e-6 || std::fabs(Controller.Q(1) - Q_est(1)) <= 1e-6 || std::fabs(Controller.Q(2) - Q_est(2)) <= 1e-6 || std::fabs(Controller.Q(3) - Q_est(3)) <= 1e-6)
+			{
+				std::cout << "Vicino Q_est" << std::endl;
+
+				Q_fin = Q0;
+
+				if ( Time_new > 0.0 && reset_time)
+				{
+					Time_new = 0.0;
+					Q_in = Controller.Q;
+					DeltaQ = Q_fin - Controller.Q;
+					reset_time = 0;
+				}
+			}
+
+			if ( std::fabs(Controller.Q(0) - Q0(0)) <= 1e-6 || std::fabs(Controller.Q(1) - Q0(1)) <= 1e-6 || std::fabs(Controller.Q(2) - Q0(2)) <= 1e-6 || std::fabs(Controller.Q(3) - Q0(3)) <= 1e-6)
+			{
+				std::cout << "Vicino Q0" << std::endl;
+
+				Q_fin = Q0 + Kuka_Vec::Constant(0.4);
+				Q_fin(4) = Q0(4);
+				Q_fin(5) = Q0(5);
+				Q_fin(6) = Q0(6);
+
+				if ( Time_new > 0.0 && reset_time)
+				{
+					std::cout << "--------This second if--------" << std::endl;
+					Time_new = 0.0;
+					Q_in = Controller.Q;
+					DeltaQ = Q_fin - Controller.Q;
+					reset_time = 0;
+				}
+			}
+
+			if ( reset_time )
+			{
+				std::cout << "--------ei--------" << std::endl;
+				Q_in = Q_restart;
+			}
+			
+			Q_time(0) = DeltaQ(0)*0.5*(1-cos((Time_new)));
+			Q_time(1) = DeltaQ(1)*0.5*(1-cos((Time_new)));
+			Q_time(2) = DeltaQ(2)*0.5*(1-cos((Time_new)));
+			Q_time(3) = DeltaQ(3)*0.5*(1-cos((Time_new)));
+			Q_time(4) = DeltaQ(4)*0.5*(1-cos((Time_new)));
+			Q_time(5) = DeltaQ(5)*0.5*(1-cos((Time_new)));
+			Q_time(6) = DeltaQ(6)*0.5*(1-cos((Time_new)));
+			
+			Time_new = Time_new + DELTAT;
+
+			Q_ref = Q_in + Q_time;
+			Q_ref(4) = Q_restart(4);
+			Q_ref(5) = Q_restart(5);
+			Q_ref(6) = Q_restart(6);
+
+			std::cout << "Q_ref-Q = " << Q_ref-Controller.Q << std::endl;
+
+		}
+		
+		//If a collision has occurred and it has NOT passed t_rest*DELTAT seconds then we keep as reference for the robot the 
+		//value saved in Q_stop
+		
+		if( (CollCounter < t_rest) && coll)
+		{
+			CollCounter++;
+			CycleCounter--;
+			new_traj = 0;
+		}
 
 		//Saving robot state
 		
@@ -229,7 +347,7 @@ int main(int argc, char *argv[])
 		if (coll)
 		{
 			std::cout << "Collision has occurred at time: " << Time << "\n";
-			Q_ref = Q_stop;			
+			Q_ref = Q_stop;
 		}
 
 		//Saving state reference values
@@ -295,13 +413,13 @@ int main(int argc, char *argv[])
 		Controller.r_ob = Controller.Residual(Controller.Q, Controller.dQ_hat, torques_temp, Controller.r_ob, CycleCounter, s1_ob, s2_ob, Controller.p0_hat);
 
 		//COMPARISON WITH THE THRESHOLDS
-
+		/*
 		logic_flag = {0,0,0,0,0,0,0};
 
 		logic_flag = Controller.collision(Controller.r_ob, Time);	
 
 		std::cout << logic_flag[0] << logic_flag[1] << logic_flag[2] << logic_flag[3] << logic_flag[4] << logic_flag[5] << logic_flag[6] << std::endl;	
-
+		*/
 		//Controller.Tor_meas_filtered.push_back(Controller.torque_measured);
 
 		Controller.r_save.push_back(Controller.r);

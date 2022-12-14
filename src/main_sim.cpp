@@ -228,15 +228,28 @@ int main(int argc, char *argv[])
 
 	//Initialization estimated varibales
             
-	//reduced-order obs
-	Controller.dQ_hat = Controller.k0 * Controller.Q;
-
-	//full-state obs
+	//Observer
 	Controller.Q_hat = Controller.Q;
-	//Controller.dQ_hat = Kuka_Vec::Constant(0.0);
+	Controller.dQ_hat = Kuka_Vec::Constant(0.0);
 
 	Controller.Q_hat_save.push_back(Controller.Q_hat);
     Controller.dQ_hat_save.push_back(Controller.dQ_hat);
+
+	//Initial generalized momentum
+
+	Mass = Controller.GetMass(Controller.Q);
+	Controller.p0 = Mass*Controller.dQ;
+	Controller.p0_hat = Mass*Controller.dQ_hat;
+
+	//Variabili prova
+
+	double time_res = 0.3;
+	double CollCounter = 0.0;
+	double t_rest = 300;
+	bool new_traj = 0;
+	Kuka_Vec Q0_new;
+	Kuka_Vec Q_restart;
+	bool do_fault = 1;
 	
 	//SIMULATION LOOP
 	while (Time < tf)
@@ -281,11 +294,11 @@ int main(int argc, char *argv[])
 
 		//GIVE DIRECTLY THE VALUES OF THE Q
 
-		Q_ref = Q0 + Kuka_Vec::Constant(0.1*(1.0 - std::cos(Time)));
+		Q_ref = Q0 + Kuka_Vec::Constant(0.2*(1.0 - std::cos(Time)));
 
-		dQ_ref = Kuka_Vec::Constant(0.1*std::sin(Time));
+		dQ_ref = Kuka_Vec::Constant(0.2*std::sin(Time));
 		
-		d2Q_ref = Kuka_Vec::Constant(0.1*std::cos(Time));
+		d2Q_ref = Kuka_Vec::Constant(0.2*std::cos(Time));
 
 		Q_ref(4) = Q0(4);
 		Q_ref(5) = Q0(5);
@@ -299,52 +312,58 @@ int main(int argc, char *argv[])
 		d2Q_ref(5) = 0.0;
 		d2Q_ref(6) = 0.0;
 
-		d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+		//d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+		//d2Q_ref = d2Q_ref;
 		
-
 		//TRY TO RESTART THE ROBOT IF THE COLLISION HAS FINISHED
-
-		/*
-		if (Time>=1.5 && !coll)
+		
+		if (Time >= time_res && !coll)
 		{	
 			coll = std::any_of(logic_flag.begin(), logic_flag.end(), [](int i) { return i==1; });
-			//std::cout << coll << std::endl;	
 			Tcoll = Time;
 			Q_stop = Controller.Q;
 		}
+		
+		if( (CollCounter >= t_rest) && coll)
+		{
+			std::cout << "This if" << std::endl;
+			coll = false;
+			CollCounter = 0;
+			time_res = Time + 0.3;
+			Q_restart = Controller.Q; // a.k.a where the robot is when the collision has occurred;
+			Q0_new = Q_restart - Kuka_Vec::Constant(0.2*(1.0 - std::cos(Tcoll)));
+			new_traj = 1;
+			do_fault = 0;
 
+		}
+		
+		if ( new_traj && !coll)
+		{
+			std::cout << "----------------------------------------" << std::endl;
+			Q_ref = Q0_new + Kuka_Vec::Constant(0.2*(1.0 - std::cos(Tcoll)));
+			Q_ref(4) = Q_restart(4);
+			Q_ref(5) = Q_restart(5);
+			Q_ref(6) = Q_restart(6);
+			std::cout << "Q_ref-Q = " << Q_ref-Controller.Q << std::endl;
+		}
+
+		d2Q_ref = d2Q_ref + Controller.PDController(Controller.Q, Controller.dQ, Controller.d2Q, Q_ref, dQ_ref , Controller.d2Q);
+		
+		if( (CollCounter < t_rest) && coll)
+		{
+			CollCounter++;
+			Time = Time-DELTAT;
+			new_traj = 0;
+		}
+		
 		if (coll)
 		{
 			std::cout << "Collision has occurred at time: " << Time << "\n";
 			Controller.Q = Q_stop;
-			//Controller.Q = Q_stop - gain*Controller.r;
 			Controller.dQ = Kuka_Vec::Constant(0.0);
 			d2Q_ref = Kuka_Vec::Constant(0.0);
 		}
-		
-		if ((Time >= Tcoll+1.0) && coll)
-		{
-			coll = false;
-			Trestart = Tcoll;
-			std::cout << "has passed one second from the collision....Tcoll = " << Tcoll << " Time = " << Time << std::endl;			
-		}
-		
-		if ((Time >= Trestart) && !coll)
-		{
-			Time = Trestart;
-			do_ext_torque = false;
-			if (CycleCounter>=1000 && CycleCounter<=1200)
-			{
-				do_ext_torque = true;
-			}
-			std::cout << "Trestart = " << Trestart << std::endl;
-			Trestart += DELTAT;
-		}
-		
-		*/
-		std::cout << "Time = " << Time << std::endl;
-		
-		
+				
 		//MODEL INTEGRATION
 
 		Torques_ref = Controller.FeedbackLinearization(Controller.Q, Controller.dQ, d2Q_ref);
@@ -359,7 +378,7 @@ int main(int argc, char *argv[])
 		}
 		*/
 		
-		if  (Time>=5.0 && Time<=8.0)
+		if  (Time>=5.0 && do_fault)
 		{
 			Torques_faulty = Controller.ExtTorque(Torques_nom, fault, Controller.Q, F);
 			Torques_ref += Torques_faulty;
@@ -453,9 +472,11 @@ int main(int argc, char *argv[])
 
 		p_vec.push_back(p);
 
-		std::cout << "-------Step = " << CycleCounter << "\n";
+		//std::cout << "-------Step = " << CycleCounter << "\n";
 
 		CycleCounter++;
+
+		std::cout << "Time = " << Time << std::endl;
 
 		//Time += DELTAT;
 	}
